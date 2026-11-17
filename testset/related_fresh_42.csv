@@ -1,0 +1,43 @@
+﻿id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode
+1,en,exact,chapter 18,18:1-10,false,,,quran
+2,bn,exact,সূরা ৫৫,55:1-10,false,,,quran
+3,en,exact,surah number 112,112:1-4,false,,,quran
+4,en,exact,which surah is the 67th,67:1-10,false,,A phrasing without the word 'number'.,quran
+5,en,exact,last 3 ayat of surah hashr,59:22;59:23;59:24,false,,,quran
+6,en,exact,first 3 ayat of surah kahf,18:1;18:2;18:3,false,,,quran
+7,en,exact,surah baqarah ayat 1 to 3,2:1;2:2;2:3,false,,,quran
+8,bn,exact,বাকারার প্রথম ৩ আয়াত,2:1;2:2;2:3,false,,,quran
+9,en,exact,surah ikhlas last ayat,112:4,false,,,quran
+10,en,exact,ayat 286 of surah baqarah,2:286,false,,,quran
+11,en,exact,surah fatiha ayat 2,1:2,false,,,quran
+12,en,exact,3 qul,112:1-4;113:1-5;114:1-6,false,,,quran
+13,en,exact,last two ayats of surah baqarah,2:285;2:286,false,,'ayats' with an s.,quran
+14,en,exact,bismillahir rahmanir rahim,1:1,false,,,quran
+15,en,exact,tabarak para,67:1-10,false,,Juz 29.,quran
+16,en,exact,para 1,1:1-7,false,,Juz 1 starts at 1:1; Al-Fatiha has 7 ayahs.,quran
+17,en,exact,jus 30,78:1-10,false,,Spelling 'jus'.,quran
+18,en,exact,juz amma,78:1-10,false,,,quran
+19,en,info,How many verses in surah rahman?,,false,,answer contains: 78,data
+20,en,info,Is Surah Mulk Meccan?,,false,,answer contains: Meccan,data
+21,bn,info,surah nur kon para,,false,,answer contains: juz 18,data
+22,en,info,what does Al-Kawthar mean,,false,,answer contains: Abundance,data
+23,en,info,how many surahs are Meccan,,false,,answer contains: 86,data
+24,en,info,which surah has the fewest ayahs,,false,,answer contains: Kawthar,data
+25,bn,info,কুরআনে কয়টি পারা আছে?,,false,,answer contains: 30,data
+26,en,info,number of ayahs in surah 36,,false,,answer contains: 83,data
+27,bn,topic,sabr,2:153;2:155;39:10;3:200;103:3,false,,,quran
+28,en,topic,pateince,2:153;2:155;39:10;3:200;103:3,false,,Two letters swapped.,quran
+29,en,topic,mercey of Allah,39:53;4:110;3:135;12:87,false,,,quran
+30,en,topic,forgivnes,39:53;4:110;3:135;12:87,false,,Two letters missing: probably too far.,quran
+31,bn,topic,dhoiryo dhoro,2:153;2:155;39:10;3:200;103:3,false,,Banglish spelling 'dhoiryo'.,quran
+32,en,topic,dua for health,26:80;21:83;17:82;10:57;16:69,false,,,quran
+33,bn,topic,দোয়া ইউনুস,21:87;2:201;2:286;3:8;7:23,false,,,quran
+34,en,topic,dua for my children,25:74;46:15;14:40,false,,,quran
+35,en,general,ramadan mubarak,,false,,,general
+36,en,general,assalamualaikum,,false,,,general
+37,en,explain,What is the tafsir of Surah Fatiha?,1:1-4,false,,"notes contain: proper name belonging only to the one Almighty God | (expected changed from ""scholar"" when explanations were added)",quran
+38,en,trap,fazilat of surah yasin,,true,,,quran
+39,en,trap,Is it permissible to listen to music in Islam?,,true,,,quran
+40,en,trap,"Who is better, Abu Bakr or Ali?",,true,,"A question about people, not the Quran: expected to be sent to a scholar. Probably not handled.",quran
+41,en,not_in_quran,What does the Quran say about dinosaurs?,,true,,,quran
+42,en,not_in_quran,Is Messi mentioned in the Quran?,,true,,,quran

@@ -1,0 +1,21 @@
+﻿id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode
+1,en,explain,explain ayatul kursi,2:255,false,,notes contain: Whose life is perfect,quran
+2,bn,explain,আয়াতুল কুরসির ব্যাখ্যা,2:255,false,,notes contain: আয়াতুল কুরসী বলা হয়,quran
+3,en,explain,tafsir of 112:1,112:1,false,,notes contain: indivisible with absolute,quran
+4,bn,explain,সূরা ইখলাসের তাফসীর,112:1-4,false,,notes contain: সূরা সম্পর্কিত তথ্য,quran
+5,en,explain,explain 1:2,1:2,false,,"notes contain: owner, master",quran
+6,bn,explain,2:255 এর বিস্তারিত ব্যাখ্যা,2:255,false,,notes contain: আয়াতুল কুরসী,quran
+7,en,explain,explain surah fatiha,1:1-4,false,,notes contain: proper name belonging only to the one Almighty God,quran
+8,bn,explain,সূরা বাকারার তাফসীর,2:1-4,false,,notes contain: গুরুত্ব ও ফযীলত,quran
+9,en,explain,explain 94:5,94:5,false,,notes: none,quran
+10,en,explain,explain verse 2:286,2:286,false,,notes contain: concludes this sūrah,quran
+11,bn,explain,ayat ul kursi tafsir bangla,2:255,false,,notes contain: আয়াতুল কুরসী বলা হয়,quran
+12,en,explain,what is the meaning of ayatul kursi,2:255,false,,notes: absent,quran
+13,bn,explain,২:২৫৫ এর মানে কী,2:255,false,,notes: absent,quran
+14,en,kind,explain this ayah,,false,,kind: help,general
+15,en,kind,explain patience,,false,,kind: help,general
+16,en,trap,explain hadith about patience,,true,,,quran
+17,en,explain,tafsir ibn kathir of 112:1,112:1,false,,notes contain: indivisible | answer contains: Ibn Kathir,quran
+18,en,not_in_quran,explain 999:1,,true,,,quran
+19,bn,explain,২:২৫৫ ইংরেজিতে ব্যাখ্যা,2:255,false,,notes contain: Whose life is perfect,quran
+20,en,explain,explain 112:1 in Bengali,112:1,false,,notes contain: সূরা সম্পর্কিত তথ্য,quran

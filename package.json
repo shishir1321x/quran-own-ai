@@ -1,0 +1,28 @@
+{
+  "name": "quran-own-ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A Quran assistant with no third-party AI: its own search and answer templates. Runs on Render's free plan.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build-data": "node scripts/build-data.mjs",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "eval": "tsx scripts/eval.ts",
+    "check-themes": "tsx scripts/check-themes.ts"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "jsdom": "^25.0.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

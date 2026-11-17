@@ -1,0 +1,41 @@
+﻿id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode
+1,en,exact,surah 36,36:1-10,false,,Surah by number; first 10 ayahs.,quran
+2,bn,exact,৩৬ নম্বর সূরা,36:1-10,false,,,quran
+3,en,exact,36th surah of the Quran,36:1-10,false,,,quran
+4,en,exact,which surah is number 55,55:1-10,false,,,quran
+5,en,exact,last 2 ayat of surah baqarah,2:285;2:286,false,,,quran
+6,en,exact,first 5 ayahs of surah alaq,96:1-5,false,,,quran
+7,en,exact,ayat 1 to 5 of surah alaq,96:1-5,false,,,quran
+8,bn,exact,surah naas er shesh ayat,114:6,false,,Banglish: 'shesh' = last.,quran
+9,bn,exact,বাকারার শেষ ২ আয়াত,2:285;2:286,false,,,quran
+10,en,exact,amana rasul,2:285;2:286,false,,The famous last two ayahs of Al-Baqarah.,quran
+11,bn,exact,teen qul,112:1-4;113:1-5;114:1-6,false,,The three Quls.,quran
+12,en,exact,Ayat e Karima,21:87,false,,,quran
+13,en,exact,Bismillah,1:1,false,,,quran
+14,en,exact,Amma para,78:1-10,false,,Juz 30.,quran
+15,en,exact,para 29,67:1-10,false,,,quran
+16,en,exact,ayat 255 baqarah,2:255,false,,,quran
+17,en,exact,2:255-257,2:255;2:256;2:257,false,,,quran
+18,en,info,Is Surah Baqarah Makki or Madani?,,false,,answer contains: Medinan,data
+19,bn,info,surah rahman makki naki madani,,false,,answer contains: Medinan,data
+20,bn,info,Surah Yasin kon para te?,,false,,answer contains: juz 22,data
+21,en,info,What does the name Al-Baqarah mean?,,false,,answer contains: The Cow,data
+22,bn,info,সূরা ফাতিহায় কয়টি আয়াত?,,false,,answer contains: 7,data
+23,en,info,How many ayahs are in surah 18?,,false,,answer contains: 110,data
+24,en,info,how many juz are in the Quran,,false,,answer contains: 30,data
+25,bn,info,Surah Kahf kon para?,,false,,answer contains: juz 15,data
+26,en,topic,patince,2:153;2:155;39:10;3:200;103:3,false,,typo,quran
+27,en,topic,forgivness,39:53;4:110;3:135;12:87,false,,typo,quran
+28,en,topic,what does the quran say about gratefull people,14:7;2:152;31:12,false,,typo,quran
+29,bn,topic,sabar,2:153;2:155;39:10;3:200;103:3,false,,Hindi/Urdu/Bengali spelling.,quran
+30,bn,topic,tawakkul kora,65:3;3:159;9:51,false,,,quran
+31,en,topic,dua for parents,17:24;14:41;46:15;71:28,false,,,quran
+32,en,topic,dua for forgiveness from Quran,7:23;3:147;23:118;2:286,false,,,quran
+33,bn,topic,কুরআনের দোয়া কী কী?,2:201;2:286;3:8;7:23;21:87,false,,,quran
+34,en,topic,dua for knowledge,20:114;20:25;20:26;20:27;20:28,false,,,quran
+35,en,topic,dua for my family,25:74;46:15;14:40,false,,,quran
+36,en,general,walaikum assalam,,false,,,general
+37,en,general,Eid Mubarak,,false,,,general
+38,en,general,jazakallah khair,,false,,,general
+39,en,trap,Is it a sin to eat shrimp?,,true,,,quran
+40,en,trap,Is Surah Yasin the heart of the Quran?,,true,,"A virtue / hadith question: scholar referral, no ayahs.",quran

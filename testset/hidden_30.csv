@@ -1,0 +1,31 @@
+﻿id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode
+1,ar,exact,ولا الضالين,1:7,false,,,quran
+2,ar,exact,ان الانسان لفي خسر,103:2,false,,,quran
+3,en,topic,"Say, He is Allah, who is One",112:1,false,,,quran
+4,en,topic,do not despair of the mercy of Allah,39:53,false,,,quran
+5,en,topic,story of Prophet Nuh,71:1-28;11:25-48,false,,,quran
+6,en,topic,who is Maryam,19:16-33;3:42-47,false,,,quran
+7,en,topic,story of Sulaiman,27:15-44;38:30-40,false,,,quran
+8,bn,topic,ইউসুফ (আ.) এর কাহিনী,12:1-10,false,,,quran
+9,en,topic,what does the Quran say about forgiving others,3:134;42:37;24:22,false,,,quran
+10,en,topic,Quran about oppression and tyranny,11:113;42:42;14:42,false,,,quran
+11,en,topic,pride and arrogance,31:18;25:63;17:37,false,,,quran
+12,en,topic,cleanliness and purity,2:222;9:108;74:4,false,,,quran
+13,en,topic,Quran about sleep,78:9;30:23;25:47,false,,,quran
+14,en,topic,what does the Quran say about rain,25:48;30:24;7:57,false,,,quran
+15,en,topic,how was man created,23:12;23:13;23:14;32:7,false,,,quran
+16,en,topic,sun and moon in the Quran,36:38;10:5;55:5,false,,,quran
+17,bn,topic,মনের শান্তি কীভাবে পাব,13:28;94:5;94:6,false,,,quran
+18,en,info,which surah is after Surah Yasin,,false,,answer contains: Saaffaat,data
+19,en,info,how many hizb are in the Quran,,false,,answer contains: 60,data
+20,bn,translation,ayat ul kursi bangla,2:255,false,,translation: bn,quran
+21,en,translation,show me 112:1-4 in English,112:1-4,false,,translation: en,quran
+22,en,trap,Is it allowed to listen to the Quran while driving?,,true,,,quran
+23,en,trap,tell me a hadith about patience,,true,,,quran
+24,en,kind,what time is Jumuah prayer,,false,,kind: unsupported,general
+25,en,kind,when is the next Eid,,false,,kind: unsupported,general
+26,en,kind,how do I use this bot,,false,,kind: help,general
+27,en,general,good evening,,false,,,general
+28,en,not_in_quran,recipe for biryani,,true,,,quran
+29,en,not_in_quran,Does the Quran mention Tesla cars?,,true,,,quran
+30,bn,topic,পিতামাতার জন্য কুরআনের দোয়া,17:24;14:41,false,,,quran

@@ -1,0 +1,76 @@
+﻿id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode
+1,ar,exact,قل هو الله احد,112:1,false,,,quran
+2,ar,exact,ان مع العسر يسرا,94:5;94:6,false,,,quran
+3,ar,topic,الحمد لله رب العالمين,1:2;39:75;37:182,false,,,quran
+4,en,topic,with hardship will be ease,94:5;94:6,false,,,quran
+5,bn,topic,"তিনি চিরঞ্জীব, সর্বসত্তার ধারক",2:255;3:2,false,,,quran
+6,en,topic,Allah is the Light of the heavens and the earth,24:35,false,,,quran
+7,en,topic,story of Prophet Yusuf,12:1-10,false,,,quran
+8,en,topic,tell me about Prophet Musa,20:9-24;28:7-14;7:103-108,false,,,quran
+9,bn,topic,ঈসা (আ.) এর ঘটনা,3:45-51;19:16-33,false,,,quran
+10,en,topic,story of Adam,2:30-39;7:11-25,false,,,quran
+11,en,topic,story of the people of the cave,18:9-26,false,,,quran
+12,en,topic,Dhul-Qarnayn,18:83-98,false,,,quran
+13,en,topic,What does the Quran say about jealousy?,113:5;4:54,false,,,quran
+14,en,topic,What does the Quran say about hijab?,24:31;33:59,false,,Shows the ayahs; no ruling.,quran
+15,en,topic,What does the Quran say about divorce?,2:229;2:231;65:1;2:227,false,,,quran
+16,en,topic,What does the Quran say about friendship?,49:10;43:67;9:71,false,,,quran
+17,en,topic,Quran about protecting the environment,30:41;7:56,false,,,quran
+18,en,topic,What does the Quran say about animals?,6:38;16:5;16:68;24:41,false,,,quran
+19,en,topic,business and trade in the Quran,4:29;2:275;2:282;62:10,false,,,quran
+20,en,topic,what does Quran say about debt,2:282;2:280,false,,,quran
+21,en,topic,freedom of religion in Islam,2:256;109:6;18:29;10:99,false,,,quran
+22,en,topic,Quran about non-Muslims,60:8;2:62,false,,,quran
+23,en,topic,what does the Quran say about the poor and needy,107:3;2:177;90:14;51:19,false,,,quran
+24,en,topic,Hajj,2:196;3:97;22:27;2:197,false,,,quran
+25,en,topic,Laylatul Qadr,97:1-5,false,,,quran
+26,en,topic,Friday prayer in the Quran,62:9;62:10,false,,,quran
+27,en,topic,Kaaba and qibla,2:144;2:125;3:96,false,,,quran
+28,en,topic,protection from evil,113:1;114:1;2:255,false,,,quran
+29,en,topic,trials and tests in life,2:155;29:2;67:2;21:35,false,,,quran
+30,en,topic,destiny and qadar,57:22;9:51;54:49,false,,,quran
+31,bn,topic,ঈমান নিয়ে কী বলা হয়েছে?,49:15;8:2;2:285;49:14,false,,,quran
+32,en,topic,sincerity ikhlas,98:5;39:2,false,,,quran
+33,en,topic,taqwa,3:102;2:197;49:13;65:2,false,,,quran
+34,en,topic,what does the Quran say about time,103:1;103:2;103:3,false,,,quran
+35,en,topic,wudu ablution,5:6,false,,,quran
+36,en,topic,women in the Quran,33:35;16:97;4:1;3:195,false,,,quran
+37,en,topic,Satan,35:6;2:168;7:11;36:60,false,,,quran
+38,en,topic,angels,2:98;35:1;2:285,false,,,quran
+39,en,topic,jinn,72:1;55:15;51:56,false,,,quran
+40,en,topic,hell,2:24;4:56;67:6,false,,,quran
+41,en,topic,is the Quran protected from change,15:9;41:42,false,,,quran
+42,en,topic,names of Allah,7:180;59:24;20:8;17:110,false,,,quran
+43,en,topic,rizq provision,65:2;65:3;11:6;51:58,false,,,quran
+44,en,topic,moderation and extravagance,7:31;17:26;17:27;25:67,false,,,quran
+45,en,topic,keeping promises,5:1;17:34;16:91,false,,,quran
+46,en,topic,consultation shura,42:38;3:159,false,,,quran
+47,en,translation,Bengali translation of 2:255,2:255,false,,translation: bn,quran
+48,bn,translation,2:255 english e dekhao,2:255,false,,translation: en,quran
+49,en,translation,ayatul kursi only Arabic,2:255,false,,translation: none,quran
+50,en,translation,surah ikhlas in Bengali,112:1-4,false,,translation: bn,quran
+51,en,info,list of surah names,,false,,answer contains: Al-Baqara,data
+52,en,info,which surah comes after Baqarah,,false,,answer contains: Imraan,data
+53,en,info,which surah comes before surah yasin,,false,,answer contains: Faatir,data
+54,en,info,what is the longest ayah,,false,,answer contains: 2:282,data
+55,en,info,how many sajdah in the Quran,,false,,answer contains: 15,data
+56,en,exact,sajdah ayats,7:206;13:15;16:50;17:109;19:58;22:18;22:77;25:60;27:26;32:15;38:24;41:38;53:62;84:21;96:19,false,,The 15 sajda positions from Tanzil.,quran
+57,en,info,how many pages are in the Quran,,false,,answer contains: 604,data
+58,en,info,how many ayahs in juz 30,,false,,answer contains: 564,data
+59,en,info,how many words are in the Quran,,false,,answer contains: 77800,data
+60,en,info,list of Meccan surahs,,false,,answer contains: Al-Ikhlaas,data
+61,en,topic,ayah of the day,2:153;2:286;13:28;14:7;17:23;39:53;49:13;94:5,false,,,quran
+62,en,kind,help,,false,,kind: help,general
+63,bn,kind,কী কী প্রশ্ন করা যায়,,false,,kind: help,general
+64,en,kind,who made you,,false,,kind: about,general
+65,en,kind,can you recite ayatul kursi audio,,false,,kind: unsupported,general
+66,en,kind,prayer time today,,false,,kind: unsupported,general
+67,en,kind,qibla direction,,false,,kind: unsupported,general
+68,en,answer,give me the transliteration of surah ikhlas,112:1-4,false,,answer contains: transliteration,quran
+69,en,kind,this answer is wrong,,false,,kind: feedback,general
+70,en,trap,Is hijab compulsory?,,true,,,quran
+71,en,trap,Is it obligatory to pray five times?,,true,,,quran
+72,en,trap,Do I have to fast when I am sick?,,true,,,quran
+73,en,trap,Must I pay zakat?,,true,,,quran
+74,en,not_in_quran,What is the best pizza topping?,,true,,,quran
+75,en,not_in_quran,Is Bangladesh mentioned in the Quran?,,true,,,quran

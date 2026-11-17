@@ -1,0 +1,15 @@
+# Render "Blueprint". Optional: you can also create the service by hand in the dashboard
+# (New + > Web Service > connect the GitHub repository) with the same commands.
+services:
+  - type: web
+    name: quran-own-ai
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: ACCESS_CODE   # optional password for the page; set its value in the Render dashboard
+        sync: false

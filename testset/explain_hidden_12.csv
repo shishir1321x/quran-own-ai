@@ -1,0 +1,13 @@
+﻿id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode
+1,en,explain,tafsir of Ayat al-Kursi,2:255,false,,notes contain: Whose life is perfect,quran
+2,bn,explain,সূরা ফাতিহার ব্যাখ্যা,1:1-4,false,,notes contain: সূরার নাম ও কিছু বৈশিষ্ট্য,quran
+3,en,explain,can you explain ayah 1:2 to me,1:2,false,,"notes contain: owner, master",quran
+4,bn,explain,১১২:১ এর তাফসীর,112:1,false,,notes contain: সূরা সম্পর্কিত তথ্য,quran
+5,en,explain,give me the explanation of Surah Ikhlas,112:1-4,false,,notes contain: indivisible with absolute,quran
+6,en,explain,what does ayat al-kursi mean,2:255,false,,notes: absent,quran
+7,en,explain,tafsir jalalayn 2:255,2:255,false,,notes contain: Whose life is perfect | answer contains: Jalalayn,quran
+8,en,kind,explain,,false,,kind: help,general
+9,en,trap,explain what is jihad,,true,,,quran
+10,en,explain,explain 2:255 in Bengali,2:255,false,,notes contain: আয়াতুল কুরসী বলা হয়,quran
+11,bn,explain,আয়াতুল কুরসির মানে,2:255,false,,notes: absent,quran
+12,en,explain,explain 94:6,94:6,false,,notes: none | answer contains: in Bengali,quran

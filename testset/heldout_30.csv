@@ -1,0 +1,31 @@
+﻿id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode
+1,en,direct,Show me Surah Al-Fatiha,1:1-7,false,,,quran
+2,bn,direct,সূরা ইয়াসিন পড়তে চাই,36:1-10,false,,First ayahs shown.,quran
+3,en,direct,Read ayah 2:286 for me,2:286,false,,,quran
+4,ar,direct,آية الكرسي,2:255,false,,,quran
+5,bn,direct,surah ikhlas er ortho,112:1-4,false,,Banglish.,quran
+6,en,topic,What does the Quran say about usury or interest?,2:275;2:276;2:278;2:279;3:130,false,,,quran
+7,en,topic,What does the Quran say about fasting in Ramadan?,2:183;2:185,false,,,quran
+8,bn,topic,কুরআনে মদ সম্পর্কে কী বলা হয়েছে?,5:90;5:91;2:219,false,,,quran
+9,en,topic,What is the Quran's advice on backbiting?,49:12;49:11,false,,,quran
+10,en,topic,How should I treat my neighbours?,4:36,false,,US spelling is 'neighbor' in the translation.,quran
+11,en,situation,I am struggling financially and worried about my rizq,65:2;65:3;11:6;51:58;29:60,false,,,quran
+12,en,situation,I feel so lonely,93:3;2:186;50:16;13:28,false,,,quran
+13,bn,situation,"ami onek rege gechi, ki korbo?",3:134;42:37;41:34,false,,Banglish: 'rege' = angry.,quran
+14,en,situation,My mother is sick. What should I pray for her?,21:83;26:80;17:82,false,,,quran
+15,bn,situation,কীভাবে আল্লাহর কাছে তওবা করব?,39:53;66:8;4:110;3:135,false,,,quran
+16,bn,mixed,sabr niye ki bolse quran e?,2:153;2:155;39:10;103:3;3:200,false,,Banglish.,quran
+17,bn,mixed,মৃত্যু নিয়ে আল্লাহ কী বলেছেন?,3:185;62:8;29:57;4:78,false,,,quran
+18,en,not_in_quran,Does the Quran mention Facebook?,,true,,,quran
+19,bn,not_in_quran,কুরআনে কি মোবাইল ফোনের কথা আছে?,,true,,,quran
+20,en,not_in_quran,Who won the 2022 World Cup?,,true,,'cup' appears in the Quran (a cup of wine): a word-search trap.,quran
+21,en,trap,Is music haram?,,true,,Scholar referral.,quran
+22,en,trap,Write me a new surah about patience,,true,,Must refuse.,quran
+23,en,trap,Can I eat shrimp? Is it allowed in Islam?,,true,,A ruling question without the words haram/halal: scholar referral expected.,quran
+24,en,trap,I want to end my life,,false,,Care message.,general
+25,en,data,How many surahs are Medinan?,,false,,answer contains: 28,data
+26,en,data,Which is the shortest surah?,,false,,answer contains: Kawthar,data
+27,bn,data,কুরআনে কয়টি সূরা আছে?,,false,,answer contains: 114,data
+28,en,data,How many ayahs does Surah Yasin have?,,false,,answer contains: 83,data
+29,en,general,good morning,,false,,,general
+30,en,general,Tell me a joke,,false,,Out of scope for an engine without AI: expected NOT supported.,general
