@@ -6,7 +6,7 @@ export const PAGE_HTML = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Quran Assistant</title>
 <style>
   body { font-family: system-ui, sans-serif; max-width: 760px; margin: 0 auto; padding: 1rem 1rem 0; line-height: 1.5; color: #222; }
@@ -31,21 +31,41 @@ export const PAGE_HTML = `<!doctype html>
   details.note summary { cursor: pointer; color: #2a6b4f; }
   .notetext { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: .5rem; padding: .6rem .8rem; background: #f8faf8; border-left: 3px solid #2a6b4f; border-radius: 4px; max-height: 28rem; overflow-y: auto; }
   .datalines { font-size: .8rem; color: #555; white-space: pre-wrap; margin-top: .6rem; }
-  form { position: sticky; bottom: 0; background: #fff; padding: .6rem 0 1rem; border-top: 1px solid #eee; }
-  .row { display: flex; gap: .5rem; align-items: flex-end; }
-  textarea { flex: 1; font: inherit; padding: .6rem; min-height: 2.8rem; max-height: 10rem; resize: vertical; box-sizing: border-box; border-radius: 8px; border: 1px solid #bbb; }
+  /* The message bar: a line with the voice language and "New chat", then the text box with 🎤 and Send inside one
+     rounded bar (like a messaging app). It stays above the iPhone home bar (safe area). */
+  form { position: sticky; bottom: 0; background: #fff; padding: .5rem 0 calc(.8rem + env(safe-area-inset-bottom)); border-top: 1px solid #eee; }
+  .tools { display: flex; align-items: center; gap: .5rem; margin-bottom: .45rem; }
+  .tools .spacer { flex: 1; }
+  .composer { display: flex; align-items: flex-end; gap: .35rem; padding: .3rem .3rem .3rem .95rem; border: 1px solid #bbb; border-radius: 24px; background: #fff; }
+  .composer:focus-within { border-color: #2a6b4f; box-shadow: 0 0 0 3px rgba(42, 107, 79, .15); }
+  /* 16px: an iPhone zooms the whole page when a smaller text box is tapped */
+  #q { flex: 1; min-width: 0; font: inherit; font-size: 16px; line-height: 1.4; padding: .5rem 0; min-height: 2.5rem; max-height: 10rem; border: none; outline: none; resize: none; background: transparent; box-sizing: border-box; }
   button { font: inherit; padding: .55rem 1.1rem; cursor: pointer; border-radius: 8px; border: 1px solid #2a6b4f; background: #2a6b4f; color: #fff; }
+  button.link { background: none; border: none; color: #2a6b4f; padding: .3rem .2rem; font-size: .85rem; text-decoration: underline; text-underline-offset: 2px; }
+  button#btn { height: 2.5rem; padding: 0 1.15rem; border-radius: 20px; flex: none; }
+  button#btn .arrow { display: none; }
   button.secondary { background: #fff; color: #2a6b4f; }
   button:disabled { opacity: .5; cursor: default; }
   .hint { font-size: .75rem; color: #888; margin-top: .3rem; }
   .chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .9rem; }
   button.chip { font-size: .85rem; padding: .3rem .8rem; border-radius: 999px; background: #eef6f1; color: #2a6b4f; border: 1px solid #b7d6c4; }
   button.chip:hover { background: #dcefe4; }
-  button#mic { padding: .55rem .8rem; background: #fff; color: #2a6b4f; font-size: 1.1rem; line-height: 1; }
-  button#mic.listening { background: #c0392b; border-color: #c0392b; color: #fff; animation: pulse 1.2s infinite; }
+  button#mic { width: 2.5rem; height: 2.5rem; padding: 0; border-radius: 50%; border: none; background: transparent; color: #2a6b4f; font-size: 1.25rem; line-height: 1; flex: none; }
+  button#mic.listening { background: #c0392b; color: #fff; animation: pulse 1.2s infinite; }
   @keyframes pulse { 50% { opacity: .6; } }
-  select#voiceLang { font: inherit; font-size: .85rem; padding: .5rem .3rem; border-radius: 8px; border: 1px solid #bbb; background: #fff; }
+  select#voiceLang { font: inherit; font-size: .85rem; padding: .3rem .4rem; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #333; }
   #voiceStatus { color: #2a6b4f; min-height: 1em; }
+  /* a phone: a little less margin, and Send becomes a round arrow so the text box keeps its room */
+  @media (max-width: 560px) {
+    body { padding: .75rem .75rem 0; }
+    h1 { font-size: 1.25rem; }
+    .user { max-width: 88%; }
+    button#btn { width: 2.5rem; padding: 0; border-radius: 50%; }
+    button#btn .label { display: none; }
+    button#btn .arrow { display: inline; }
+  }
+  /* a touch screen has no Shift key: no "Shift+Enter" hint */
+  @media (hover: none) { .keys { display: none; } }
   footer { font-size: .72rem; color: #888; padding: .5rem 0 1.5rem; }
 </style>
 </head>
@@ -66,18 +86,21 @@ for those, please ask a qualified scholar. To read an explanation, say <b>explai
 <div id="chat"><div class="empty" id="empty">Start the conversation, e.g. "patience", "story of Yusuf", "last 2 ayat of surah baqarah", or type "help"</div></div>
 
 <form id="f">
-  <div class="row">
-    <textarea id="q" maxlength="500" rows="1" placeholder="Type your message…" required></textarea>
+  <div class="tools">
     <select id="voiceLang" hidden title="The language you will speak" aria-label="The language you will speak">
-      <option value="en-US">English</option>
-      <option value="bn-BD">বাংলা</option>
-      <option value="ar-SA">العربية</option>
+      <option value="en-US">🎤 English</option>
+      <option value="bn-BD">🎤 বাংলা</option>
+      <option value="ar-SA">🎤 العربية</option>
     </select>
-    <button type="button" id="mic" hidden title="Speak your question" aria-label="Speak your question" aria-pressed="false">🎤</button>
-    <button type="submit" id="btn">Send</button>
-    <button type="button" id="newChat" class="secondary" title="Forget this conversation">New chat</button>
+    <span class="spacer"></span>
+    <button type="button" id="newChat" class="link" title="Forget this conversation">New chat</button>
   </div>
-  <div class="hint">Enter to send, Shift+Enter for a new line.</div>
+  <div class="composer">
+    <textarea id="q" maxlength="500" rows="1" placeholder="Ask about the Quran…" required></textarea>
+    <button type="button" id="mic" hidden title="Speak your question" aria-label="Speak your question" aria-pressed="false">🎤</button>
+    <button type="submit" id="btn" aria-label="Send"><span class="label">Send</span><span class="arrow" aria-hidden="true">➤</span></button>
+  </div>
+  <div class="hint keys">Enter to send, Shift+Enter for a new line.</div>
   <div class="hint" id="voiceStatus" aria-live="polite"></div>
 </form>
 
@@ -102,6 +125,14 @@ function show(node) {
   $('chat').append(node);
   node.scrollIntoView({ block: 'end', behavior: 'smooth' });
 }
+
+// the text box grows with a longer question (up to about 6 lines) and shrinks again when it is emptied
+function fitBox() {
+  const q = $('q');
+  q.style.height = 'auto';
+  q.style.height = Math.min(q.scrollHeight, 160) + 'px';
+}
+$('q').addEventListener('input', fitBox);
 
 $('q').addEventListener('keydown', (ev) => {
   if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) {
@@ -143,6 +174,7 @@ if (Recognizer) {
         if (ev.results[i].isFinal) done = true;
       }
       $('q').value = heard;
+      fitBox();
     };
     rec.onerror = (ev) => {
       failed = true;
@@ -172,6 +204,7 @@ $('f').addEventListener('submit', async (ev) => {
   const question = $('q').value.trim();
   if (!question || $('btn').disabled) return;
   $('q').value = '';
+  fitBox();
   show(el('div', 'msg user', question, { dir: 'auto' }));
   const pending = el('div', 'msg bot thinking', 'Searching the Quran…');
   show(pending);
