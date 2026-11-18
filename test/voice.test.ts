@@ -13,20 +13,26 @@ const settle = () => new Promise((r) => setTimeout(r, 30));
 /** A stand-in for the browser's SpeechRecognition: the test says what the user "said". */
 class FakeRecognizer {
   static last: FakeRecognizer | null = null;
+  /** like Safari on an iPhone: after the first time it often never fires "end" (not after a result, not after stop()) */
+  static iphone = false;
   lang = ''; interimResults = false; continuous = false; maxAlternatives = 1;
   onresult: ((ev: unknown) => void) | null = null;
   onerror: ((ev: unknown) => void) | null = null;
   onend: (() => void) | null = null;
   onstart: (() => void) | null = null;
   started = false;
+  stopped = false;
   constructor() { FakeRecognizer.last = this; }
   start() { this.started = true; this.onstart?.(); }
-  stop() { this.onend?.(); }
-  say(text: string) {
-    const result = Object.assign([{ transcript: text, confidence: 0.9 }], { isFinal: true });
+  stop() { this.stopped = true; if (!FakeRecognizer.iphone) this.onend?.(); }
+  abort() { this.stopped = true; if (!FakeRecognizer.iphone) this.onend?.(); }
+  private emit(text: string, isFinal: boolean) {
+    const result = Object.assign([{ transcript: text, confidence: 0.9 }], { isFinal });
     this.onresult?.({ resultIndex: 0, results: [result] });
-    this.onend?.();
   }
+  say(text: string) { this.emit(text, true); if (!FakeRecognizer.iphone) this.onend?.(); }
+  /** the words are never marked final, but the browser does end (also seen on iPhones) */
+  sayNotFinal(text: string) { this.emit(text, false); this.onend?.(); }
   fail(error: string) { this.onerror?.({ error }); this.onend?.(); }
 }
 
@@ -84,6 +90,60 @@ describe('voice in the page', () => {
     await settle();
     expect(doc.getElementById('voiceStatus')!.textContent).toMatch(/microphone/i);
     expect(doc.querySelectorAll('.msg.user')).toHaveLength(0);
+  });
+
+  it('works again and again (three questions in a row)', async () => {
+    FakeRecognizer.iphone = false;
+    const { doc } = openPage(true);
+    for (const q of ['surah ikhlas', '2:255', 'patience']) {
+      (doc.getElementById('mic') as HTMLButtonElement).click();
+      FakeRecognizer.last!.say(q);
+      await settle();
+    }
+    expect([...doc.querySelectorAll('.msg.user')].map((e) => e.textContent)).toEqual(['surah ikhlas', '2:255', 'patience']);
+    expect(doc.getElementById('mic')!.classList.contains('listening')).toBe(false);
+  });
+
+  it('iPhone: the browser never says it has ended; every question is still sent, and the next tap works', async () => {
+    FakeRecognizer.iphone = true;
+    try {
+      const { doc } = openPage(true);
+      for (const q of ['surah ikhlas', '2:255', 'patience']) {
+        const mic = doc.getElementById('mic') as HTMLButtonElement;
+        mic.click();
+        const rec = FakeRecognizer.last!;
+        expect(rec.started).toBe(true);
+        rec.say(q);
+        await settle();
+        expect(rec.stopped).toBe(true);                              // the page stopped it itself
+        expect(mic.classList.contains('listening')).toBe(false);     // the button is free again
+      }
+      expect([...doc.querySelectorAll('.msg.user')].map((e) => e.textContent)).toEqual(['surah ikhlas', '2:255', 'patience']);
+    } finally { FakeRecognizer.iphone = false; }
+  });
+
+  it('iPhone: the words are never marked final; what was heard is sent when the browser ends', async () => {
+    const { doc } = openPage(true);
+    (doc.getElementById('mic') as HTMLButtonElement).click();
+    FakeRecognizer.last!.sayNotFinal('surah yasin');
+    await settle();
+    expect(doc.getElementById('chat')!.textContent).toContain('Surah 36, Yaseen');
+  });
+
+  it('a tap while listening stops it even if the browser never answers, and the next tap starts again', async () => {
+    FakeRecognizer.iphone = true;
+    try {
+      const { doc } = openPage(true);
+      const mic = doc.getElementById('mic') as HTMLButtonElement;
+      mic.click();
+      const first = FakeRecognizer.last!;
+      mic.click();                                                   // stop
+      expect(first.stopped).toBe(true);
+      expect(mic.classList.contains('listening')).toBe(false);
+      mic.click();                                                   // and again: a NEW recognizer
+      expect(FakeRecognizer.last).not.toBe(first);
+      expect(FakeRecognizer.last!.started).toBe(true);
+    } finally { FakeRecognizer.iphone = false; }
   });
 
   it('Settings says where the voice goes', () => {

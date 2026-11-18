@@ -159,43 +159,57 @@ if (Recognizer) {
   const nav = (navigator.language || '').toLowerCase();
   $('voiceLang').value = saved || (nav.startsWith('bn') ? 'bn-BD' : nav.startsWith('ar') ? 'ar-SA' : 'en-US');
   $('voiceLang').addEventListener('change', () => { try { localStorage.setItem('voiceLang', $('voiceLang').value); } catch (e) { /* fine */ } });
+  // Safari on an iPhone often never fires "end" after the first time (not after a result, not after stop()). So the
+  // page never waits for it: each listening session ends ONCE, by whichever comes first: a final result, the browser's
+  // own end, an error, a second tap, or 15 seconds. Then the button is free again and the next tap starts a new one.
+  const micOff = () => {
+    listening = null;
+    $('mic').classList.remove('listening');
+    $('mic').setAttribute('aria-pressed', 'false');
+  };
   $('mic').addEventListener('click', () => {
-    if (listening) { listening.stop(); return; }          // a second tap stops listening
+    if (listening) { listening.finish(true); return; }    // a second tap: stop now, and send what was heard
     const rec = new Recognizer();
     rec.lang = $('voiceLang').value;
     rec.interimResults = true;                             // the words appear in the box while you speak
     rec.continuous = false;                                // one question, then it stops by itself
     rec.maxAlternatives = 1;
-    let heard = '', done = false, failed = false;
+    let heard = '', ended = false, guard = 0;
+    const finish = (send, message) => {
+      if (ended) return;                                   // a session ends only once
+      ended = true;
+      clearTimeout(guard);
+      if (listening && listening.rec === rec) micOff();
+      try { rec.abort ? rec.abort() : rec.stop(); } catch (e) { /* already stopped */ }
+      $('voiceStatus').textContent = message || '';
+      if (send && heard.trim()) $('f').requestSubmit();   // send what was said, like Enter
+    };
     rec.onresult = (ev) => {
+      if (ended) return;
       heard = '';
+      let final = false;
       for (let i = 0; i < ev.results.length; i++) {
         heard += ev.results[i][0].transcript;
-        if (ev.results[i].isFinal) done = true;
+        if (ev.results[i].isFinal) final = true;
       }
       $('q').value = heard;
       fitBox();
+      if (final) finish(true);                             // do not wait for "end": it may never come
     };
     rec.onerror = (ev) => {
-      failed = true;
-      $('voiceStatus').textContent = ev.error === 'not-allowed' || ev.error === 'service-not-allowed'
+      if (ended || ev.error === 'aborted') return;         // "aborted" is our own stop
+      finish(false, ev.error === 'not-allowed' || ev.error === 'service-not-allowed'
         ? 'The microphone is not allowed. Allow it for this page in the browser, or type your question.'
         : ev.error === 'no-speech' ? 'I did not hear anything. Tap 🎤 and speak again.'
-        : 'Voice did not work this time. Please try again, or type your question.';
+        : 'Voice did not work this time. Please try again, or type your question.');
     };
-    rec.onend = () => {
-      listening = null;
-      $('mic').classList.remove('listening');
-      $('mic').setAttribute('aria-pressed', 'false');
-      if (failed) return;
-      $('voiceStatus').textContent = '';
-      if (done && heard.trim()) $('f').requestSubmit();   // send what was said, like Enter
-    };
-    listening = rec;
+    rec.onend = () => finish(true);                        // the browser stopped: send what was heard, even if not "final"
+    listening = { rec: rec, finish: finish };
     $('mic').classList.add('listening');
     $('mic').setAttribute('aria-pressed', 'true');
     $('voiceStatus').textContent = 'Listening… speak now. Tap 🎤 again to stop.';
-    try { rec.start(); } catch (e) { listening = null; $('mic').classList.remove('listening'); $('voiceStatus').textContent = 'Voice could not start. Please type your question.'; }
+    guard = setTimeout(() => finish(true), 15000);         // never stay "listening" for ever
+    try { rec.start(); } catch (e) { finish(false, 'Voice could not start. Please try again, or type your question.'); }
   });
 }
 
