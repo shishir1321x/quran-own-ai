@@ -102,6 +102,7 @@ for those, please ask a qualified scholar. To read an explanation, say <b>explai
   </div>
   <div class="hint keys">Enter to send, Shift+Enter for a new line.</div>
   <div class="hint" id="voiceStatus" aria-live="polite"></div>
+  <div class="hint" id="voiceDebug" hidden></div>
 </form>
 
 <footer id="credits">Arabic text: Tanzil Project (CC BY 3.0). English: Saheeh International. Bengali: Dr. Abu Bakr Muhammad Zakaria. Translations via QuranEnc.com.</footer>
@@ -151,6 +152,15 @@ $('newChat').addEventListener('click', () => {
 // service for it). This server only ever receives the text, exactly as if it had been typed. No key, no AI on the server.
 const Recognizer = window.SpeechRecognition || window.webkitSpeechRecognition;
 let listening = null;
+// Open the page with ?debug=voice to see, under the text box, what the browser does with the microphone (to find a
+// problem on a phone). It is only shown on this screen; nothing is sent anywhere.
+const VOICE_DEBUG = /[?&]debug=voice(&|$)/.test(location.search);
+let traced = 0;
+const trace = (s) => { if (VOICE_DEBUG) $('voiceDebug').textContent += (traced++ ? ' · ' : '') + s; };
+if (VOICE_DEBUG) {
+  $('voiceDebug').hidden = false;
+  trace('speech recognition: ' + (Recognizer ? 'yes' : 'NO') + ' | ' + navigator.userAgent);
+}
 if (Recognizer) {
   $('mic').hidden = false;
   $('voiceLang').hidden = false;
@@ -168,16 +178,24 @@ if (Recognizer) {
     $('mic').setAttribute('aria-pressed', 'false');
   };
   $('mic').addEventListener('click', () => {
-    if (listening) { listening.finish(true); return; }    // a second tap: stop now, and send what was heard
+    trace(listening ? 'tap (stop)' : 'tap');
+    if (listening) { listening.finish(true, '', 'tap'); return; }   // a second tap: stop now, and send what was heard
     const rec = new Recognizer();
+    trace('new recognizer');
+    rec.onstart = () => trace('start');
+    rec.onaudiostart = () => trace('audiostart');
+    rec.onspeechstart = () => trace('speechstart');
+    rec.onspeechend = () => trace('speechend');
+    rec.onaudioend = () => trace('audioend');
     rec.lang = $('voiceLang').value;
     rec.interimResults = true;                             // the words appear in the box while you speak
     rec.continuous = false;                                // one question, then it stops by itself
     rec.maxAlternatives = 1;
     let heard = '', ended = false, guard = 0;
-    const finish = (send, message) => {
+    const finish = (send, message, why) => {
       if (ended) return;                                   // a session ends only once
       ended = true;
+      trace('finish (' + (why || '') + ', ' + (send && heard.trim() ? 'send' : 'nothing to send') + ')');
       clearTimeout(guard);
       if (listening && listening.rec === rec) micOff();
       try { rec.abort ? rec.abort() : rec.stop(); } catch (e) { /* already stopped */ }
@@ -194,22 +212,24 @@ if (Recognizer) {
       }
       $('q').value = heard;
       fitBox();
-      if (final) finish(true);                             // do not wait for "end": it may never come
+      trace('result ' + (final ? 'final' : 'partial') + ' "' + heard + '"');
+      if (final) finish(true, '', 'final');                // do not wait for "end": it may never come
     };
     rec.onerror = (ev) => {
+      trace('error: ' + ev.error);
       if (ended || ev.error === 'aborted') return;         // "aborted" is our own stop
       finish(false, ev.error === 'not-allowed' || ev.error === 'service-not-allowed'
         ? 'The microphone is not allowed. Allow it for this page in the browser, or type your question.'
         : ev.error === 'no-speech' ? 'I did not hear anything. Tap 🎤 and speak again.'
-        : 'Voice did not work this time. Please try again, or type your question.');
+        : 'Voice did not work this time (' + ev.error + '). Please try again, or type your question.', 'error');
     };
-    rec.onend = () => finish(true);                        // the browser stopped: send what was heard, even if not "final"
+    rec.onend = () => { trace('end'); finish(true, '', 'end'); };   // the browser stopped: send what was heard
     listening = { rec: rec, finish: finish };
     $('mic').classList.add('listening');
     $('mic').setAttribute('aria-pressed', 'true');
     $('voiceStatus').textContent = 'Listening… speak now. Tap 🎤 again to stop.';
-    guard = setTimeout(() => finish(true), 15000);         // never stay "listening" for ever
-    try { rec.start(); } catch (e) { finish(false, 'Voice could not start. Please try again, or type your question.'); }
+    guard = setTimeout(() => { trace('15 s timeout'); finish(true, '', 'timeout'); }, 15000);   // never "listening" for ever
+    try { rec.start(); trace('start() called'); } catch (e) { trace('start() failed: ' + e.name + ' ' + e.message); finish(false, 'Voice could not start (' + e.name + '). Please try again, or type your question.', 'start failed'); }
   });
 }
 

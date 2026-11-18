@@ -146,6 +146,26 @@ describe('voice in the page', () => {
     } finally { FakeRecognizer.iphone = false; }
   });
 
+  it('with ?debug=voice the page shows what the browser did (to find a phone problem); never without it', async () => {
+    const dom = new JSDOM(PAGE_HTML, {
+      runScripts: 'dangerously', url: 'http://localhost:8787/?debug=voice', pretendToBeVisual: true,
+      beforeParse(window) {
+        (window as any).Element.prototype.scrollIntoView = () => {};
+        (window as any).HTMLFormElement.prototype.requestSubmit = function () { this.dispatchEvent(new (window as any).Event('submit', { cancelable: true, bubbles: true })); };
+        (window as any).fetch = async (_u: string, init: any) => ({ json: async () => api(JSON.parse(init.body), 'ip').body });
+        (window as any).webkitSpeechRecognition = FakeRecognizer;
+      },
+    });
+    const doc = dom.window.document;
+    (doc.getElementById('mic') as HTMLButtonElement).click();
+    FakeRecognizer.last!.say('surah ikhlas');
+    await settle();
+    const log = doc.getElementById('voiceDebug')!;
+    expect(log.hidden).toBe(false);
+    expect(log.textContent).toMatch(/tap.*start.*result final.*finish/);
+    expect(openPage(true).doc.getElementById('voiceDebug')!.hidden).toBe(true);
+  });
+
   it('Settings says where the voice goes', () => {
     const { doc } = openPage(true);
     expect(doc.querySelector('details')!.textContent).toMatch(/speech/i);
