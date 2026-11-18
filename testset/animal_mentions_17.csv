@@ -1,0 +1,18 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,info,how many times is the cow mentioned in the quran?,,false,,answer contains: 19 ayahs,data,
+2,en,info,how often does the Quran mention the elephant?,,false,,answer contains: 1 ayah,data,
+3,en,info,how many times is the spider mentioned,,false,,answer contains: 2 times in 1 ayah,data,
+4,en,info,how many ayahs mention the camel,,false,,answer contains: 18 ayahs,data,
+5,en,info,how many verses talk about the ant,,false,,answer contains: 3 times in 1 ayah,data,
+6,en,info,how many times is the dog mentioned in surah al kahf,,false,,answer contains: in 2 ayahs,data,
+7,bn,info,কুরআনে গরুর কথা কতবার এসেছে?,,false,,answer contains: ১৯টি আয়াতে,data,
+8,bn,info,হাতির কথা কতবার আছে কুরআনে,,false,,answer contains: ১টি আয়াতে,data,
+9,bn,info,quran e kukur er kotha koybar ache,,false,,answer contains: ৩টি আয়াতে,data,
+10,ar,info,كم مرة ذكرت البقرة في القرآن,,false,,answer contains: 19 آية,data,
+11,ar,info,كم مرة ورد ذكر الفيل في القرآن,,false,,answer contains: آية واحدة,data,
+12,en,data,how many times does the word cow appear,,false,,answer contains: The word,data,
+13,en,info,how many ayahs are in surah al-baqarah,,false,,answer contains: 286,data,
+14,ar,info,كم آية في سورة البقرة,,false,,answer contains: 286,data,
+15,bn,info,মোট কয়টি?,,false,,answer contains: ২৭ প্রকার,data,how many animals are mentioned in quran?
+16,en,info,how many?,,false,,answer contains: 27 kinds,data,কুরআনে কোন কোন প্রাণীর কথা বলা হয়েছে?
+17,en,info,how many?,,false,,answer contains: has 83 ayahs,data,সূরা ইয়াসিন

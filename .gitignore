@@ -4,3 +4,5 @@ dist/
 .env.*
 .dev.vars
 *.log
+# written by npm run eval
+eval-results-*.csv

@@ -1,0 +1,6 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,info,which word was used the most times in the quran,,false,,answer contains: 2763,data,
+2,bn,info,kon shobdo beshi ache quran e,,false,,answer contains: ২৭৬৩,data,
+3,bn,info,sijdah koyta,,false,,"answer contains: ১৫, ১৪ বা ১১",data,
+4,ar,info,أكثر كلمة استعمالا في القرآن,,false,,answer contains: 2763,data,
+5,bn,info,কুরআনে সবথেকে বেশি কোন শব্দটা আছে,,false,,answer contains: ২৭৬৩,data,

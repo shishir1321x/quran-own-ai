@@ -1,0 +1,6 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,info,top 10 words in the quran,,false,,answer contains: 2763,data,
+2,en,info,which word comes most often in quran,,false,,answer contains: الله,data,
+3,bn,info,সবচেয়ে বেশি কোন শব্দ এসেছে কুরআনে,,false,,answer contains: ২৭৬৩,data,
+4,en,info,how often is the name of allah mentioned,,false,,answer contains: 2698,data,
+5,ar,info,ما أكثر الكلمات ورودا في سورة الإخلاص,,false,,answer contains: أحد,data,

@@ -1,0 +1,7 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,info,how many sajdah ayahs are in the quran,,false,,"answer contains: 15, 14 or 11",data,
+2,en,info,how many sajdas are there in the quran?,,false,,answer contains: please ask a qualified scholar,data,
+3,en,info,how many sajdah in the Quran,,false,,answer contains: 38:24,data,
+4,bn,info,কুরআনে কয়টি সিজদার আয়াত আছে?,,false,,"answer contains: ১৫, ১৪ বা ১১",data,
+5,ar,info,كم عدد آيات السجدة في القرآن,,false,,answer contains: 15 أو 14 أو 11,data,
+6,en,answer,list of sajdah ayahs,22:77,false,,answer contains: count them differently,quran,

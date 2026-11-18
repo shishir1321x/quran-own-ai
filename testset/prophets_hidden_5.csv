@@ -1,0 +1,6 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,info,how many times is prophet nuh mentioned,,false,,answer contains: 43 times,data,
+2,en,info,number of prophets in the quran,,false,,answer contains: 25 prophets,data,
+3,bn,info,কুরআনে ইউসুফ নবীর কথা কতবার এসেছে,,false,,answer contains: ২৭ বার,data,
+4,en,info,list of prophets in quran,,false,,answer contains: 25 prophets,data,
+5,en,info,how many times is harun mentioned,,false,,answer contains: 20 times,data,

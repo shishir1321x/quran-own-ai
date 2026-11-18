@@ -13,6 +13,10 @@ const SCRIPT_LETTERS: Record<Lang, RegExp> = {
 const STRONG_BANGLISH = new Set([
   // question words
   'ki', 'keno', 'kivabe', 'kibhabe', 'kothay', 'kokhon', 'koto', 'kon', 'kake', 'kemon', 'kiser',
+  // how many / how often ("quran e sijda koyta")
+  'koyta', 'koyti', 'koyto', 'kotogulo', 'kotota', 'kototi', 'koybar', 'kotobar', 'sijdar', 'sejda', 'sejdar',
+  // next / previous / more ("porer ayat", "ager ayat", "aro dekhao")
+  'porer', 'poror', 'ager', 'aager', 'aro', 'aaro', 'dekhao',
   // pronouns
   'ami', 'amar', 'amader', 'amake', 'tumi', 'tomar', 'tomader', 'apni', 'apnar', 'apnake',
   'tader', 'kono', 'kichu', 'shob', 'sob', 'shobai', 'sobai',

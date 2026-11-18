@@ -8,7 +8,7 @@
 //  - general                            : greetings and thanks are answered; general knowledge is OUT OF SCOPE
 //                                         for an engine without AI and counts as not supported
 import { readFileSync, writeFileSync } from 'node:fs';
-import { Engine } from '../src/engine.js';
+import { Engine, type HistoryTurn } from '../src/engine.js';
 
 function parseCsv(text: string): Record<string, string>[] {
   const rows: string[][] = [];
@@ -49,8 +49,14 @@ const tally: Record<string, { n: number; ok: number }> = {};
 let langOk = 0, fake = 0, ms = 0;
 
 for (const r of rows) {
+  // optional column "previous": a question asked just before, so a follow-up ("how many?") can be measured
+  const history: HistoryTurn[] = [];
+  if (r.previous) {
+    const p = engine.ask(r.previous);
+    history.push({ question: r.previous, answer: p.answer, citations: p.ayahs.map((a) => ({ surah: a.s, ayah: a.a })) });
+  }
   const t0 = performance.now();
-  const reply = engine.ask(r.question);
+  const reply = engine.ask(r.question, history);
   ms += performance.now() - t0;
   const shown = reply.ayahs.map((a) => `${a.s}:${a.a}`);
   for (const a of reply.ayahs) if (!engine.quran.get(a.s, a.a)) fake++;

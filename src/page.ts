@@ -38,6 +38,14 @@ export const PAGE_HTML = `<!doctype html>
   button.secondary { background: #fff; color: #2a6b4f; }
   button:disabled { opacity: .5; cursor: default; }
   .hint { font-size: .75rem; color: #888; margin-top: .3rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .9rem; }
+  button.chip { font-size: .85rem; padding: .3rem .8rem; border-radius: 999px; background: #eef6f1; color: #2a6b4f; border: 1px solid #b7d6c4; }
+  button.chip:hover { background: #dcefe4; }
+  button#mic { padding: .55rem .8rem; background: #fff; color: #2a6b4f; font-size: 1.1rem; line-height: 1; }
+  button#mic.listening { background: #c0392b; border-color: #c0392b; color: #fff; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .6; } }
+  select#voiceLang { font: inherit; font-size: .85rem; padding: .5rem .3rem; border-radius: 8px; border: 1px solid #bbb; background: #fff; }
+  #voiceStatus { color: #2a6b4f; min-height: 1em; }
   footer { font-size: .72rem; color: #888; padding: .5rem 0 1.5rem; }
 </style>
 </head>
@@ -50,6 +58,9 @@ for those, please ask a qualified scholar. To read an explanation, say <b>explai
 <details>
   <summary>Settings</summary>
   <p><label>Access code (if required): <input type="password" id="access" autocomplete="off"></label></p>
+  <p class="hint">Voice: the 🎤 button uses your browser's own speech recognition to turn what you say into text. In Chrome and Edge
+  the sound is sent to Google's or Microsoft's speech service for that; this assistant only receives the text. If you do not want
+  that, type your question instead. (Not every browser has speech recognition; then there is no 🎤 button.)</p>
 </details>
 
 <div id="chat"><div class="empty" id="empty">Start the conversation, e.g. "patience", "story of Yusuf", "last 2 ayat of surah baqarah", or type "help"</div></div>
@@ -57,10 +68,17 @@ for those, please ask a qualified scholar. To read an explanation, say <b>explai
 <form id="f">
   <div class="row">
     <textarea id="q" maxlength="500" rows="1" placeholder="Type your message…" required></textarea>
+    <select id="voiceLang" hidden title="The language you will speak" aria-label="The language you will speak">
+      <option value="en-US">English</option>
+      <option value="bn-BD">বাংলা</option>
+      <option value="ar-SA">العربية</option>
+    </select>
+    <button type="button" id="mic" hidden title="Speak your question" aria-label="Speak your question" aria-pressed="false">🎤</button>
     <button type="submit" id="btn">Send</button>
     <button type="button" id="newChat" class="secondary" title="Forget this conversation">New chat</button>
   </div>
   <div class="hint">Enter to send, Shift+Enter for a new line.</div>
+  <div class="hint" id="voiceStatus" aria-live="polite"></div>
 </form>
 
 <footer id="credits">Arabic text: Tanzil Project (CC BY 3.0). English: Saheeh International. Bengali: Dr. Abu Bakr Muhammad Zakaria. Translations via QuranEnc.com.</footer>
@@ -97,6 +115,57 @@ $('newChat').addEventListener('click', () => {
   $('chat').replaceChildren(el('div', 'empty', 'New chat started. Ask anything about the Quran.', { id: 'empty' }));
   $('q').focus();
 });
+
+// Voice: the browser's own speech recognition turns speech into text (Chrome and Edge use their makers' online speech
+// service for it). This server only ever receives the text, exactly as if it had been typed. No key, no AI on the server.
+const Recognizer = window.SpeechRecognition || window.webkitSpeechRecognition;
+let listening = null;
+if (Recognizer) {
+  $('mic').hidden = false;
+  $('voiceLang').hidden = false;
+  let saved = null;
+  try { saved = localStorage.getItem('voiceLang'); } catch (e) { /* storage blocked: fine */ }
+  const nav = (navigator.language || '').toLowerCase();
+  $('voiceLang').value = saved || (nav.startsWith('bn') ? 'bn-BD' : nav.startsWith('ar') ? 'ar-SA' : 'en-US');
+  $('voiceLang').addEventListener('change', () => { try { localStorage.setItem('voiceLang', $('voiceLang').value); } catch (e) { /* fine */ } });
+  $('mic').addEventListener('click', () => {
+    if (listening) { listening.stop(); return; }          // a second tap stops listening
+    const rec = new Recognizer();
+    rec.lang = $('voiceLang').value;
+    rec.interimResults = true;                             // the words appear in the box while you speak
+    rec.continuous = false;                                // one question, then it stops by itself
+    rec.maxAlternatives = 1;
+    let heard = '', done = false, failed = false;
+    rec.onresult = (ev) => {
+      heard = '';
+      for (let i = 0; i < ev.results.length; i++) {
+        heard += ev.results[i][0].transcript;
+        if (ev.results[i].isFinal) done = true;
+      }
+      $('q').value = heard;
+    };
+    rec.onerror = (ev) => {
+      failed = true;
+      $('voiceStatus').textContent = ev.error === 'not-allowed' || ev.error === 'service-not-allowed'
+        ? 'The microphone is not allowed. Allow it for this page in the browser, or type your question.'
+        : ev.error === 'no-speech' ? 'I did not hear anything. Tap 🎤 and speak again.'
+        : 'Voice did not work this time. Please try again, or type your question.';
+    };
+    rec.onend = () => {
+      listening = null;
+      $('mic').classList.remove('listening');
+      $('mic').setAttribute('aria-pressed', 'false');
+      if (failed) return;
+      $('voiceStatus').textContent = '';
+      if (done && heard.trim()) $('f').requestSubmit();   // send what was said, like Enter
+    };
+    listening = rec;
+    $('mic').classList.add('listening');
+    $('mic').setAttribute('aria-pressed', 'true');
+    $('voiceStatus').textContent = 'Listening… speak now. Tap 🎤 again to stop.';
+    try { rec.start(); } catch (e) { listening = null; $('mic').classList.remove('listening'); $('voiceStatus').textContent = 'Voice could not start. Please type your question.'; }
+  });
+}
 
 $('f').addEventListener('submit', async (ev) => {
   ev.preventDefault();
@@ -151,6 +220,20 @@ function render(r) {
       d.append(det);
     }
     box.append(d);
+  }
+  // what to ask next: a tap puts the question in the box and sends it (text only, never HTML)
+  if (r.suggestions && r.suggestions.length) {
+    const chips = el('div', 'chips');
+    for (const s of r.suggestions) {
+      const b = el('button', 'chip', s, { type: 'button', dir: 'auto' });
+      b.addEventListener('click', () => {
+        if ($('btn').disabled) return;
+        $('q').value = s;
+        $('f').requestSubmit();
+      });
+      chips.append(b);
+    }
+    box.append(chips);
   }
   return box;
 }

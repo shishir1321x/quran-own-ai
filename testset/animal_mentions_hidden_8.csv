@@ -1,0 +1,9 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,info,how many times is the hoopoe mentioned?,,false,,answer contains: 1 ayah,data,
+2,en,info,how often are horses mentioned in the quran,,false,,answer contains: 6 ayahs,data,
+3,en,info,how many verses mention the wolf,,false,,answer contains: 3 ayahs,data,
+4,bn,info,কুরআনে উটের কথা কতবার বলা হয়েছে?,,false,,answer contains: ১৮টি আয়াতে,data,
+5,ar,info,كم مرة ذكر الكلب في القرآن,,false,,answer contains: 3 آيات,data,
+6,en,info,how many times are the bees mentioned in surah an-nahl,,false,,answer contains: 1 ayah,data,
+7,bn,info,সংখ্যা কত?,,false,,answer contains: ২৭ প্রকার,data,list of animals in quran
+8,en,data,how many times does the word camel appear,,false,,answer contains: The word,data,

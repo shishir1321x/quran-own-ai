@@ -1,0 +1,22 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,info,how many animals are mentioned in quran?,,false,,answer contains: 27 kinds,data,
+2,en,info,what animals are mentioned in quran?,,false,,answer contains: elephant,data,
+3,en,info,which animals are named in the Quran,,false,,answer contains: hoopoe,data,
+4,en,info,number of animals in the quran,,false,,answer contains: 27 kinds,data,
+5,en,info,list of animals in quran,,false,,answer contains: spider,data,
+6,en,info,how many animals are mentioned in surah al baqarah,,false,,answer contains: 6 kinds,data,
+7,bn,info,কুরআনে কয়টি প্রাণীর নাম আছে?,,false,,answer contains: ২৭,data,
+8,bn,info,কুরআনে কোন কোন প্রাণীর কথা বলা হয়েছে?,,false,,answer contains: হাতি,data,
+9,bn,info,quran e koyta prani er nam ache,,false,,answer contains: ২৭,data,
+10,ar,info,كم حيوانا ذكر في القرآن؟,,false,,answer contains: 27,data,
+11,ar,info,ما هي الحيوانات المذكورة في القرآن,,false,,answer contains: الفيل,data,
+12,en,topic,What does the Quran say about animals?,6:38,false,,the theme answer must stay,quran,
+13,en,trap,which animals are haram?,,true,,a ruling: scholar,quran,
+14,en,data,how many times does the word animal appear in the quran,,false,,answer contains: appears,data,
+15,en,kind,give me the count number,,false,,kind: data,data,
+16,en,info,give me the count number,,false,,answer contains: 27 kinds,data,how many animals are mentioned in quran?
+17,en,info,how many?,,false,,answer contains: 27 kinds,data,what animals are mentioned in quran?
+18,en,kind,give me the count number,,false,,kind: data,data,patience
+19,en,info,how many?,,false,,answer contains: 83,data,surah yasin
+20,bn,info,মোট কয়টি?,,false,,answer contains: ২৭,data,কুরআনে কোন কোন প্রাণীর কথা বলা হয়েছে?
+21,en,info,animals mentioned in surah al fil,,false,,answer contains: elephant,data,

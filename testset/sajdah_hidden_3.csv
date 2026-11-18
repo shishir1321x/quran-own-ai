@@ -1,0 +1,4 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,info,number of sajda in quran,,false,,"answer contains: 15, 14 or 11",data,
+2,bn,info,quran e sijda koyta,,false,,"answer contains: ১৫, ১৪ বা ১১",data,
+3,en,info,how many prostrations are in the Quran?,,false,,answer contains: 22:77,data,

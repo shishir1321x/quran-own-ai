@@ -1,0 +1,6 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,exact,more please,78:11-20,false,,continue the para,quran,para 30
+2,bn,exact,porer ayat,2:256,false,,the ayah after,quran,2:255
+3,en,info,and in surah yusuf?,,false,,answer contains: of Surah Yusuf,data,how many times is yaqub mentioned
+4,en,translation,in english,112:1-4,false,,translation: en,quran,সূরা ইখলাস
+5,en,info,what about surah an-naml,,false,,answer contains: Naml,data,which animals are mentioned in surah al baqarah

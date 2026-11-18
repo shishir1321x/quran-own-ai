@@ -1,0 +1,13 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,bn,info,কোন শব্দটি বেশি ব্যবহার হয়েছে?,,false,,answer contains: ২৭৬৩,data,
+2,en,info,which word is used mostly in quran?,,false,,answer contains: 2763,data,
+3,bn,info,quran e kototi sijhda ache?,,false,,"answer contains: ১৫, ১৪ বা ১১",data,
+4,en,info,which word occurs most frequently in the quran,,false,,answer contains: 2763,data,
+5,en,info,most repeated word in quran,,false,,answer contains: 2763,data,
+6,bn,info,কুরআনে সর্বাধিক ব্যবহৃত শব্দ কোনটি,,false,,answer contains: ২৭৬৩,data,
+7,bn,info,kon shobdo sobcheye beshi bebohar hoyeche,,false,,answer contains: ২৭৬৩,data,
+8,ar,info,ما الكلمة الأكثر استخداما في القرآن,,false,,answer contains: 2763,data,
+9,bn,info,quran e sejdah koyti,,false,,"answer contains: ১৫, ১৪ বা ১১",data,
+10,en,info,how many sujood are in the quran,,false,,"answer contains: 15, 14 or 11",data,
+11,bn,info,কুরআনে কতটি সেজদা আছে,,false,,"answer contains: ১৫, ১৪ বা ১১",data,
+12,en,info,how many words are in the quran,,false,,answer contains: 77800,data,

@@ -15,7 +15,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "eval": "tsx scripts/eval.ts",
-    "check-themes": "tsx scripts/check-themes.ts"
+    "check-themes": "tsx scripts/check-themes.ts",
+    "check-wording": "tsx scripts/check-wording.ts"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",

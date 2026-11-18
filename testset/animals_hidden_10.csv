@@ -1,0 +1,11 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,info,Which animals does the Quran mention?,,false,,answer contains: 27 kinds,data,
+2,en,info,how many different animals are there in the quran,,false,,answer contains: 27 kinds,data,
+3,en,info,name all the animals in quran,,false,,answer contains: camel,data,
+4,bn,info,কোরআনে উল্লেখিত প্রাণীগুলোর নাম কী?,,false,,answer contains: উট,data,
+5,bn,info,quran e kon kon poshu pakhir kotha ache,,false,,answer contains: ২৭,data,
+6,ar,info,اذكر أسماء الحيوانات في القرآن,,false,,answer contains: 27,data,
+7,en,info,which animals are mentioned in surah an-nahl,,false,,answer contains: bee,data,
+8,en,info,total number?,,false,,answer contains: 27 kinds,data,list of animals in quran
+9,en,kind,how many?,,false,,kind: data,data,Ayat al-Kursi
+10,en,kind,how many?,,false,,kind: data,data,

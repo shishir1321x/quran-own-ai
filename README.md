@@ -23,10 +23,31 @@ The first step that applies answers:
 2. **Small talk and limits**: thanks, wishes (*Eid Mubarak*), greetings, "who are you / who made you / are you AI",
    **help** (what can I ask), "this answer is wrong" (feedback), and what it **cannot do** here: audio, prayer times,
    the qibla direction, dates of Eid, a zakat calculator (it says so instead of guessing).
+   **Talking to the assistant itself** (*what is your name?*, *are you a muslim?*, *you are very helpful*, *tell me a joke*,
+   in English, Banglish, Bengali and Arabic): a short answer that leads back to the Quran, never ayahs picked by its words.
+   Only when the message has nothing about the Quran in it, and never for the words of an ayah (*you are the best nation*).
 3. **Numbers and facts** (`src/stats.ts`, computed from the data, with the line they came from): ayahs in a surah or
    a juz, longest/shortest surah, the longest ayah, Meccan/Medinan counts and **lists**, the list of surah names, the
    surah before or after another, how many juz, pages, hizb, sajdah ayahs, words, how often a word appears, and facts
    about one surah (Meccan or Medinan, which para it begins in, what its name means).
+   **Animals** (`src/animals.ts`): *how many / which animals are mentioned* (27 kinds, also for one surah) and *how many
+   times is the cow mentioned* (times and ayahs, with the first ayahs). An ayah counts for an animal only if the name is in
+   the Arabic text AND in the English translation of the same ayah, so ابل in "Iblis" or حمر ("red") are not counted.
+   The list of kinds is chosen by hand: have it checked (`npm run check-themes animals`).
+   **Prophets** (`src/prophets.ts`): *which / how many prophets are mentioned* (the 25 named, with 40:78: not every messenger
+   is named) and *how many times is Musa mentioned* (136; Ibrahim 69, Nuh 43, Isa 25 ...), by the same Arabic-AND-English
+   rule as the animals, so صالح "righteous", هود "Jews" or يحيي "gives life" are not counted. The list of names is hand-made.
+   **Follow-ups** that continue the chat: *show more* (the next ayahs, or ayahs not shown yet for a topic), *next / previous
+   ayah*, *next surah*, *in English / বাংলায় / only Arabic* (the same ayahs), *what about surah Kahf / the camel / Musa?* (the
+   same count again). **Suggestions** under each answer (2 or 3 tappable next questions, in the chat language); a test asks
+   every one of them after sample questions and checks it gets a real answer.
+   **The most used words** (`src/wordfreq.ts`): *what is the most used word* (in the Quran or one surah), counted in the
+   Arabic text word by word as written: من 2763 times; without small words (particles, pronouns) الله 2153, or 2698 with a
+   letter joined in front (والله, بالله, لله ...). *How many times is Allah mentioned* is counted in the Arabic text (2698),
+   not in the translation (which adds "Allah" in [brackets] too).
+   **A number as a follow-up** ("how many?", "give me the count number", "মোট কয়টি?"): the count for the question before
+   (a count or list again, or the ayahs of a surah or para), answered in the follow-up's language; if there is nothing to
+   count it says what it can count (it never searches the text for the word "count").
 4. **The ayah of the day**, **references and famous passages**: `2:255`, *Ayat al-Kursi* (any spelling), *Amana
    ar-Rasul*, *Ayat-e-Karima*, *Bismillah*, *teen qul*, a **page** of the mushaf, a **juz (para)** (*para 3*, *Amma para*).
 5. **A surah, by name or number, or a part of it**: *surah 36*, *last 2 ayat of surah baqarah*, *ayat 1 to 5 of surah alaq*.
@@ -47,10 +68,19 @@ The first step that applies answers:
 After that, the answer can be changed by what the person asked: **"in Bengali", "in English", "only Arabic"** choose the
 translation, and a request for a transliteration is answered with the ayahs and a note that it is not available.
 
+**Voice** (the 🎤 button in the page, `src/page.ts`): the browser's own speech recognition (Web Speech API) turns speech into
+text in the language picked next to it (English, বাংলা, العربية); the question is sent when you stop speaking. The server
+only receives text, as if typed: no key, no AI on the server. But Chrome and Edge send the sound to Google's or Microsoft's
+speech service to do this: the page says so in Settings, and it should be agreed with the supervisor. Firefox has no
+speech recognition (no 🎤 button there). It needs HTTPS or localhost. Tested with a stand-in recognizer (`test/voice.test.ts`);
+a real microphone has to be tried by hand. "chapter 2 verse 255", as speech-to-text often writes it, is 2:255.
+
 There is no step that writes free text. Every sentence is in `src/templates.ts`.
 
 **Checking the lists:** `npm run check-themes` prints the English text of every ayah in every theme, story and
-"something from the Quran" list, so a reader can check each one against its theme.
+"something from the Quran" list, and every ayah counted for each animal, so a reader can check each one against its theme.
+**Checking the wording:** `npm run check-wording` prints every sentence of the animal answers in English, Bengali and
+Arabic side by side (with every Arabic number form), for a native reader.
 
 ## Run it on your computer
 
@@ -58,7 +88,7 @@ Node.js 20 or newer.
 
 ```
 npm install
-npm test            # 504 tests (including the page run in a fake browser)
+npm test            # 575 tests (including the page run in a fake browser)
 npm run build
 npm start           # http://localhost:8787
 ```
@@ -114,6 +144,22 @@ Nine sets (`testset/`), questions of many kinds. The answers were decided before
 | `hidden_30.csv` (written together with the 75, **never run until the work was finished**) | **28/30 (93%)** | 30/30 |
 | `explain_20.csv` (explain an ayah: the translators' notes) | **4/20 (20%)** | 20/20 |
 | `explain_hidden_12.csv` (never run until the feature was finished; **close in style to the 20**, so it shows less than it seems) | **12/12** | 12/12 |
+| `animals_21.csv` (how many / which animals, count follow-ups; written before the code) | **3/21 (14%)** | 21/21 |
+| `animals_hidden_10.csv` (never run until the feature was finished; same author and style) | **10/10** | 10/10 |
+| `animal_mentions_17.csv` (how many times one animal is named; a follow-up in another language) | **7/17 (41%)**, 3 of the 7 by coincidence | 17/17 |
+| `animal_mentions_hidden_8.csv` (never run until the feature was finished; same author and style) | **8/8** | 8/8 |
+| `sajdah_6.csv` (how many sajdah ayahs, and why scholars count 15, 14 or 11) | **1/6 (17%)**, the 1 only because the ayah is in the data line | 6/6 |
+| `sajdah_hidden_3.csv` (never run until the change was finished) | **2/3**: "quran e sijda koyta" was answered in English | 3/3 after adding the Banglish counting words |
+| `word_frequency_15.csv` (the most used word; how many times Allah is mentioned; 3 rows that must not change) | **3/15 (20%)**, only the 3 that must not change | 15/15 |
+| `word_frequency_hidden_5.csv` (never run until the feature was finished; same author and style) | **5/5** | 5/5 |
+| `phrasing_12.csv` (other ways to ask: "বেশি", "mostly", "kototi", "sijhda", "sujood" ...) | **7/12 (58%)** | 12/12 |
+| `phrasing_hidden_5.csv` (never run until the change was finished; same author and style) | **5/5** | 5/5 |
+| `chat_18.csv` (questions to the assistant itself; 5 Quran questions with "you" that must not change) | **6/18 (33%)** | 18/18 |
+| `chat_hidden_6.csv` (never run until the change was finished; same author and style) | **6/6** | 6/6 |
+| `prophets_15.csv` (which prophets, how many times one is named) | **2/15 (13%)**, only the 2 that must not change; "musa" gave 0 | 15/15 |
+| `prophets_hidden_5.csv` (never run until the feature was finished; same author and style) | **5/5** | 5/5 |
+| `followups_16.csv` (show more, next/previous ayah, next surah, in English, what about ...) | **3/16 (19%)** | 16/16 |
+| `followups_hidden_5.csv` (never run until the feature was finished; same author and style) | **5/5** (one answered in English to Banglish) | 5/5 |
 
 Only the **first-run numbers are honest estimates**: after a first run I fixed what I saw and ran again, so the last
 column is optimistic. For `normal_users_75` the 24% is only the "before" picture (the features were built to pass it);
