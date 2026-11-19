@@ -1,0 +1,6 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,kind,what's this website about,,false,,kind: about,general,
+2,en,kind,tell me about yourself,,false,,kind: about,general,
+3,en,kind,privacy policy,,false,,kind: terms,general,
+4,en,kind,do you save my data,,false,,kind: terms,general,
+5,bn,kind,এটা কিসের অ্যাপ?,,false,,kind: about,general,

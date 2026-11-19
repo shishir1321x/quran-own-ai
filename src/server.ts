@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 import { makeApi } from './api.js';
 import { Engine } from './engine.js';
 import { PAGE_HTML } from './page.js';
+import { TERMS_HTML } from './terms.js';
 
 const MAX_BODY_BYTES = 10_000;
 
@@ -37,6 +38,9 @@ export function createApp(env: { ACCESS_CODE?: string; RATE_LIMIT?: string } = {
       if (req.method === 'GET' && path === '/') {
         res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff' });
         res.end(PAGE_HTML);
+      } else if (req.method === 'GET' && path === '/terms') {
+        res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'x-content-type-options': 'nosniff' });
+        res.end(TERMS_HTML);
       } else if (req.method === 'GET' && path === '/health') {
         res.writeHead(200, { 'content-type': 'text/plain' });
         res.end('ok');

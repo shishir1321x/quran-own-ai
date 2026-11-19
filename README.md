@@ -75,6 +75,12 @@ speech service to do this: the page says so in Settings, and it should be agreed
 speech recognition (no 🎤 button there). It needs HTTPS or localhost. Tested with a stand-in recognizer (`test/voice.test.ts`);
 a real microphone has to be tried by hand. "chapter 2 verse 255", as speech-to-text often writes it, is 2:255.
 
+**Terms & privacy** (`/terms`, `src/terms.ts`): a plain-language page ("At a glance", then numbered sections) written for what
+this assistant really does: not a religious authority, no question text saved, what the log keeps, voice, sources and licences.
+"What is this chatbot about?" (also *tumi k?*, *এটা কী?*, *ما هذا*) gets a specific answer with examples and a link to it;
+"what are your terms?" / "do you store my questions?" get the short version. `test/terms.test.ts` checks the page's promises
+against the code. Change the page when the assistant changes.
+
 There is no step that writes free text. Every sentence is in `src/templates.ts`.
 
 **Checking the lists:** `npm run check-themes` prints the English text of every ayah in every theme, story and
@@ -88,7 +94,7 @@ Node.js 20 or newer.
 
 ```
 npm install
-npm test            # 584 tests (including the page run in a fake browser)
+npm test            # 595 tests (including the page run in a fake browser)
 npm run build
 npm start           # http://localhost:8787
 ```
@@ -160,6 +166,8 @@ Nine sets (`testset/`), questions of many kinds. The answers were decided before
 | `prophets_hidden_5.csv` (never run until the feature was finished; same author and style) | **5/5** | 5/5 |
 | `followups_16.csv` (show more, next/previous ayah, next surah, in English, what about ...) | **3/16 (19%)** | 16/16 |
 | `followups_hidden_5.csv` (never run until the feature was finished; same author and style) | **5/5** (one answered in English to Banglish) | 5/5 |
+| `about_terms_15.csv` (what is this chatbot about; terms and privacy questions) | **2/15 (13%)**, only the 2 that must not change | 15/15 |
+| `about_terms_hidden_5.csv` (never run until the change was finished; same author and style) | **5/5** | 5/5 |
 
 Only the **first-run numbers are honest estimates**: after a first run I fixed what I saw and ran again, so the last
 column is optimistic. For `normal_users_75` the 24% is only the "before" picture (the features were built to pass it);

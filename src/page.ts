@@ -48,6 +48,8 @@ export const PAGE_HTML = `<!doctype html>
   button:disabled { opacity: .5; cursor: default; }
   .hint { font-size: .75rem; color: #888; margin-top: .3rem; }
   .chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .9rem; }
+  .linkline { margin-top: .7rem; }
+  a.answer-link, footer a { color: #2a6b4f; }
   button.chip { font-size: .85rem; padding: .3rem .8rem; border-radius: 999px; background: #eef6f1; color: #2a6b4f; border: 1px solid #b7d6c4; }
   button.chip:hover { background: #dcefe4; }
   button#mic { width: 2.5rem; height: 2.5rem; padding: 0; border-radius: 50%; border: none; background: transparent; color: #2a6b4f; font-size: 1.25rem; line-height: 1; flex: none; }
@@ -105,7 +107,7 @@ for those, please ask a qualified scholar. To read an explanation, say <b>explai
   <div class="hint" id="voiceDebug" hidden></div>
 </form>
 
-<footer id="credits">Arabic text: Tanzil Project (CC BY 3.0). English: Saheeh International. Bengali: Dr. Abu Bakr Muhammad Zakaria. Translations via QuranEnc.com.</footer>
+<footer id="credits">Arabic text: Tanzil Project (CC BY 3.0). English: Saheeh International. Bengali: Dr. Abu Bakr Muhammad Zakaria. Translations via QuranEnc.com. · <a href="/terms">Terms &amp; privacy</a></footer>
 
 <script>
 const $ = (id) => document.getElementById(id);
@@ -287,6 +289,12 @@ function render(r) {
       d.append(det);
     }
     box.append(d);
+  }
+  // a page of this site that comes with the answer (the Terms page): only a path on this site, never another address
+  if (r.link && typeof r.link.href === 'string' && r.link.href.charAt(0) === '/' && r.link.href.charAt(1) !== '/') {
+    const line = el('div', 'linkline');
+    line.append(el('a', 'answer-link', r.link.label, { href: r.link.href }));
+    box.append(line);
   }
   // what to ask next: a tap puts the question in the box and sends it (text only, never HTML)
   if (r.suggestions && r.suggestions.length) {

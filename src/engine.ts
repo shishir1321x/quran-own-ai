@@ -23,7 +23,7 @@ import { detectLanguage } from './language.js';
 export type Kind =
   | 'greeting' | 'thanks' | 'about' | 'scholar' | 'refusal' | 'crisis'
   | 'theme' | 'surah' | 'ref' | 'juz' | 'story' | 'explain' | 'search' | 'noTopic' | 'followup' | 'data' | 'help' | 'unsupported' | 'feedback' | 'notFound'
-  | 'chat';
+  | 'chat' | 'terms';
 
 export interface Reply {
   kind: Kind;
@@ -41,6 +41,8 @@ export interface Reply {
   rawTranslation?: boolean;
   /** Tappable next questions, in the language of the reply (every one is a question this engine answers). */
   suggestions?: string[];
+  /** A page of this site to open (the Terms page, for "what is this?" and "what are your terms?"). */
+  link?: { href: string; label: string };
 }
 export interface HistoryTurn { question: string; answer: string; citations: Array<{ surah: number; ayah: number }> }
 
@@ -94,6 +96,11 @@ const UNSUPPORTED: RegExp[] = [
   /\b(?:download|pdf|mp4|wallpaper|app store|play store)\b/i,
 ];
 const FEEDBACK = /\b(?:this|that|your|the|it|answer)\b.{0,25}\b(?:wrong|incorrect|not correct|not right|bad|useless)\b|\byou(?:'re| are)\s+(?:wrong|incorrect|useless|stupid)\b|\b(?:wrong|incorrect) answer\b|ভুল (?:উত্তর|বলছ|বলছেন|বললে)|উত্তর(?:টা)? ভুল|ঠিক (?:না|নয়|হয়নি|হয় নি)|তুমি ভুল|আপনি ভুল|هذا (?:خطأ|غلط)|إجابة خاطئة/i;
+// "what is this chatbot about?", "what's this?", "tell me about yourself", "tumi k?", "eta ki", "এটা কী?", "এই চ্যাটবটটি কী নিয়ে?"
+const ABOUT_MORE = /^\s*(?:what(?:'s|\s+is)|whats|wats)\s+(?:this|that)(?:\s+(?:chat\s*bot|chatbot|bot|app|application|assistant|site|website|web\s*site|page|tool|thing))?(?:\s+(?:about|for|all\s+about))?\s*[?!.]*$|^\s*(?:tell\s+me\s+)?about\s+(?:this|the)\s+(?:chat\s*bot|chatbot|bot|app|assistant|site|website)\b|\btell\s+me\s+about\s+(?:yourself|this\s+(?:chat\s*bot|chatbot|bot|app|assistant|site|website))\b|\bwhat\s+is\s+(?:the\s+)?quran\s+assistant\b|^\s*(?:tumi|apni|tui)\s+(?:k|ke)\s*[?!.]*$|^\s*(?:eta|eita|eti)\s+(?:ki|kisher|kiser)(?:\s+(?:app|chatbot|bot))?\s*[?!.]*$|(?:এটা|এটি|এই\s*(?:চ্যাটবট|চ্যাটবটটি|অ্যাপ|অ্যাপটি|সাইট|ওয়েবসাইট))\s*(?:কী|কি|কিসের|কীসের)|(?:চ্যাটবটটি|চ্যাটবট|অ্যাপটি)\s*(?:কী|কি)\s*(?:নিয়ে|সম্পর্কে)|^\s*(?:তুমি|আপনি)\s*(?:কে)\s*[?!।]*$|ما\s*هذا|ما\s*هذه|عن\s*ماذا\s*(?:هذا|هذه)/i;
+// "what are your terms?", "privacy policy", "do you store my questions?", "তোমার শর্তাবলী কী?", "الشروط"
+const TERMS_Q = /\bterms\s*(?:and|&)\s*conditions?\b|\bterms\s+of\s+(?:use|service)\b|^\s*(?:the\s+|your\s+)?terms\s*[?!.]*$|\b(?:your|ur|the\s+app'?s?|this\s+(?:app|bot|chatbot|site)'?s?)\s+terms\b|\bprivacy(?:\s+policy)?\b|\bdisclaimer\b|\b(?:do|will|did|does)\s+(?:you|u|this\s+(?:app|bot|chatbot|site))\s+(?:store|save|keep|record|log|collect|share|sell|track)\b|\b(?:is|are)\s+my\s+(?:data|questions?|chats?|messages?|voice|information|info)\s+(?:safe|private|saved|stored|recorded)\b|(?:তোমার|আপনার|এই\s*\S+|ব্যবহারের)\s*শর্তাবলী|গোপনীয়তা|প্রাইভেসি|আমার\s*(?:প্রশ্ন|তথ্য|ডেটা).{0,20}(?:সংরক্ষণ|রাখ|সেভ|জমা)|الشروط|الخصوصيه|الخصوصية|بياناتي/i;
+
 // Talking to the assistant itself. Never used when the question has anything about the Quran in it (QURAN_WORD):
 // "whenever I ask something from the Quran, it should answer from the Quran".
 const QURAN_WORD = /\b(?:quran|koran|qur'?an|quraan|ayahs?|ayats?|ayat|verses?|surahs?|suras?|allah|god|lord|prophets?|nabi|rasul|messenger|dua|tafsir|juz|para)\b|কুরআন|কোরআন|আয়াত|সূরা|আল্লাহ|নবী|রাসূল|দোয়া|قران|القران|ايه|سوره|الله|النبي|دعاء/i;
@@ -496,7 +503,13 @@ export class Engine {
     // 2. small talk and things this assistant cannot do (short messages only, so a real question is never taken for them)
     if (words <= 5 && THANKS.test(lower)) return this.reply('thanks', 'general', lang, MSG.thanks[lang]);
     if (words <= 5 && WISHES.test(lower)) return this.reply('greeting', 'general', lang, MSG.wishes[lang]);
-    if (words <= 6 && ABOUT.test(lower)) return this.reply('about', 'general', lang, MSG.about[lang]);
+    // what this assistant is, and its terms: a specific answer and a link to the Terms page (never when the Quran is asked about)
+    const termsLink = { href: '/terms', label: MSG.termsLink[lang] };
+    const aboutQuran = QURAN_WORD.test(`${lower} ${normAr(text)}`);
+    if ((words <= 6 && ABOUT.test(lower)) || (words <= 8 && !aboutQuran && ABOUT_MORE.test(lower))) {
+      return this.reply('about', 'general', lang, MSG.about[lang], { link: termsLink });
+    }
+    if (words <= 12 && !aboutQuran && TERMS_Q.test(lower)) return this.reply('terms', 'general', lang, MSG.termsShort[lang], { link: termsLink });
     if (words <= 9 && HELP.test(lower)) return this.reply('help', 'general', lang, MSG.help[lang]);
     if (words <= 8 && FEEDBACK.test(lower)) return this.reply('feedback', 'general', lang, MSG.feedback[lang]);
     if (anyMatch(UNSUPPORTED, lower)) return this.reply('unsupported', 'general', lang, MSG.cannotDo[lang]);
