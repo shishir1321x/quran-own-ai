@@ -137,6 +137,9 @@ const HIZB = /\bhow many hizb\b|কয়টি হিযব|কয়টি হ
 const WORDS_IN_QURAN = /\bhow many\s+(?:words|letters)\b|কয়টি শব্দ|কত শব্দ|কয়টি হরফ|كم كلمة|كم حرف/i;
 // "explain 2:255", "tafsir of Ayat al-Kursi", "আয়াতুল কুরসির ব্যাখ্যা": show the translator's notes for the ayah.
 const EXPLAIN = /\b(explain|explanation|explaining|elaborate|interpret|interpretation|commentary|tafsir|tafseer|tafsier|tafsiir)\b|ব্যাখ্যা|তাফসীর|তাফসির|শরহ|شرح|تفسير|توضيح/gi;
+// "which surah talks about ...?", "kon surah te ...", "কোন সূরায় ...", "في أي سورة ...": the answer also names the surahs
+const WHICH_SURAH = /\b(?:which|what)\s+(?:surahs?|suras?|chapters?)\b|\bin\s+which\s+(?:surahs?|suras?)\b|\bkon\s+(?:kon\s+)?(?:surah|sura|surat|shura)\w*|কোন\s*(?:কোন\s*)?(?:সূরা|সুরা)|(?:أي|اي)\s*(?:سورة|سوره)|ما\s*(?:السورة|السوره)/i;
+
 // "what does this mean?", "what do these mean?": about the ayahs just shown, answered like "explain these" (the notes)
 const MEANING_BACK = /^\s*what\s+(?:does|do|is|are)\s+(?:this|that|it|these|those)(?:\s+(?:ayah|ayat|verse|ayahs|verses|one|ones))?\s+means?\s*[?!.]*$|^\s*what\s+(?:is|are)\s+the\s+meanings?\s+of\s+(?:this|that|it|these|those)(?:\s+(?:ayah|ayat|verse|ayahs|verses))?\s*[?!.]*$/i;
 // Words of "explain these / this / it" that only point back to what was shown (no target of their own)
@@ -463,6 +466,15 @@ export class Engine {
         else if (en >= 0) r.translation = 'en';
       }
       if (TRANSLIT.test(lower)) r.answer += ' ' + MSG.noTranslit[r.lang];
+      // "which surah talks about sacrifice?": name the surahs of the ayahs shown (in the order they are shown)
+      if (['theme', 'search', 'story'].includes(r.kind) && WHICH_SURAH.test(`${lower} ${normAr(question)}`)) {
+        const bySurah = new Map<number, number[]>();
+        for (const { s, a } of r.ayahs) bySurah.set(s, [...(bySurah.get(s) ?? []), a]);
+        const parts = (join: string, name: (s: number) => string) =>
+          [...bySurah.entries()].map(([s, as]) => `${name(s)} (${as.map((a) => `${s}:${a}`).join(join)})`).join(join);
+        const c = (s: number) => this.quran.chapters[s - 1];
+        r.answer += MSG.inSurahs(parts(', ', (s) => `Surah ${c(s).tr}`), parts(', ', (s) => `সূরা ${c(s).tr}`), parts('، ', (s) => `سورة ${c(s).ar}`))[r.lang];
+      }
     }
     r.suggestions = this.suggest(r, question);
     return r;

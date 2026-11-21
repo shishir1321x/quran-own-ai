@@ -15,6 +15,13 @@ export const MORE_THEMES: Theme[] = [
     words: ['friend', 'friends', 'friendship', 'brotherhood', 'brotherly', 'unity', 'united', 'বন্ধু', 'বন্ধুত্ব', 'ভ্রাতৃত্ব', 'ঐক্য', 'صديق', 'أخوة'] },
   { id: 'the environment', ayahs: [[30, 41], [7, 56], [6, 141], [28, 77]],
     words: ['environment', 'pollution', 'nature', 'ecology', 'trees', 'plants', 'পরিবেশ', 'প্রকৃতি', 'বৃক্ষ', 'بيئة'] },
+  // Qurbani: the command (108:2), the rite for every nation (22:34), the animals as symbols (22:36), "their meat will not
+  // reach Allah ... but piety" (22:37), and Ibrahim's great sacrifice (37:107). NOT 5:3 and 5:90, whose English also says
+  // "sacrificed": they forbid animals sacrificed to idols. Chosen by hand: to be checked like the other themes.
+  { id: 'sacrifice (qurbani)', ayahs: [[108, 2], [22, 34], [22, 36], [22, 37], [37, 107]],
+    words: ['sacrifice', 'sacrifices', 'sacrificial', 'sacrificing', 'sacrificed', 'qurbani', 'kurbani', 'korbani', 'qorbani', 'qurbany', 'kurbany',
+      'udhiyah', 'udhiya', 'udhia', 'udhiyyah', 'adha', 'azha', 'কুরবানি', 'কুরবানী', 'কোরবানি', 'কোরবানী', 'আযহা', 'আজহা',
+      'قربان', 'القربان', 'أضحية', 'الأضحية', 'اضحية', 'الاضحية', 'الأضاحي', 'نحر'] },
   { id: 'animals', ayahs: [[6, 38], [16, 5], [16, 68], [24, 41], [16, 69]],
     words: ['animal', 'animals', 'cattle', 'bird', 'birds', 'bee', 'bees', 'পশু', 'পাখি', 'মৌমাছি', 'حيوان', 'حيوانات'] },
   { id: 'business and trade', ayahs: [[4, 29], [2, 275], [2, 282], [62, 10]],

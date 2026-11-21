@@ -1,0 +1,6 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,bn,topic,qurbani niye ayat,108:2;22:34;22:36;22:37;37:107,false,,,quran,
+2,bn,topic,কুরবানী,108:2;22:34;22:36;22:37;37:107,false,,,quran,
+3,en,answer,which surah mentions qurbani,108:2;22:34;22:36;22:37;37:107,false,,answer contains: These ayahs are in,quran,
+4,bn,topic,eid ul adha niye ayat,108:2;22:34;22:36;22:37;37:107,false,,,quran,
+5,bn,answer,kon surah te namaz er kotha ache,29:45,false,,answer contains: Taa-Haa,quran,

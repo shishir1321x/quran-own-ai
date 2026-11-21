@@ -70,6 +70,10 @@ The first step that applies answers:
    family*). A spelling mistake in an English word is corrected first, but only if it looks like a typing mistake.
 10. **"Something from the Quran"** with no topic: three well-known ayahs.
 11. **Search** (`src/search.ts`): BM25 over the English, Bengali and Arabic texts, with Banglish and prophet-name
+    Words that only frame a question (*which surah talks about*, Banglish *kon surah te ... er kotha bola hoyeche*) are not
+    search words: they counted as missing words and hid the topic ("mountain er kotha" was "not found").
+    **"Which surah ...?"** (also *kon surah te*, *কোন সূরায়*, *في أي سورة*) after topic or search ayahs: the answer also names
+    their surahs, with the references.
     translation. An ayah is shown only if it covers enough of the question's words (rare words weigh more). If not: "not found".
 
 After that, the answer can be changed by what the person asked: **"in Bengali", "in English", "only Arabic"** choose the
@@ -101,7 +105,7 @@ Node.js 20 or newer.
 
 ```
 npm install
-npm test            # 610 tests (including the page run in a fake browser)
+npm test            # 627 tests (including the page run in a fake browser)
 npm run build
 npm start           # http://localhost:8787
 ```
@@ -179,6 +183,8 @@ Nine sets (`testset/`), questions of many kinds. The answers were decided before
 | `explain_followups_hidden_5.csv` (never run until the change was finished; same author and style) | **5/5** | 5/5 |
 | `surah_full_12.csv` (a whole surah, a range, a page; follow-ups after a whole surah) | **1/12 (8%)**, only the para row that must not change | 12/12 |
 | `surah_full_hidden_4.csv` (never run until the change was finished; same author and style) | **4/4** | 4/4 |
+| `sacrifice_which_surah_13.csv` (qurbani in every spelling, "which surah", Banglish sentence words) | **1/13 (8%)**, only the ruling that must not change | 13/13 |
+| `sacrifice_which_surah_hidden_5.csv` (never run until the change was finished; same author and style) | **5/5** | 5/5 |
 
 Only the **first-run numbers are honest estimates**: after a first run I fixed what I saw and ran again, so the last
 column is optimistic. For `normal_users_75` the 24% is only the "before" picture (the features were built to pass it);

@@ -61,11 +61,24 @@ export function matchThemes(question: string, isEnglish: (w: string) => boolean 
 
 // ---------------------------------------------------------------- BM25 search
 /** Query words for each of the three texts. Banglish and Bengali words are also mapped to English. */
+// Words that only frame a question, in English and Banglish ("which surah talks about ...", "kon surah te ... er kotha
+// bola hoyeche"): never search words. The search counts a word that the text does not have as a MISSING word, so these
+// hid the real topic ("sacrifice er kotha" was "not found"; "which surah talks about sacrifice" found "talk" in 2:76).
+const FRAMING = new Set([
+  'which', 'surah', 'surahs', 'sura', 'suras', 'surat', 'chapter', 'chapters', 'quran', 'koran', 'quraan', 'talk', 'talks', 'talking',
+  'speak', 'speaks', 'speaking', 'mention', 'mentions', 'mentioned', 'mentioning', 'regarding', 'concerning',
+  'er', 'kotha', 'bola', 'bole', 'boleche', 'hoyeche', 'hoise', 'hoyece', 'hoeche', 'kon', 'kono', 'te', 'ki', 'kii', 'ache', 'ase', 'achhe',
+  'asche', 'niye', 'somporke', 'shomporke', 'bishoye', 'korar', 'kora', 'kore', 'korte', 'ayat', 'ayate', 'ayaat', 'surate', 'surahte',
+  'qurane', 'korane', 'kurane', 'quraner', 'kuraner', 'bolo', 'bolun', 'dao', 'din', 'den', 'amake', 'jante', 'chai', 'gulo', 'guli',
+  'dekhao', 'dekhan',
+].filter((w) => !(w in BANGLISH_TO_EN) && !(w in NAME_TO_EN)));
+
 export function queryTokens(question: string, isEnglish: (w: string) => boolean = () => false): { en: string[]; bn: string[]; ar: string[] } {
   // A Banglish or foreign word that we translate (namaz -> prayer, Ibrahim -> Abraham) is REPLACED by its
   // translation: the original word is not in the English text and must not count as a missing word.
   const mapped = mappedEnglishWords(question, isEnglish).map(stemEn);
-  const raw = tokensEn(question).filter((w) => !(w in BANGLISH_TO_EN) && !(w in NAME_TO_EN));
+  const topic = question.replace(/[A-Za-z']+/g, (w) => (FRAMING.has(w.toLowerCase()) ? ' ' : w));
+  const raw = tokensEn(topic).filter((w) => !(w in BANGLISH_TO_EN) && !(w in NAME_TO_EN));
   return { en: [...new Set([...raw, ...mapped])], bn: tokensBn(question), ar: tokensAr(question) };
 }
 

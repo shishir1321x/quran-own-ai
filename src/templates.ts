@@ -40,6 +40,7 @@ export const THEME_LABEL: Record<string, T> = {
   'dua for family': t('a supplication for family', 'পরিবারের জন্য দোয়া', 'دعاء للأسرة'),
   'supplications (dua)': t('supplications (dua) in the Quran', 'কুরআনের দোয়া', 'الأدعية في القرآن'),
   'illness and healing': t('illness and healing', 'অসুস্থতা ও আরোগ্য', 'المرض والشفاء'),
+  'sacrifice (qurbani)': t('sacrifice (qurbani)', 'কুরবানি', 'القربان والأضحية'),
 };
 
 export const MSG = {
@@ -144,6 +145,8 @@ export const MSG = {
     : which === 'bn'
       ? t('The same ayahs, with the Bengali translation.', 'একই আয়াতগুলো, বাংলা অনুবাদসহ।', 'الآيات نفسها مع الترجمة البنغالية.')
       : t('The same ayahs, in Arabic only.', 'একই আয়াতগুলো, শুধু আরবি।', 'الآيات نفسها بالعربية فقط.'),
+  /** "Which surah talks about ...?": the surahs of the ayahs shown, with their references (lists made in engine.ts). */
+  inSurahs: (en: string, bn: string, ar: string): T => t(` These ayahs are in: ${en}.`, ` এই আয়াতগুলো আছে: ${bn}।`, ` هذه الآيات في: ${ar}.`),
   moreIntro: (label: string): T => t(`More ayahs: ${label}.`, `আরও আয়াত: ${label}।`, `مزيد من الآيات: ${label}.`),
   moreSearch: t(
     'More ayahs that contain words from your earlier question. Please read them in context; this assistant does not interpret them.',
