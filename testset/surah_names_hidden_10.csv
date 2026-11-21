@@ -1,0 +1,11 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,bn,topic,surah hozz,22:1,false,,,quran,
+2,en,topic,surah dhuha,93:1,false,,,quran,
+3,en,topic,surah juma,62:1,false,,,quran,
+4,en,topic,surah ankabuth,29:1,false,,,quran,
+5,en,topic,surah kauser,108:1,false,,,quran,
+6,en,topic,surah zariat,51:1,false,,,quran,
+7,bn,topic,সূরা ফুরকান,25:1,false,,,quran,
+8,bn,topic,সূরা মুদ্দাসসির,74:1,false,,,quran,
+9,bn,topic,সূরা তাওবা,9:1,false,,,quran,
+10,bn,topic,সূরা হাদীদ,57:1,false,,,quran,

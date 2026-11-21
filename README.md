@@ -56,6 +56,13 @@ The first step that applies answers:
    ayahs) still comes 10 at a time with *show more*. Until 21 Nov 2026 a surah showed its first 10 ayahs: 7 rows of
    `related_40.csv` and `related_fresh_42.csv` that expected exactly those 10 were changed to the whole surah. The chat
    history keeps up to 300 ayahs per turn, and a request may be up to 64 KB, so that a follow-up after a whole surah works.
+   **Surah names in the spellings people type** (`src/surahs.ts`): *surah hazz / hojj* (Al-Hajj), *zinn*, *jumma*,
+   *kiyamah*, *zariyat*, *dahr*, *nohol*; and in Bengali letters for all 114 surahs (*সূরা হজ্জ*, *সূরা আল-ফজর*,
+   *সূরা জুমু'আ*, *ফজর সূরার প্রথম আয়াত*). A short name, or one that is also an ordinary word or a prophet's name (Hajj,
+   Nuh, ফজর, নূহ, তওবা, জিন), counts only right next to the word "surah" / "সূরা": *ফজর নামাজে কোন সূরা পড়া হয়?* is
+   still the prayer topic, and a spelling that fits two surahs is never guessed. **The Bengali spellings are my own list
+   and still need a native reader's check.** Surah Al-Kafirun (*সূরা কাফিরুন*, *سورة الكافرون*) is no longer taken for
+   the sensitive topic "kafir" (a question about kafirs still goes to a scholar).
 6. **Follow-up**: "banglay ortho ki?" shows the ayahs of the chat so far with the Bengali translation.
    **Explain this ayah** (`explain 2:255`, `tafsir of Ayat al-Kursi`, `আয়াতুল কুরসির ব্যাখ্যা`): the translators' own
    explanatory notes for the ayah (or the first 4 ayahs of a surah), copied word for word from `data/notes.json`,
@@ -105,7 +112,7 @@ Node.js 20 or newer.
 
 ```
 npm install
-npm test            # 627 tests (including the page run in a fake browser)
+npm test            # 688 tests (including the page run in a fake browser)
 npm run build
 npm start           # http://localhost:8787
 ```
@@ -148,7 +155,7 @@ This is checked in `test/data.test.ts`. See `NOTICE.md` about the Tanzil "no cha
 
 ## How well does it work? (`npm run eval`)
 
-Nine sets (`testset/`), questions of many kinds. The answers were decided before running. All counts are real, from `npm run eval`.
+The sets in `testset/`, questions of many kinds. The answers were decided before running. All counts are real, from `npm run eval`.
 
 | Set | First run, engine unchanged | After the fixes I made for it |
 |---|---|---|
@@ -185,6 +192,8 @@ Nine sets (`testset/`), questions of many kinds. The answers were decided before
 | `surah_full_hidden_4.csv` (never run until the change was finished; same author and style) | **4/4** | 4/4 |
 | `sacrifice_which_surah_13.csv` (qurbani in every spelling, "which surah", Banglish sentence words) | **1/13 (8%)**, only the ruling that must not change | 13/13 |
 | `sacrifice_which_surah_hidden_5.csv` (never run until the change was finished; same author and style) | **5/5** | 5/5 |
+| `surah_names_38.csv` (surah names as people type them, in Latin and Bengali letters; 6 rows that must not change) | **6/38 (16%)**, only the 6 that must not change | 38/38 |
+| `surah_names_hidden_10.csv` (never run until the change was finished; same author and style) | **10/10** | 10/10 |
 
 Only the **first-run numbers are honest estimates**: after a first run I fixed what I saw and ran again, so the last
 column is optimistic. For `normal_users_75` the 24% is only the "before" picture (the features were built to pass it);
@@ -200,6 +209,7 @@ Where it fails (known limits):
 - It finds **words, not meanings**. A topic that is not in the theme list and is asked in other words may give
   a "not found", or an ayah that contains the word but is about something else.
 - Banglish and Bengali vocabulary is small (`BANGLISH_TO_EN`, the theme words): "ekla" (lonely) is not known.
+- Surah names in Bengali letters come from a hand-written list of spellings: one not in the list is not found.
 - A spelling mistake of more than one letter is not guessed (*forgivnes* is, *forgivness* is not corrected); a Banglish
   spelling is matched by consonants only for words we already know.
 - Hadith, the virtue of a surah, and "who is better" questions are sent to a scholar: there are no hadith collections here.

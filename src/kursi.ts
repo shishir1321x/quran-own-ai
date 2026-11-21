@@ -15,12 +15,15 @@ const KURSI_BN = new Set([bengaliSkeleton('কুরসি'), swapped(bengaliSke
 const AYAT_BN = new Set([bengaliSkeleton('আয়াত'), bengaliSkeleton('আয়াতুল')]);
 const ONE_WORD_BN = new Set([bengaliSkeleton('আয়াতুলকুরসি'), bengaliSkeleton('আয়াতকুরসি')]);
 
+// "surah quraish", "সূরা কাউসার": with the word surah it is a surah (Quraish and Kawthar have the consonants of "kursi")
+const SURAH = /^(?:surah|sura|surat|soorah|chapter)$|^সূরা|^সুরা/;
+
 function check(words: string[], skeleton: (s: string) => string, kursi: Set<string>, ayat: Set<string>, oneWord: Set<string>): boolean {
   for (let i = 0; i < words.length; i++) {
     const sk = skeleton(words[i]);
     if (oneWord.has(sk)) return true;                                   // written as one word
     if (!kursi.has(sk)) continue;
-    if (words.length <= 2) return true;                                  // just "kursi"
+    if (words.length <= 2 && !words.some((w) => SURAH.test(w))) return true;   // just "kursi" (not "surah quraish")
     const prev1 = skeleton(words[i - 1] ?? '');
     const prev2 = skeleton((words[i - 2] ?? '') + (words[i - 1] ?? ''));
     if (ayat.has(prev1) || ayat.has(prev2)) return true;
