@@ -15,7 +15,7 @@ describe('what this chatbot is about', () => {
   it('a specific answer: what it searches, the translations, examples, what it does not do, and the Terms', () => {
     const r = engine.ask('what is this chatbot about');
     expect(r.kind).toBe('about');
-    for (const part of ['6236 ayahs', 'Saheeh International', 'Zakaria', 'explain 2:255', 'how many times is Musa mentioned', 'not a religious authority', 'Terms']) {
+    for (const part of ['Quran Assistant from Amal', '6236 ayahs', 'Saheeh International', 'Zakaria', 'explain 2:255', 'how many times is Musa mentioned', 'not a religious authority', 'Terms']) {
       expect(r.answer, part).toContain(part);
     }
     expect(r.link).toEqual({ href: '/terms', label: 'Terms & privacy' });
@@ -25,7 +25,10 @@ describe('what this chatbot is about', () => {
     const bn = engine.ask('tumi k?');
     expect(bn.kind).toBe('about');
     expect(bn.answer).toContain('৬২৩৬টি আয়াত');
-    expect(engine.ask('ما هذا البرنامج').answer).toContain('6236 آية');
+    expect(bn.answer).toContain('Amal');
+    const ar = engine.ask('ما هذا البرنامج').answer;
+    expect(ar).toContain('6236 آية');
+    expect(ar).toContain('Amal');
   });
 
   it('a question about the terms or privacy gets the short version, with the link', () => {
@@ -66,8 +69,10 @@ describe('the Terms page', () => {
     }
   });
 
-  it('has nothing of another app or company in it', () => {
-    expect(TERMS_HTML).not.toMatch(/amal|lit labs|singapore|noor coins|@/i);
+  it('says it is from Amal (approved by Amal), and copies nothing from the Amal app\'s own terms or contacts', () => {
+    expect(TERMS_HTML).toContain('from Amal');
+    expect(TERMS_HTML).not.toMatch(/student project/i);
+    expect(TERMS_HTML).not.toMatch(/lit labs|singapore|noor coins|soul stack|jannah garden|@/i);
   });
 
   it('is linked from the chat page', () => {
@@ -120,5 +125,16 @@ describe('the examples in the "about" answer', () => {
         expect(['chat', 'about'], `${lang}: ${q}`).not.toContain(r.kind);
       }
     }
+  });
+});
+
+describe('from Amal', () => {
+  it('the name answer and the page header say it', () => {
+    expect(engine.ask('what is your name?').answer).toContain('Quran Assistant, from Amal');
+    expect(engine.ask('তোমার নাম কী?').answer).toContain('Amal');
+    expect(engine.ask('ما اسمك؟').answer).toContain('Amal');
+    const doc = new JSDOM(PAGE_HTML).window.document;
+    expect(doc.querySelector('h1')!.textContent).toMatch(/Quran Assistant.*by Amal/);
+    expect(doc.title).toContain('Amal');
   });
 });

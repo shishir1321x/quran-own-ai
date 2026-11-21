@@ -94,7 +94,7 @@ Node.js 20 or newer.
 
 ```
 npm install
-npm test            # 595 tests (including the page run in a fake browser)
+npm test            # 596 tests (including the page run in a fake browser)
 npm run build
 npm start           # http://localhost:8787
 ```

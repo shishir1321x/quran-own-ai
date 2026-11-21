@@ -7,7 +7,7 @@ export const TERMS_HTML = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Terms &amp; privacy · Quran Assistant</title>
+<title>Terms &amp; privacy · Quran Assistant from Amal</title>
 <style>
   body { font-family: system-ui, sans-serif; max-width: 720px; margin: 0 auto; padding: 1rem 1.1rem calc(2rem + env(safe-area-inset-bottom)); line-height: 1.65; color: #222; }
   a { color: #2a6b4f; }
@@ -38,17 +38,17 @@ expect from it. By using the assistant you agree to it.</p>
 <section class="glance">
   <h2>At a glance</h2>
   <ul>
-    <li>A free study tool: it finds real ayahs and counts things in the Quran text. No AI writes its answers.</li>
+    <li>A free study tool from Amal: it finds real ayahs and counts things in the Quran text. No AI writes its answers.</li>
     <li>It is not a religious authority. It gives no fatwas, rulings or tafsir of its own: ask a qualified scholar.</li>
     <li>The text of your questions is not saved. There are no accounts, no saved chats and no ads.</li>
     <li>Voice is optional: your browser turns speech into text (Chrome and Edge send the sound to Google or Microsoft for that).</li>
-    <li>You need an access code from the person who runs this copy. Please do not pass it on.</li>
+    <li>You need an access code from the people who gave you the link. Please do not pass it on.</li>
     <li>It is provided as it is: it can be asleep, slow or unavailable, and it can choose or count something wrongly.</li>
   </ul>
 </section>
 
 <h2><span class="n">1</span>What this assistant is</h2>
-<p>A student project: a small program that searches the Arabic text of the whole Quran (6236 ayahs) and shows real ayahs
+<p>Quran Assistant from Amal: a small program that searches the Arabic text of the whole Quran (6236 ayahs) and shows real ayahs
 with an English translation (Saheeh International) and a Bengali translation (Dr. Abu Bakr Muhammad Zakaria). It also counts
 things in the text, for example the ayahs of a surah, the animals and prophets named in it, or how often a word is used.
 It understands English, Bengali (also Banglish) and Arabic.</p>
@@ -68,7 +68,7 @@ tafsir of its own. For any question about what you should do, please ask a quali
 </ul>
 
 <h2><span class="n">3</span>Who can use it</h2>
-<p>Anyone the person who runs this copy has given the link and the access code to. The code is for the people it was given
+<p>Anyone who has been given the link and the access code. The code is for the people it was given
 to: please do not post it or pass it on. If it spreads too widely it will be changed, and the old code stops working.</p>
 
 <h2><span class="n">4</span>What happens with your questions</h2>
@@ -114,7 +114,7 @@ surahs 2 to 114 (surah 9 has none), and the translations are shown without their
 <h2><span class="n">8</span>No guarantees</h2>
 <p>The assistant is free and is provided as it is. It may be asleep (the first visit after a quiet time can take about a
 minute), slow, or unavailable, and its free hosting has limited hours. It can show an ayah that does not fit your question,
-miss one that does, or count something wrongly. Please use your own judgement: the person who runs it cannot be responsible
+miss one that does, or count something wrongly. Please use your own judgement: the people who run it cannot be responsible
 for decisions made from its answers.</p>
 
 <h2><span class="n">9</span>Changes to these terms</h2>
@@ -122,9 +122,9 @@ for decisions made from its answers.</p>
 change means you accept the new version.</p>
 
 <h2><span class="n">10</span>Questions</h2>
-<p>Ask the person who gave you the link and the access code. To report a wrong answer, tell them exactly what you asked and
+<p>Ask the people who gave you the link and the access code. To report a wrong answer, tell them exactly what you asked and
 what was wrong, so that it can be fixed.</p>
 
-<footer><a href="/">← Back to the chat</a> · Quran Assistant, a student project</footer>
+<footer><a href="/">← Back to the chat</a> · Quran Assistant from Amal</footer>
 </body>
 </html>`;

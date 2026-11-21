@@ -7,10 +7,11 @@ export const PAGE_HTML = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Quran Assistant</title>
+<title>Quran Assistant · by Amal</title>
 <style>
   body { font-family: system-ui, sans-serif; max-width: 760px; margin: 0 auto; padding: 1rem 1rem 0; line-height: 1.5; color: #222; }
   h1 { font-size: 1.4rem; margin: .5rem 0 .25rem; }
+  h1 .by { font-weight: 500; font-size: .72em; color: #2a6b4f; white-space: nowrap; }
   .notice { font-size: .85rem; color: #555; background: #f4f4f4; padding: .6rem .8rem; border-radius: 6px; }
   details { font-size: .9rem; margin: .5rem 0; }
   input[type=password] { font: inherit; padding: .3rem .5rem; }
@@ -72,7 +73,7 @@ export const PAGE_HTML = `<!doctype html>
 </style>
 </head>
 <body>
-<h1>Quran Assistant</h1>
+<h1>Quran Assistant <span class="by">· by Amal</span></h1>
 <p class="notice">Ask in English, বাংলা (or Banglish) or العربية. This assistant has no AI behind it: it searches the Quran text and shows
 real ayahs with a translation, and it counts things (for example ayahs per surah). It does not interpret ayahs and gives no religious rulings:
 for those, please ask a qualified scholar. To read an explanation, say <b>explain 2:255</b> (the translator's own notes, word for word). Type <b>help</b> to see what you can ask.</p>
