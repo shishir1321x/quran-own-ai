@@ -9,15 +9,16 @@ const range = (s: number, from: number, to: number) => Array.from({ length: to -
 
 describe('a surah by number', () => {
   it.each([
-    ['surah 36', 36, 10], ['chapter 18', 18, 10], ['সূরা ৫৫', 55, 10], ['৩৬ নম্বর সূরা', 36, 10], ['36th surah of the Quran', 36, 10],
-    ['which surah is number 55', 55, 10], ['which surah is the 67th', 67, 10], ['surah number 112', 112, 4], ['সূরা নং ১১২', 112, 4],
+    // the whole surah (until 21 Nov 2026 only its first 10 ayahs were shown)
+    ['surah 36', 36, 83], ['chapter 18', 18, 110], ['সূরা ৫৫', 55, 78], ['৩৬ নম্বর সূরা', 36, 83], ['36th surah of the Quran', 36, 83],
+    ['which surah is number 55', 55, 78], ['which surah is the 67th', 67, 30], ['surah number 112', 112, 4], ['সূরা নং ১১২', 112, 4],
   ])('%s', (q, s, n) => expect(refs(q)).toEqual(range(s, 1, n)));
   it('a number that is not a surah is not one', () => {
     expect(e.ask('surah 115').kind).not.toBe('surah');
     expect(refs('surah 0')).toEqual([]);
   });
   it('the intro names the surah and its number', () => {
-    expect(e.ask('surah 36').answer).toMatch(/Surah 36, Yaseen: the first 10 of 83/);
+    expect(e.ask('surah 36').answer).toMatch(/Surah 36, Yaseen: all 83 ayahs/);
   });
 });
 
@@ -29,8 +30,8 @@ describe('a part of a surah', () => {
     ['surah naas er shesh ayat', ['114:6']], ['surah ikhlas last ayat', ['112:4']], ['last ayah of surah naas', ['114:6']],
     ['ayat 286 of surah baqarah', ['2:286']], ['surah fatiha ayat 2', ['1:2']], ['ayat 255 baqarah', ['2:255']],
   ])('%s', (q, expected) => expect(refs(q)).toEqual(expected));
-  it('"last 50 ayat" of a long surah is cut to 10, an ayah number past the end is ignored', () => {
-    expect(refs('last 50 ayat of surah baqarah')).toHaveLength(10);
+  it('"last 50 ayat" of a long surah gives all 50, an ayah number past the end is ignored', () => {
+    expect(refs('last 50 ayat of surah baqarah')).toEqual(range(2, 237, 286));
     expect(e.ask('ayat 999 of surah baqarah').kind).toBe('surah');
   });
   it('first and last of the whole Quran', () => {
@@ -182,7 +183,7 @@ describe('Bengali spellings and sentences from a real session', () => {
     const r = e.ask('কোর আনে কতটা সূরা আছে');
     expect(r.answer).toBe('কুরআনে ১১৪টি সূরা এবং ৬২৩৬টি আয়াত আছে।');
     expect(r.data?.[0]).toBe('The Quran has 114 surahs and 6236 ayahs.');
-    expect(e.ask('সূরা ৩৬').answer).toBe('সূরা ৩৬, Yaseen: ৮৩টি আয়াতের প্রথম ১০টি।');
+    expect(e.ask('সূরা ৩৬').answer).toBe('সূরা ৩৬, Yaseen: সব ৮৩টি আয়াত।');
     expect(e.ask('বাকারার শেষ ২ আয়াত').answer).toMatch(/2:285-286/);
   });
 });

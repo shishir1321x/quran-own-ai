@@ -43,10 +43,12 @@ describe('suggestions', () => {
   });
 
   it('what is suggested after ayahs: more (or the next surah at its end), an explanation, another translation', () => {
-    expect(engine.ask('surah yasin').suggestions).toEqual(['show more', 'explain 36:1', 'in Bengali']);
+    // a whole surah ends at its last ayah: next surah; a para (10 at a time): show more
+    expect(engine.ask('surah yasin').suggestions).toEqual(['next surah', 'explain 36:1', 'in Bengali']);
+    expect(engine.ask('para 30').suggestions).toEqual(['show more', 'explain 78:1', 'in Bengali']);
     expect(engine.ask('surah al-ikhlas').suggestions).toEqual(['next surah', 'explain 112:1', 'in Bengali']);
     expect(engine.ask('2:255').suggestions).toEqual(['next ayah', 'explain 2:255', 'in Bengali']);
-    expect(engine.ask('সূরা ইয়াসিন').suggestions).toEqual(['আরও দেখাও', '36:1 এর ব্যাখ্যা', 'ইংরেজিতে']);
+    expect(engine.ask('সূরা ইয়াসিন').suggestions).toEqual(['পরের সূরা', '36:1 এর ব্যাখ্যা', 'ইংরেজিতে']);
   });
 
   it('none for a crisis, a ruling or a made-up ayah', () => {
@@ -69,14 +71,14 @@ describe('suggestions in the page', () => {
     });
     const doc = dom.window.document;
     const settle = () => new Promise((r) => setTimeout(r, 30));
-    (doc.getElementById('q') as HTMLTextAreaElement).value = 'surah yasin';
+    (doc.getElementById('q') as HTMLTextAreaElement).value = 'para 30';   // a para goes 10 at a time: "show more"
     doc.getElementById('f')!.dispatchEvent(new (dom.window as any).Event('submit', { cancelable: true, bubbles: true }));
     await settle();
     const chips = [...doc.querySelectorAll('button.chip')].map((b) => b.textContent);
-    expect(chips).toEqual(['show more', 'explain 36:1', 'in Bengali']);
+    expect(chips).toEqual(['show more', 'explain 78:1', 'in Bengali']);
     (doc.querySelector('button.chip') as HTMLButtonElement).click();
     await settle();
     const text = doc.getElementById('chat')!.textContent!;
-    expect(text).toContain('More ayahs: 36:11-20');
+    expect(text).toContain('More ayahs: 78:11-20');
   });
 });

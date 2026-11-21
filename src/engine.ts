@@ -334,9 +334,10 @@ export class Engine {
     return { kind, mode, lang, answer, ayahs: [], notFound: false, translation: lang === 'bn' ? 'bn' : 'en', ...extra };
   }
 
-  private range(s: number, from: number, to: number): Array<{ s: number; a: number }> {
+  /** The ayahs from..to of surah s: at most `cap` of them (10 for a para or "show more"; a surah or a range is shown whole). */
+  private range(s: number, from: number, to: number, cap = MAX_RANGE): Array<{ s: number; a: number }> {
     const n = this.quran.chapters[s - 1].n;
-    const end = Math.min(to, from + MAX_RANGE - 1, n);
+    const end = Math.min(to, from + cap - 1, n);
     const out: Array<{ s: number; a: number }> = [];
     for (let a = from; a <= end; a++) out.push({ s, a });
     return out;
@@ -380,7 +381,7 @@ export class Engine {
       const from = Number(rg[1] ?? rg[3]);
       const to = Number(rg[2] ?? rg[4]);
       if (from >= 1 && to >= from && from <= n) {
-        const list = this.range(s, from, Math.min(to, n));
+        const list = this.range(s, from, Math.min(to, n), Infinity);   // exactly the range asked
         return { list, label: refLabel(list) };
       }
     }
@@ -388,8 +389,8 @@ export class Engine {
     const wantFirst = FIRST_WORDS.test(lower);
     if (wantLast !== wantFirst) {
       const m = text.match(NUM_BEFORE_AYAH);
-      const count = m ? Math.max(1, Math.min(MAX_RANGE, Number(m[1]) || WORD_NUMBER[m[1].toLowerCase()] || 1)) : 1;
-      const list = wantLast ? this.range(s, Math.max(1, n - count + 1), n) : this.range(s, 1, count);
+      const count = m ? Math.max(1, Math.min(n, Number(m[1]) || WORD_NUMBER[m[1].toLowerCase()] || 1)) : 1;
+      const list = wantLast ? this.range(s, Math.max(1, n - count + 1), n, Infinity) : this.range(s, 1, count, Infinity);
       return { list, label: refLabel(list) };
     }
     return null;
@@ -579,7 +580,7 @@ export class Engine {
     if (ref) {
       const [s, from, to] = ref;
       if (s >= 1 && s <= 114 && from >= 1 && from <= this.quran.chapters[s - 1].n && to >= from) {
-        const list = this.range(s, from, Math.min(to, this.quran.chapters[s - 1].n));
+        const list = this.range(s, from, Math.min(to, this.quran.chapters[s - 1].n), Infinity);   // exactly the range asked
         return this.reply('ref', 'quran', lang, MSG.refIntro(refLabel(list))[lang], { ayahs: list });
       }
       return this.reply('notFound', 'quran', lang, MSG.notFound[lang], { notFound: true });
@@ -589,9 +590,15 @@ export class Engine {
     const pm = text.match(PAGE_NO);
     const pageNo = pm ? Number(pm.slice(1).find((x) => x !== undefined)) : 0;
     if (pageNo >= 1 && pageNo <= 604) {
+      // the whole page: from where it starts to where the next page starts (a page can hold the end of one surah and
+      // the start of the next: page 604 is Al-Ikhlas, Al-Falaq and An-Nas)
       const [ps, pa] = this.quran.pages[pageNo - 1];
-      const list = this.range(ps, pa, this.quran.chapters[ps - 1].n);
-      return this.reply('ref', 'quran', lang, MSG.pageIntro(pageNo, `${ps}:${pa}`, list.length)[lang], { ayahs: list });
+      const next = this.quran.pages[pageNo];   // undefined after page 604: to the end of the Quran
+      const startAt = this.quran.ayahs.findIndex((y) => y.s === ps && y.a === pa);
+      const stopAt = next ? this.quran.ayahs.findIndex((y) => y.s === next[0] && y.a === next[1]) : this.quran.ayahs.length;
+      const list = this.quran.ayahs.slice(startAt, stopAt).map((y) => ({ s: y.s, a: y.a }));
+      const last = list[list.length - 1];
+      return this.reply('ref', 'quran', lang, MSG.pageWhole(pageNo, `${ps}:${pa}`, `${last.s}:${last.a}`, list.length)[lang], { ayahs: list });
     }
 
     // a juz (para): "para 3", "3 নং পারা", "Bakara 3 para", "Amma para"
@@ -624,7 +631,7 @@ export class Engine {
       if (ayahNo >= 1 && ayahNo <= c.n) {
         return this.reply('ref', 'quran', lang, MSG.refIntro(`${surah}:${ayahNo}`)[lang], { ayahs: [{ s: surah, a: ayahNo }] });
       }
-      const list = this.range(surah, 1, c.n);
+      const list = this.range(surah, 1, c.n, Infinity);   // the whole surah (Al-Baqarah: all 286 ayahs)
       return this.reply('surah', 'quran', lang, MSG.surahIntro(c.tr, list.length, c.n, surah)[lang], { ayahs: list });
     }
 
@@ -632,7 +639,7 @@ export class Engine {
     if (words <= 6 && FOLLOW_UP.test(lower)) {
       const last = [...history].reverse().find((h) => h.citations?.length > 0);
       if (last) {
-        const list = last.citations.slice(0, MAX_RANGE).map((c) => ({ s: c.surah, a: c.ayah }));
+        const list = last.citations.map((c) => ({ s: c.surah, a: c.ayah }));   // the same ayahs, all of them
         return this.reply('followup', 'quran', lang, MSG.followUpIntro[lang], { ayahs: list, translation: 'bn' });
       }
       return this.reply('notFound', 'quran', lang, MSG.followUpNone[lang], { notFound: true });
@@ -729,7 +736,7 @@ export class Engine {
 
     if (kind === 'lang') {
       const which: 'en' | 'bn' | 'none' = /arabic|আরবি|بالعربيه/.test(plain + ' ' + ar) ? 'none' : /bangla|bengali|বাংলা|بالبنغاليه/.test(plain + ' ' + ar) ? 'bn' : 'en';
-      return this.reply('followup', 'quran', lang, MSG.sameAyahs(which)[lang], { ayahs: cites.slice(0, MAX_RANGE), translation: which });
+      return this.reply('followup', 'quran', lang, MSG.sameAyahs(which)[lang], { ayahs: cites, translation: which });
     }
     if (kind === 'next') {
       if (end.a < n(end.s)) return one(end.s, end.a + 1);

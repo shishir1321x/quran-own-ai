@@ -60,7 +60,9 @@ describe('the prophets named in the Quran', () => {
 
 describe('follow-ups that continue the chat', () => {
   it('more, next, previous, next surah, across the edges of surahs and of the Quran', () => {
-    expect(refs('show more', 'surah yasin')).toEqual(Array.from({ length: 10 }, (_, i) => `36:${i + 11}`));
+    // a para goes 10 at a time ("para 30" begins at 78:1); a surah is shown whole, so "show more" after it ends it
+    expect(refs('show more', 'para 30')).toEqual(Array.from({ length: 10 }, (_, i) => `78:${i + 11}`));
+    expect(engine.ask('show more', [turn('surah yasin')]).answer).toContain('That was the end of Surah Yaseen');
     expect(refs('next ayah', '2:255')).toEqual(['2:256']);
     expect(refs('previous ayah', '2:255')).toEqual(['2:254']);
     expect(refs('next', '112:4')).toEqual(['113:1']);

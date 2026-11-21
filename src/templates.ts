@@ -119,10 +119,11 @@ export const MSG = {
     `${name}: যেখান থেকে বর্ণনা শুরু (${label})। বাকিটা কুরআনে পড়ে নিন।`,
     `${name}: موضع بداية القصة (${label}). أكمل القراءة في المصحف.`),
   dayIntro: t('Ayah of the day.', 'আজকের আয়াত।', 'آية اليوم.'),
-  pageIntro: (n: number, ref: string, shown: number): T => t(
-    `Page ${n} of the Madani mushaf begins at ${ref}. Here are its first ${shown} ayahs.`,
-    `মাদানী মুসহাফের ${bd(n)} নম্বর পৃষ্ঠা শুরু হয়েছে ${ref} থেকে। এর প্রথম ${bd(shown)}টি আয়াত দেখানো হলো।`,
-    `الصفحة ${n} من المصحف المدني تبدأ من ${ref}. هذه أول ${shown} آيات منها.`),
+  /** A whole page of the Madani mushaf (it can hold the end of one surah and the start of the next). */
+  pageWhole: (n: number, from: string, to: string, count: number): T => t(
+    `Page ${n} of the Madani mushaf: ${enN(count, 'ayah', 'ayahs')}, from ${from} to ${to}.`,
+    `মাদানী মুসহাফের ${bd(n)} নম্বর পৃষ্ঠা: ${from} থেকে ${to} পর্যন্ত ${bd(count)}টি আয়াত।`,
+    `الصفحة ${n} من المصحف المدني: ${arAyahs(count)}، من ${from} إلى ${to}.`),
   wishes: t(
     'And to you too! May Allah accept our good deeds. Ask me anything about the Quran.',
     'আপনাকেও শুভেচ্ছা! আল্লাহ আমাদের সবার নেক আমল কবুল করুন। কুরআন সম্পর্কে কিছু জানতে চাইলে জিজ্ঞেস করুন।',

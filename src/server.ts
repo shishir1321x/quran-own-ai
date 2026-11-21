@@ -9,7 +9,8 @@ import { Engine } from './engine.js';
 import { PAGE_HTML } from './page.js';
 import { TERMS_HTML } from './terms.js';
 
-const MAX_BODY_BYTES = 10_000;
+// A question with the last 3 turns of the chat; a turn can list a whole surah (Al-Baqarah: 286 ayahs, about 6.5 KB).
+const MAX_BODY_BYTES = 64_000;
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {

@@ -4,6 +4,8 @@ import { RateLimiter } from './rateLimit.js';
 import { cleanTranslation } from './text.js';
 
 export const MAX_QUESTION_CHARS = 500;
+/** Ayahs kept per earlier turn of the chat: a whole surah is shown at once, and the longest has 286 ayahs. */
+export const MAX_CITATIONS = 300;
 
 export interface ApiEnv { ACCESS_CODE?: string; RATE_LIMIT?: string }
 export interface ApiResult { status: number; body: Record<string, unknown> }
@@ -19,7 +21,7 @@ function cleanHistory(raw: unknown): HistoryTurn[] {
       citations: cites
         .map((c) => ({ surah: Number((c as Record<string, unknown>)?.surah), ayah: Number((c as Record<string, unknown>)?.ayah) }))
         .filter((c) => Number.isInteger(c.surah) && Number.isInteger(c.ayah) && c.surah >= 1 && c.surah <= 114 && c.ayah >= 1)
-        .slice(0, 10),
+        .slice(0, MAX_CITATIONS),
     };
   });
 }

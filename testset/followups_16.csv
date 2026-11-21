@@ -1,5 +1,5 @@
 id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
-1,en,exact,show more,36:11-20,false,,continue the surah,quran,surah yasin
+1,en,exact,show more,78:11-20,false,,continue the para (a surah is now shown whole),quran,para 30
 2,en,exact,next ayah,2:256,false,,the ayah after,quran,2:255
 3,en,exact,previous ayah,2:254,false,,the ayah before,quran,2:255
 4,en,translation,in english,2:255,false,,translation: en,quran,ayatul kursi banglay
@@ -8,8 +8,8 @@ id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expecte
 7,en,info,what about the camel,,false,,answer contains: The camel is named 18 times,data,how many times is the cow mentioned in the quran
 8,en,info,what about surah yasin,,false,,answer contains: Surah Yaseen,data,what is the most used word in quran
 9,en,topic,what about mercy,39:53,false,,a new topic,quran,patience
-10,en,exact,next surah,2:1-10,false,,the surah after,quran,surah al fatiha
-11,bn,exact,আরও দেখাও,36:11-20,false,,continue the surah,quran,surah yasin
+10,en,exact,next surah,2:1-286,false,,the surah after,quran,surah al fatiha
+11,bn,exact,আরও দেখাও,78:11-20,false,,continue the para (a surah is now shown whole),quran,para 30
 12,en,exact,next,113:1,false,,across the end of a surah,quran,112:4
 13,en,kind,show more,,false,,kind: notFound,quran,
 14,en,info,what about musa,,false,,answer contains: 136 times,data,how many times is ibrahim mentioned

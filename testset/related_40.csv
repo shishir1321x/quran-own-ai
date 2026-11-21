@@ -1,8 +1,8 @@
 ﻿id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode
-1,en,exact,surah 36,36:1-10,false,,Surah by number; first 10 ayahs.,quran
-2,bn,exact,৩৬ নম্বর সূরা,36:1-10,false,,,quran
-3,en,exact,36th surah of the Quran,36:1-10,false,,,quran
-4,en,exact,which surah is number 55,55:1-10,false,,,quran
+1,en,exact,surah 36,36:1-83,false,,Surah by number; the whole surah (first 10 ayahs until 21 Nov 2026).,quran
+2,bn,exact,৩৬ নম্বর সূরা,36:1-83,false,,,quran
+3,en,exact,36th surah of the Quran,36:1-83,false,,,quran
+4,en,exact,which surah is number 55,55:1-78,false,,,quran
 5,en,exact,last 2 ayat of surah baqarah,2:285;2:286,false,,,quran
 6,en,exact,first 5 ayahs of surah alaq,96:1-5,false,,,quran
 7,en,exact,ayat 1 to 5 of surah alaq,96:1-5,false,,,quran

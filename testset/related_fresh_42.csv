@@ -1,8 +1,8 @@
 ﻿id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode
-1,en,exact,chapter 18,18:1-10,false,,,quran
-2,bn,exact,সূরা ৫৫,55:1-10,false,,,quran
+1,en,exact,chapter 18,18:1-110,false,,,quran
+2,bn,exact,সূরা ৫৫,55:1-78,false,,,quran
 3,en,exact,surah number 112,112:1-4,false,,,quran
-4,en,exact,which surah is the 67th,67:1-10,false,,A phrasing without the word 'number'.,quran
+4,en,exact,which surah is the 67th,67:1-30,false,,A phrasing without the word 'number'.,quran
 5,en,exact,last 3 ayat of surah hashr,59:22;59:23;59:24,false,,,quran
 6,en,exact,first 3 ayat of surah kahf,18:1;18:2;18:3,false,,,quran
 7,en,exact,surah baqarah ayat 1 to 3,2:1;2:2;2:3,false,,,quran

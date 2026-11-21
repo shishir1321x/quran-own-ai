@@ -68,11 +68,11 @@ describe('references and surahs', () => {
     expect(refs('What is the first ayah of the Quran?')).toEqual(['1:1']);
     expect(refs('What is the last ayah of the Quran?')).toEqual(['114:6']);
   });
-  it('a named surah: all of it if short, the first 10 ayahs if long', () => {
+  it('a named surah: all of it, short or long (until 21 Nov 2026 a long one showed its first 10 ayahs)', () => {
     expect(refs('surah naas er banglay ortho ki?')).toHaveLength(6);
     expect(refs('Show me Surah Al-Kawthar')).toEqual(['108:1', '108:2', '108:3']);
-    expect(refs('সূরা ইয়াসিন পড়তে চাই')).toHaveLength(10);
-    expect(e.ask('Give me Surah Al-Baqarah').answer).toMatch(/first 10 of 286/);
+    expect(refs('সূরা ইয়াসিন পড়তে চাই')).toHaveLength(83);
+    expect(e.ask('Give me Surah Al-Baqarah').answer).toMatch(/all 286 ayahs/);
   });
   it('"meaning" after earlier ayahs shows the same ayahs in Bengali', () => {
     const first = e.ask('surah naas');

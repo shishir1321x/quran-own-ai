@@ -51,6 +51,11 @@ The first step that applies answers:
 4. **The ayah of the day**, **references and famous passages**: `2:255`, *Ayat al-Kursi* (any spelling), *Amana
    ar-Rasul*, *Ayat-e-Karima*, *Bismillah*, *teen qul*, a **page** of the mushaf, a **juz (para)** (*para 3*, *Amma para*).
 5. **A surah, by name or number, or a part of it**: *surah 36*, *last 2 ayat of surah baqarah*, *ayat 1 to 5 of surah alaq*.
+   **A surah is shown whole** (Al-Baqarah: all 286 ayahs, about 0.2 MB); a range or a part exactly as asked (*2:1-286*,
+   *last 20 ayat of surah baqarah*); a mushaf page whole (*page 604*: Al-Ikhlas, Al-Falaq, An-Nas). A para (juz, up to 564
+   ayahs) still comes 10 at a time with *show more*. Until 21 Nov 2026 a surah showed its first 10 ayahs: 7 rows of
+   `related_40.csv` and `related_fresh_42.csv` that expected exactly those 10 were changed to the whole surah. The chat
+   history keeps up to 300 ayahs per turn, and a request may be up to 64 KB, so that a follow-up after a whole surah works.
 6. **Follow-up**: "banglay ortho ki?" shows the ayahs of the chat so far with the Bengali translation.
    **Explain this ayah** (`explain 2:255`, `tafsir of Ayat al-Kursi`, `আয়াতুল কুরসির ব্যাখ্যা`): the translators' own
    explanatory notes for the ayah (or the first 4 ayahs of a surah), copied word for word from `data/notes.json`,
@@ -96,7 +101,7 @@ Node.js 20 or newer.
 
 ```
 npm install
-npm test            # 603 tests (including the page run in a fake browser)
+npm test            # 610 tests (including the page run in a fake browser)
 npm run build
 npm start           # http://localhost:8787
 ```
@@ -172,6 +177,8 @@ Nine sets (`testset/`), questions of many kinds. The answers were decided before
 | `about_terms_hidden_5.csv` (never run until the change was finished; same author and style) | **5/5** | 5/5 |
 | `explain_followups_12.csv` (explain these / this / it, what does this mean?, the opening sentence) | **3/12 (25%)**, only the 3 that must not change | 12/12 |
 | `explain_followups_hidden_5.csv` (never run until the change was finished; same author and style) | **5/5** | 5/5 |
+| `surah_full_12.csv` (a whole surah, a range, a page; follow-ups after a whole surah) | **1/12 (8%)**, only the para row that must not change | 12/12 |
+| `surah_full_hidden_4.csv` (never run until the change was finished; same author and style) | **4/4** | 4/4 |
 
 Only the **first-run numbers are honest estimates**: after a first run I fixed what I saw and ran again, so the last
 column is optimistic. For `normal_users_75` the 24% is only the "before" picture (the features were built to pass it);

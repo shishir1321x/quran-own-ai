@@ -1,0 +1,5 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,exact,surah rahman,55:1-78,false,,the whole surah,quran,
+2,bn,exact,সূরা ইয়াসিন দেখাও,36:1-83,false,,the whole surah,quran,
+3,en,exact,surah 18,18:1-110,false,,the whole surah,quran,
+4,en,exact,next ayah,68:1,false,,after the last ayah of the surah shown,quran,surah al-mulk
