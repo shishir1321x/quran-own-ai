@@ -1,0 +1,6 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,explain,explain them,78:1-4,false,,answer contains: I do not explain anything on my own,quran,para 30
+2,en,explain,please explain these ayahs,12:1-4,false,,answer contains: I do not explain anything on my own,quran,story of yusuf
+3,bn,explain,এটার ব্যাখ্যা কী,2:255,false,,answer contains: আমি নিজে থেকে কিছুই ব্যাখ্যা করি না,quran,2:255
+4,en,explain,what do these mean?,112:1-4,false,,answer contains: I do not explain anything on my own,quran,surah ikhlas
+5,ar,explain,شرح هذا,2:255,false,,answer contains: لا أشرح شيئًا من عندي,quran,2:255

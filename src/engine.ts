@@ -137,6 +137,20 @@ const HIZB = /\bhow many hizb\b|কয়টি হিযব|কয়টি হ
 const WORDS_IN_QURAN = /\bhow many\s+(?:words|letters)\b|কয়টি শব্দ|কত শব্দ|কয়টি হরফ|كم كلمة|كم حرف/i;
 // "explain 2:255", "tafsir of Ayat al-Kursi", "আয়াতুল কুরসির ব্যাখ্যা": show the translator's notes for the ayah.
 const EXPLAIN = /\b(explain|explanation|explaining|elaborate|interpret|interpretation|commentary|tafsir|tafseer|tafsier|tafsiir)\b|ব্যাখ্যা|তাফসীর|তাফসির|শরহ|شرح|تفسير|توضيح/gi;
+// "what does this mean?", "what do these mean?": about the ayahs just shown, answered like "explain these" (the notes)
+const MEANING_BACK = /^\s*what\s+(?:does|do|is|are)\s+(?:this|that|it|these|those)(?:\s+(?:ayah|ayat|verse|ayahs|verses|one|ones))?\s+means?\s*[?!.]*$|^\s*what\s+(?:is|are)\s+the\s+meanings?\s+of\s+(?:this|that|it|these|those)(?:\s+(?:ayah|ayat|verse|ayahs|verses))?\s*[?!.]*$/i;
+// Words of "explain these / this / it" that only point back to what was shown (no target of their own)
+const POINT_BACK = new Set([
+  'can', 'could', 'would', 'will', 'you', 'me', 'us', 'please', 'pls', 'plz', 'the', 'these', 'this', 'those', 'them', 'it', 'that',
+  'ayah', 'ayahs', 'ayat', 'aya', 'verse', 'verses', 'to', 'for', 'bit', 'little', 'more', 'again', 'briefly', 'ok', 'okay', 'now',
+  'also', 'all', 'of', 'what', 'does', 'do', 'is', 'are', 'mean', 'means', 'meaning', 'tell', 'give', 'about', 'one', 'ones', 'above',
+  'egulo', 'egular', 'eta', 'etar', 'eti', 'ei', 'amake', 'ektu', 'koro', 'korun', 'dao', 'din', 'den', 'to', 'er', 'ki', 'bolo', 'gulo',
+  'এগুলো', 'এগুলোর', 'এগুলোকে', 'এটা', 'এটার', 'এটাকে', 'এটি', 'এটির', 'এই', 'সেগুলো', 'সেগুলোর', 'ওগুলো', 'ওগুলোর', 'আয়াত',
+  'আয়াতগুলো', 'আয়াতগুলোর', 'আয়াতটি', 'আয়াতটির', 'আমাকে', 'একটু', 'আরেকটু', 'করো', 'করুন', 'কর', 'দাও', 'দিন', 'দেন', 'তো', 'এর',
+  'কি', 'কী', 'বলো', 'বলুন',
+  'هذه', 'هذا', 'هذي', 'لي', 'من', 'فضلك', 'الايات', 'الايه', 'ايه', 'ايات', 'ما', 'معني',
+].map((w) => normAr(normBn(w))));
+
 // A named work of tafsir: we do not have these, only the translators' notes.
 const TAFSIR_WORK = /\b(ibn kathir|ibn katheer|ibn-kathir|kathir|katheer|jalalayn|jalalain|jalalein|tabari|tabri|qurtubi|qurtubee|sa'?di|saadi|maududi|mawdudi|tafheem|muyassar|maarif|maariful|ibn abbas|baghawi|razi|zamakhshari)\b|ইবনে কাসীর|ইবনে কাছীর|জালালাইন|তাবারী|কুরতুবী|মাওদুদী|তাফহীম|মা'?আরিফুল|ابن كثير|الجلالين|الطبري|القرطبي|السعدي|الميسر/gi;
 const THANKS = /\b(thanks|thank you|thankyou|thx|shukria|shukriya|dhonnobad|dhanyabad|jazak\w*|jazaka\w*)\b|ধন্যবাদ|শুকরিয়া|জাযাকাল্লাহ|জাজাকাল্লাহ|شكرا|شكرًا|جزاك/i;
@@ -390,36 +404,49 @@ export class Engine {
     const work = question.match(TAFSIR_WORK)?.[0] ?? '';
     const stripped = question.replace(EXPLAIN, ' ').replace(TAFSIR_WORK, ' ').replace(/\s+/g, ' ').trim();
     const base = this.core(stripped, history);
-    const lang = base.lang;
+    // "شرح 2:255": without the word "explain" only "2:255" is left, which has no language: take the whole question's
+    const lang = /\p{L}/u.test(stripped) ? base.lang : detectLanguage(question);
     const asked = toAsciiDigits(question).toLowerCase();
-    // only a clear target gets notes: one ayah, a range, or a surah (its first ayahs)
-    if (!(base.ayahs.length > 0 && (base.kind === 'ref' || base.kind === 'surah'))) {
+    // every answer to "explain ..." first says that nothing is explained in the assistant's own words
+    const own = MSG.ownWords[lang];
+    // only a clear target gets notes: one ayah, a range, or a surah (its first ayahs) ...
+    let target: Array<{ s: number; a: number }> | null = base.ayahs.length > 0 && (base.kind === 'ref' || base.kind === 'surah') ? base.ayahs : null;
+    // ... or, for "explain these / this / it", "what does this mean?", the ayahs that were just shown in the chat
+    const last = [...history].reverse().find((h) => h.citations?.length > 0);
+    if (!target && last && this.onlyPointsBack(stripped)) target = last.citations.map((c) => ({ s: c.surah, a: c.ayah }));
+    if (!target) {
       const badRef = base.kind === 'notFound' && /\d+\s*[:：]\s*\d+/.test(toAsciiDigits(stripped));
       const passThrough = ['scholar', 'crisis', 'refusal', 'unsupported', 'feedback', 'help', 'about', 'greeting', 'thanks'].includes(base.kind);
       if (badRef || passThrough) return base;
-      return this.reply('help', 'general', lang, MSG.explainWhich[lang]);
+      return this.reply('help', 'general', lang, `${own} ${MSG.explainWhich[lang]}`);
     }
-    const shown = base.ayahs.slice(0, EXPLAIN_MAX_AYAHS);
+    const shown = target.slice(0, EXPLAIN_MAX_AYAHS);
     const wantEn = asked.search(REQ_EN), wantBn = asked.search(REQ_BN);
     const noteLang: 'en' | 'bn' = wantBn >= 0 && (wantEn < 0 || wantBn > wantEn) ? 'bn' : wantEn >= 0 ? 'en' : lang === 'bn' ? 'bn' : 'en';
     const other: 'en' | 'bn' = noteLang === 'bn' ? 'en' : 'bn';
     const source = noteLang === 'bn' ? NOTE_SOURCE.bn : NOTE_SOURCE.en;
     const notes = shown.flatMap(({ s, a }) => { const text = this.quran.note(noteLang, s, a); return text ? [{ s, a, text, source }] : []; });
-    const parts: string[] = [];
+    const parts: string[] = [own];
     if (work) parts.push(MSG.noTafsirWork(work.trim())[lang]);
     if (notes.length > 0) parts.push(MSG.explainIntro(source)[lang]);
     else {
       parts.push(MSG.noNote[lang]);
       if (shown.some(({ s, a }) => this.quran.note(other, s, a))) parts.push(MSG.noteOtherLang(other)[lang]);
     }
-    if (base.ayahs.length > shown.length) parts.push(MSG.explainFirst(shown.length)[lang]);
+    if (target.length > shown.length) parts.push(MSG.explainFirst(shown.length)[lang]);
     return this.reply('explain', 'quran', lang, parts.join(' '), { ayahs: shown, notes, translation: noteLang, rawTranslation: notes.length > 0 });
+  }
+
+  /** "explain these", "explain it", "এগুলোর ব্যাখ্যা দাও", "اشرح هذه": nothing in it but words that point back to what was shown. */
+  private onlyPointsBack(text: string): boolean {
+    const toks = normAr(normBn(text)).toLowerCase().split(/[^\p{L}\p{M}]+/u).filter((w) => w.length > 1);
+    return toks.every((w) => POINT_BACK.has(w));
   }
 
   /** The answer to a question, with the translation the person asked for (and a note if they asked for a transliteration). */
   ask(question: string, history: HistoryTurn[] = []): Reply {
     EXPLAIN.lastIndex = 0;
-    if (EXPLAIN.test(question)) {
+    if (EXPLAIN.test(question) || MEANING_BACK.test(question.trim())) {
       EXPLAIN.lastIndex = 0;
       const e = this.explain(question, history);
       e.suggestions = this.suggest(e, question);

@@ -54,7 +54,9 @@ The first step that applies answers:
 6. **Follow-up**: "banglay ortho ki?" shows the ayahs of the chat so far with the Bengali translation.
    **Explain this ayah** (`explain 2:255`, `tafsir of Ayat al-Kursi`, `আয়াতুল কুরসির ব্যাখ্যা`): the translators' own
    explanatory notes for the ayah (or the first 4 ayahs of a surah), copied word for word from `data/notes.json`,
-   shown in a collapsed block under the ayah. "What is the meaning of" an ayah is its translation, not the notes.
+   shown in a collapsed block under the ayah. Every answer to "explain ..." first says that the assistant explains nothing on
+   its own (all it shows is the Quran as it is, its published translations and the translators' notes). "Explain these / this / it",
+   "what does this mean?", "এগুলোর ব্যাখ্যা দাও", "اشرح هذه" explain the ayahs just shown (the first 4). "What is the meaning of" an ayah is its translation, not the notes.
 7. **Which ayah is this?** (`src/phrase.ts`): the words of an ayah in Arabic, English or Bengali are found, word for word.
 8. **The story of a prophet or another person** (`STORIES` in `src/themes_more.ts`): the passage where the account begins.
 9. **Checked themes** (`THEMES` in `src/lexicon.ts` and `src/themes_more.ts`): about 90 of them, from patience and mercy to
@@ -94,7 +96,7 @@ Node.js 20 or newer.
 
 ```
 npm install
-npm test            # 596 tests (including the page run in a fake browser)
+npm test            # 603 tests (including the page run in a fake browser)
 npm run build
 npm start           # http://localhost:8787
 ```
@@ -168,6 +170,8 @@ Nine sets (`testset/`), questions of many kinds. The answers were decided before
 | `followups_hidden_5.csv` (never run until the feature was finished; same author and style) | **5/5** (one answered in English to Banglish) | 5/5 |
 | `about_terms_15.csv` (what is this chatbot about; terms and privacy questions) | **2/15 (13%)**, only the 2 that must not change | 15/15 |
 | `about_terms_hidden_5.csv` (never run until the change was finished; same author and style) | **5/5** | 5/5 |
+| `explain_followups_12.csv` (explain these / this / it, what does this mean?, the opening sentence) | **3/12 (25%)**, only the 3 that must not change | 12/12 |
+| `explain_followups_hidden_5.csv` (never run until the change was finished; same author and style) | **5/5** | 5/5 |
 
 Only the **first-run numbers are honest estimates**: after a first run I fixed what I saw and ran again, so the last
 column is optimistic. For `normal_users_75` the 24% is only the "before" picture (the features were built to pass it);

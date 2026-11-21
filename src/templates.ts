@@ -61,6 +61,11 @@ export const MSG = {
     'This is a question about hadith or the virtue of a surah. I have the Quran text, a translation and the translators\' notes, but no hadith collections, so I cannot answer it reliably. Please ask a qualified scholar.',
     'এটি হাদীস বা কোনো সূরার ফজিলত সংক্রান্ত প্রশ্ন। আমার কাছে কুরআনের পাঠ, অনুবাদ ও অনুবাদকের টীকা আছে, কিন্তু হাদীসের কোনো সংকলন নেই, তাই নির্ভরযোগ্য উত্তর দিতে পারব না। অনুগ্রহ করে একজন যোগ্য আলেমকে জিজ্ঞেস করুন।',
     'هذا سؤال عن الحديث أو فضل سورة. عندي نص القرآن وترجمته وملاحظات المترجم، بلا مجموعات حديث، فلا أستطيع الجواب بثقة. يرجى سؤال عالم مؤهل.'),
+  // The first sentence of every answer to "explain ...": the assistant explains nothing in its own words.
+  ownWords: t(
+    'I do not explain anything on my own: everything I show comes from the Quran, as it is, with its published translations.',
+    'আমি নিজে থেকে কিছুই ব্যাখ্যা করি না: আমি যা দেখাই সবই কুরআন থেকে, যেমন আছে তেমন, প্রকাশিত অনুবাদসহ।',
+    'لا أشرح شيئًا من عندي: كل ما أعرضه من القرآن كما هو، مع ترجماته المنشورة.'),
   explainIntro: (source: string): T => t(
     `Explanatory notes for these ayahs: they are the translator's own notes, copied word for word (${source}). This assistant adds nothing to them and does not judge them. For rulings please ask a qualified scholar.`,
     `এই আয়াতগুলোর ব্যাখ্যামূলক টীকা: এগুলো অনুবাদকের নিজের লেখা টীকা, হুবহু তুলে দেওয়া (${source})। এই সহকারী এতে কিছু যোগ করে না, বিচারও করে না। বিধান জানতে যোগ্য আলেমকে জিজ্ঞেস করুন।`,
