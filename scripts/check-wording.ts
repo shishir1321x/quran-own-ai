@@ -73,3 +73,10 @@ show('The list of the sajdah ayahs', (l) => STAT_TEXT.sajdaList[l]);
   show('Suggestions: numbers', (l) => SUGGEST.facts[l].join(' | '));
   show('Suggestions: after ayahs', (l) => [SUGGEST.more[l], SUGGEST.nextAyah[l], SUGGEST.nextSurah[l], SUGGEST.explain('2:255')[l], SUGGEST.inEnglish[l], SUGGEST.inBengali[l], SUGGEST.arabicOnly[l]].join(' | '));
 }
+
+// a little conversation (src/conversation.ts): what is said back to "how are you?", "I'm fine", "bye", "assalamu alaikum" ...
+{
+  for (const k of Object.keys(MSG.opener) as Array<keyof typeof MSG.opener>) show(`Conversation: a greeting first (${k})`, (l) => MSG.opener[k][l]);
+  for (const k of ['greeting', 'howAreYou', 'userWell', 'userWellBack', 'sorryToHear', 'bye', 'goodNight', 'sorry', 'areYouThere',
+    'whatDoing', 'niceToMeet', 'ack', 'jazakallah', 'thanks'] as const) show(`Conversation: ${k}`, (l) => MSG[k][l]);
+}

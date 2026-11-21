@@ -19,6 +19,7 @@ import { isAllahForm, tiedTop, wordFrequency } from './wordfreq.js';
 import { prophetsIn, prophetsNamedIn } from './prophets.js';
 import type { Lang } from './types.js';
 import { detectLanguage } from './language.js';
+import { conversation, type Conversation } from './conversation.js';
 
 export type Kind =
   | 'greeting' | 'thanks' | 'about' | 'scholar' | 'refusal' | 'crisis'
@@ -541,7 +542,11 @@ export class Engine {
     if (HADITH.test(lower)) return this.reply('scholar', 'quran', lang, MSG.noHadith[lang], { notFound: true });
     if (SENSITIVE.test(lower)) return this.reply('scholar', 'quran', lang, MSG.sensitive[lang], { notFound: true });
 
-    // 2. small talk and things this assistant cannot do (short messages only, so a real question is never taken for them)
+    // 2. a little conversation, in a humble manner: "how are you?", "I'm fine", "bye", "sorry", "assalamu alaikum" ...
+    // (src/conversation.ts: the WHOLE message only, so a question about the Quran is never taken for it)
+    const conv = words <= 12 ? conversation(q, this.askedHowAreYou(history)) : null;
+    if (conv) return this.converse(conv, lang);
+    // small talk and things this assistant cannot do (short messages only, so a real question is never taken for them)
     if (words <= 5 && THANKS.test(lower)) return this.reply('thanks', 'general', lang, MSG.thanks[lang]);
     if (words <= 5 && WISHES.test(lower)) return this.reply('greeting', 'general', lang, MSG.wishes[lang]);
     // what this assistant is, and its terms: a specific answer and a link to the Terms page (never when the Quran is asked about)
@@ -777,6 +782,29 @@ export class Engine {
       .map((f) => ({ s: f.ayah.s, a: f.ayah.a })).filter((y) => !shown.has(`${y.s}:${y.a}`)).slice(0, 5);
     if (more.length === 0) return this.reply('notFound', 'quran', lang, MSG.noMore[lang], { notFound: true });
     return this.reply('search', 'quran', lang, MSG.moreSearch[lang], { ayahs: more });
+  }
+
+  /** Did the assistant's last answer ask "How are you?" (then "good" or "valo" is the person's answer). */
+  private askedHowAreYou(history: HistoryTurn[]): boolean {
+    const last = history[history.length - 1]?.answer ?? '';
+    return (['en', 'bn', 'ar'] as const).some((l) => last.includes(MSG.howAreYouAsked[l]));
+  }
+
+  /** What to say back in a little conversation: a greeting word first (salam is answered with salam), then the rest. */
+  private converse(c: Conversation, lang: Lang): Reply {
+    const open = c.opener && c.opener !== 'welcome' ? `${MSG.opener[c.opener][lang]} ` : '';
+    switch (c.talk) {
+      case 'notWell': {   // a kind word, then the checked ayahs about hardship and comfort (as for "I am sad")
+        const themed = matchThemes('sad', this.isEnglish);
+        const label = [...new Set(themed.themes.map((t) => THEME_LABEL[t.id]?.[lang] ?? t.id))].join(DOMAIN_JOIN(lang));
+        return this.reply('theme', 'quran', lang, `${open}${MSG.sorryToHear[lang]} ${MSG.themeIntro(label)[lang]}`,
+          { ayahs: themed.ayahs.map((x) => ({ s: x.s, a: x.a })) });
+      }
+      case 'jazakallah': return this.reply('thanks', 'general', lang, open + MSG.jazakallah[lang]);
+      case 'praise': return this.reply('thanks', 'general', lang, open + MSG.compliment[lang]);
+      case 'greeting': return this.reply('greeting', 'general', lang, open + MSG.greetingBody[lang]);
+      default: return this.reply('greeting', 'general', lang, open + MSG[c.talk][lang]);
+    }
   }
 
   /** A short message to the assistant itself: its name, a personal question, praise, or a joke. Never when the Quran is asked about. */

@@ -81,6 +81,11 @@ for (const r of rows) {
       const want = r.notes?.match(/kind: (\w+)/)?.[1];
       ok = reply.kind === want && shown.length === 0; break;
     }
+    case 'reply': {         // a reply without ayahs: its kind AND a sentence in it ("kind: greeting | answer contains: How are you?")
+      const want = r.notes?.match(/kind: (\w+)/)?.[1];
+      const text = r.notes?.match(/answer contains: (.+)$/)?.[1]?.trim() ?? '';
+      ok = reply.kind === want && shown.length === 0 && !!text && reply.answer.toLowerCase().includes(text.toLowerCase()); break;
+    }
     case 'answer': {        // some of these ayahs AND a sentence in the answer
       const want = r.notes?.match(/answer contains: (.+)$/)?.[1]?.trim() ?? '';
       ok = shown.some((x) => expected.has(x)) && reply.answer.toLowerCase().includes(want.toLowerCase()); break;

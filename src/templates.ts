@@ -6,6 +6,17 @@ type T = Record<Lang, string>;
 /** Digits for a Bengali sentence: 114 -> ১১৪. */
 const bd = (n: number | string): string => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[Number(d)]);
 const t = (en: string, bn: string, ar: string): T => ({ en, bn, ar });
+
+// Pieces of the conversation answers in MSG (a greeting, "how are you?", "I'm fine")
+const GREETING_BODY = t(
+  'Welcome to Quran Assistant from Amal, a small helper for reading the Quran. You can ask me about a topic, a surah or an ayah, or a number (for example "how many ayahs are in Al-Baqarah?"). How can I help you today?',
+  'কুরআন সহকারীতে স্বাগতম! এটি Amal-এর একটি ছোট সহায়ক, কুরআন পড়ার জন্য। কুরআনের কোনো বিষয়, সূরা, আয়াত বা সংখ্যা সম্পর্কে জিজ্ঞেস করুন (যেমন "আল-বাকারায় কয়টি আয়াত?")। কীভাবে সাহায্য করতে পারি?',
+  'مرحبًا بك في مساعد القرآن من Amal، وهو مساعد صغير لقراءة القرآن. اسألني عن موضوع في القرآن أو سورة أو آية أو عدد (مثل "كم آية في سورة البقرة؟"). كيف أستطيع مساعدتك اليوم؟');
+const HOW_ARE_YOU = t('How are you?', 'আপনি কেমন আছেন?', 'كيف حالك أنت؟');
+const READ_TODAY = t(
+  'What would you like to read from the Quran today? For example: ayahs about patience, Surah Al-Mulk, or the story of Yusuf.',
+  'আজ কুরআন থেকে কী পড়তে চান? যেমন: ধৈর্য নিয়ে আয়াত, সূরা মুলক, বা ইউসুফ (আ.)-এর কাহিনী।',
+  'ماذا تحب أن تقرأ من القرآن اليوم؟ مثلًا: آيات عن الصبر، أو سورة الملك، أو قصة يوسف.');
 /** An Arabic counted noun, as Arabic grammar wants it: 1 آية واحدة, 2 آيتين, 3-10 آيات, 11 and more آية. */
 const arCount = (n: number, one: string, two: string, few: string): string =>
   n === 1 ? `${one} واحدة` : n === 2 ? two : n >= 3 && n <= 10 ? `${n} ${few}` : `${n} ${one}`;
@@ -191,10 +202,53 @@ export const MSG = {
     'I am really sorry that you are going through this. You do not have to carry it alone. Please talk to someone you trust right now, or contact your local emergency number or a crisis line. If you might be in danger, please call emergency services at once.',
     'আপনি যে কষ্টের মধ্য দিয়ে যাচ্ছেন সেজন্য আমি সত্যিই দুঃখিত। এটা একা বহন করতে হবে না। এখনই কোনো বিশ্বস্ত মানুষের সাথে কথা বলুন, অথবা আপনার এলাকার জরুরি নম্বরে বা কোনো সহায়তা-হটলাইনে যোগাযোগ করুন। আপনি বিপদে থাকতে পারেন মনে হলে এখনই জরুরি সেবায় ফোন করুন।',
     'يؤسفني جدًا ما تمرّ به. لست مضطرًا لتحمّله وحدك. تحدّث الآن مع شخص تثق به، أو اتصل برقم الطوارئ المحلي أو بخط مساعدة. إن كنت في خطر فاتصل بالطوارئ فورًا.'),
-  greeting: t(
-    'Hello! I am the Quran assistant. Ask me about a topic in the Quran, a surah or an ayah, or a number (for example "how many ayahs are in Al-Baqarah?").',
-    'আসসালামু আলাইকুম! আমি কুরআন সহকারী। কুরআনের কোনো বিষয়, সূরা, আয়াত বা সংখ্যা সম্পর্কে জিজ্ঞেস করুন (যেমন "আল-বাকারায় কয়টি আয়াত?")।',
-    'السلام عليكم! أنا مساعد القرآن. اسألني عن موضوع في القرآن أو سورة أو آية أو عدد (مثل "كم آية في سورة البقرة؟").'),
+  greeting: t(`Hello! ${GREETING_BODY.en}`, `আসসালামু আলাইকুম! ${GREETING_BODY.bn}`, `أهلًا! ${GREETING_BODY.ar}`),
+  greetingBody: GREETING_BODY,
+  // A little conversation, in a humble manner (src/conversation.ts). Honest that it is a program: "all is well here",
+  // never "I feel fine". A greeting word in the message is answered first (OPENER), then the rest.
+  opener: {
+    salam: t('Wa alaikum assalam wa rahmatullah!', 'ওয়া আলাইকুমুস সালাম ওয়া রাহমাতুল্লাহ!', 'وعليكم السلام ورحمة الله!'),
+    hello: t('Hello!', 'আসসালামু আলাইকুম!', 'أهلًا!'),
+    morning: t('Good morning!', 'শুভ সকাল!', 'صباح الخير!'),
+    afternoon: t('Good afternoon!', 'শুভ অপরাহ্ন!', 'مساء الخير!'),
+    evening: t('Good evening!', 'শুভ সন্ধ্যা!', 'مساء الخير!'),
+  },
+  howAreYou: t(
+    `Alhamdulillah, all is well here, and thank you for asking! I am only a small program for reading the Quran, but I am always here to help. ${HOW_ARE_YOU.en}`,
+    `আলহামদুলিল্লাহ, এখানে সব ঠিক আছে, জিজ্ঞেস করার জন্য ধন্যবাদ! আমি কুরআন পড়ার একটি ছোট প্রোগ্রাম মাত্র, তবে সাহায্য করতে সবসময় আছি। ${HOW_ARE_YOU.bn}`,
+    `الحمد لله، كل شيء بخير هنا، وشكرًا لسؤالك! أنا مجرد برنامج صغير لقراءة القرآن، لكنني هنا دائمًا لمساعدتك. ${HOW_ARE_YOU.ar}`),
+  /** The question that ends MSG.howAreYou: after it, a short "good" or "ভালো" is the person's answer. */
+  howAreYouAsked: HOW_ARE_YOU,
+  userWell: t(
+    `Alhamdulillah, I am glad to hear that! ${READ_TODAY.en}`,
+    `আলহামদুলিল্লাহ, শুনে ভালো লাগলো! ${READ_TODAY.bn}`,
+    `الحمد لله، يسعدني سماع ذلك! ${READ_TODAY.ar}`),
+  userWellBack: t(
+    `Alhamdulillah, I am glad to hear that! All is well here too, thank you for asking. ${READ_TODAY.en}`,
+    `আলহামদুলিল্লাহ, শুনে ভালো লাগলো! এখানেও সব ঠিক আছে, জিজ্ঞেস করার জন্য ধন্যবাদ। ${READ_TODAY.bn}`,
+    `الحمد لله، يسعدني سماع ذلك! وكل شيء بخير هنا أيضًا، شكرًا لسؤالك. ${READ_TODAY.ar}`),
+  /** Before the ayahs about hardship and comfort, when the person says they are not well. */
+  sorryToHear: t('I am sorry to hear that. May Allah make it easy for you.', 'শুনে খারাপ লাগলো। আল্লাহ আপনার জন্য সহজ করে দিন।', 'يؤسفني سماع ذلك. يسّر الله أمرك.'),
+  bye: t(
+    'Allah Hafiz, and thank you for visiting! Come back any time you want to read from the Quran.',
+    'আল্লাহ হাফেজ, আসার জন্য ধন্যবাদ! কুরআন থেকে কিছু পড়তে চাইলে যেকোনো সময় আবার আসবেন।',
+    'في أمان الله، وشكرًا لزيارتك! عُد متى شئت لتقرأ من القرآن.'),
+  goodNight: t(
+    'Good night! May Allah keep you safe. Come back any time you want to read from the Quran.',
+    'শুভ রাত্রি! আল্লাহ আপনাকে ভালো রাখুন। কুরআন থেকে কিছু পড়তে চাইলে যেকোনো সময় আবার আসবেন।',
+    'تصبح على خير! حفظك الله. عُد متى شئت لتقرأ من القرآن.'),
+  sorry: t('No problem at all! Please ask whatever you like, in your own words.', 'কোনো সমস্যা নেই! নিজের মতো করে যা ইচ্ছা জিজ্ঞেস করুন।', 'لا بأس أبدًا! اسأل ما شئت بكلماتك.'),
+  areYouThere: t('Yes, I am here! How can I help you?', 'জি, আমি এখানে আছি! কীভাবে সাহায্য করতে পারি?', 'نعم، أنا هنا! كيف أستطيع مساعدتك؟'),
+  whatDoing: t(
+    'I am here, ready to help you read the Quran. What would you like to read?',
+    'আমি এখানে আছি, কুরআন পড়তে আপনাকে সাহায্য করার জন্য প্রস্তুত। কী পড়তে চান?',
+    'أنا هنا، مستعد لمساعدتك في قراءة القرآن. ماذا تحب أن تقرأ؟'),
+  niceToMeet: t(
+    'Nice to meet you too! I am here whenever you want to read from the Quran.',
+    'আপনার সাথে পরিচিত হয়ে আমারও ভালো লাগলো! কুরআন থেকে কিছু পড়তে চাইলে আমি সবসময় আছি।',
+    'وأنا أيضًا سعيد بلقائك! أنا هنا متى أردت أن تقرأ من القرآن.'),
+  ack: t('All right! I am here whenever you have a question about the Quran.', 'আচ্ছা! কুরআন নিয়ে কোনো প্রশ্ন থাকলে জিজ্ঞেস করবেন, আমি আছি।', 'حسنًا! أنا هنا متى كان لديك سؤال عن القرآن.'),
+  jazakallah: t('Wa iyyakum! It was my pleasure. Ask me anything else about the Quran.', 'ওয়া ইয়্যাকুম! কুরআন সম্পর্কে আরও কিছু জানতে চাইলে জিজ্ঞেস করুন।', 'وإياكم! اسألني عن أي شيء آخر في القرآن.'),
   // Talking to the assistant itself: a short answer that leads back to the Quran (src/engine.ts, "talk to the assistant").
   myName: t(
     'My name is Quran Assistant, from Amal. I am a small program that searches the Quran text and shows real ayahs with a translation. Ask me about a topic (for example patience or mercy), a surah or an ayah, or a number.',
@@ -209,9 +263,9 @@ export const MSG = {
     'ধন্যবাদ, আপনার কথায় খুশি হলাম! কুরআন সম্পর্কে যা ইচ্ছা জিজ্ঞেস করুন।',
     'شكرًا، هذا لطف منك! اسألني ما شئت عن القرآن.'),
   chat: t(
-    'I am only a Quran assistant, so I cannot chat about that, tell jokes or give my own opinion. I can show you ayahs on a topic, a surah or an ayah, the story of a prophet, or numbers about the Quran. Type "help" to see examples.',
-    'আমি শুধু একটি কুরআন সহকারী, তাই এ নিয়ে গল্প করতে, কৌতুক বলতে বা নিজের মত দিতে পারি না। আমি কোনো বিষয়ে আয়াত, কোনো সূরা বা আয়াত, নবীদের কাহিনী, কিংবা কুরআনের নানা সংখ্যা দেখাতে পারি। উদাহরণ দেখতে "সাহায্য" লিখুন।',
-    'أنا مساعد للقرآن فقط، فلا أستطيع الدردشة في ذلك أو قول النكات أو إبداء رأيي. أستطيع أن أعرض آيات عن موضوع، أو سورة أو آية، أو قصة نبي، أو أرقامًا عن القرآن. اكتب "مساعدة" لترى أمثلة.'),
+    'Sorry, I am only a Quran assistant, so I cannot chat about that, tell jokes or give my own opinion. I can show you ayahs on a topic, a surah or an ayah, the story of a prophet, or numbers about the Quran. Type "help" to see examples.',
+    'দুঃখিত, আমি শুধু একটি কুরআন সহকারী, তাই এ নিয়ে গল্প করতে, কৌতুক বলতে বা নিজের মত দিতে পারি না। আমি কোনো বিষয়ে আয়াত, কোনো সূরা বা আয়াত, নবীদের কাহিনী, কিংবা কুরআনের নানা সংখ্যা দেখাতে পারি। উদাহরণ দেখতে "সাহায্য" লিখুন।',
+    'عذرًا، أنا مساعد للقرآن فقط، فلا أستطيع الدردشة في ذلك أو قول النكات أو إبداء رأيي. أستطيع أن أعرض آيات عن موضوع، أو سورة أو آية، أو قصة نبي، أو أرقامًا عن القرآن. اكتب "مساعدة" لترى أمثلة.'),
   thanks: t('You are welcome! Ask me anything else about the Quran.', 'আপনাকেও ধন্যবাদ! কুরআন সম্পর্কে আরও কিছু জানতে চাইলে জিজ্ঞেস করুন।', 'عفوًا! اسألني عن أي شيء آخر في القرآن.'),
   // "What is this chatbot about?": what it is, what to ask (every quoted example is answered: test/terms.test.ts),
   // what it does not do. A link to /terms comes with it.

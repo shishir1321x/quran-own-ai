@@ -26,6 +26,16 @@ The first step that applies answers:
    **Talking to the assistant itself** (*what is your name?*, *are you a muslim?*, *you are very helpful*, *tell me a joke*,
    in English, Banglish, Bengali and Arabic): a short answer that leads back to the Quran, never ayahs picked by its words.
    Only when the message has nothing about the Quran in it, and never for the words of an ayah (*you are the best nation*).
+   **A little conversation, in a humble manner** (`src/conversation.ts`, in English, Bengali, Banglish and Arabic):
+   *how are you? / are you good? / kemon acho / তুমি কি ভালো আছো? / كيف حالك* ("Alhamdulillah, all is well here ... How
+   are you?": it says it is a small program and never claims feelings), *I'm fine / valo achi / ভালো আছি* (and "...,
+   and you?"), *not good / mon kharap / ভালো নেই* (a kind word, then the checked ayahs about hardship and comfort), *bye /
+   allah hafez / valo theko / مع السلامة*, *good night*, *sorry*, *are you there?*, *what are you doing / ki koro*, *nice
+   to meet you*, *ok / acha*, *jazakallah* ("wa iyyakum"). *Assalamu alaikum* is answered "wa alaikum assalam". Right
+   after it asked "How are you?", a short *good / valo / ঠিক আছে* is taken as the answer. Only a WHOLE short message
+   counts, so *good deeds* or *sorry for my sins* still find ayahs. A Banglish message is answered in Bengali letters,
+   like every other answer. The sentences are in `src/templates.ts` and printed by `npm run check-wording` for a native
+   reader to check.
 3. **Numbers and facts** (`src/stats.ts`, computed from the data, with the line they came from): ayahs in a surah or
    a juz, longest/shortest surah, the longest ayah, Meccan/Medinan counts and **lists**, the list of surah names, the
    surah before or after another, how many juz, pages, hizb, sajdah ayahs, words, how often a word appears, and facts
@@ -112,7 +122,7 @@ Node.js 20 or newer.
 
 ```
 npm install
-npm test            # 688 tests (including the page run in a fake browser)
+npm test            # 763 tests (including the page run in a fake browser)
 npm run build
 npm start           # http://localhost:8787
 ```
@@ -194,6 +204,8 @@ The sets in `testset/`, questions of many kinds. The answers were decided before
 | `sacrifice_which_surah_hidden_5.csv` (never run until the change was finished; same author and style) | **5/5** | 5/5 |
 | `surah_names_38.csv` (surah names as people type them, in Latin and Bengali letters; 6 rows that must not change) | **6/38 (16%)**, only the 6 that must not change | 38/38 |
 | `surah_names_hidden_10.csv` (never run until the change was finished; same author and style) | **10/10** | 10/10 |
+| `conversation_48.csv` (how are you, I'm fine / not well, bye, sorry, salam ... in 4 ways of writing; 8 rows that must not change) | **8/48 (17%)**, only the 8 that must not change | 48/48 |
+| `conversation_hidden_10.csv` (never run until the change was finished; same author and style) | **10/10** | 10/10 |
 
 Only the **first-run numbers are honest estimates**: after a first run I fixed what I saw and ran again, so the last
 column is optimistic. For `normal_users_75` the 24% is only the "before" picture (the features were built to pass it);

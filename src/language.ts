@@ -44,6 +44,10 @@ const STRONG_BANGLISH = new Set([
   'jikir', 'jannat', 'behesht', 'jahannam', 'dozokh', 'dojokh', 'fereshta',
   'suray', 'surar', 'bangla', 'banglay', 'banglate', 'arbi', 'arbite',
   'shesh', 'sesh', 'prothom', 'pratham', 'naki', 'dekhao', 'dekhan', 'bolo', 'dao', 'den',
+  // a little conversation ("kemon acho", "valo achi", "ki koro", "valo theko", "pore kotha hobe")
+  'achi', 'acho', 'aso', 'asen', 'achis', 'achho', 'achhi', 'kmn', 'kmon', 'koro', 'korcho', 'korchen', 'korchis',
+  'khobor', 'khbr', 'obostha', 'obosta', 'theko', 'thakben', 'thakun', 'thako', 'acha', 'accha', 'achha', 'thik',
+  'kotha', 'laglo', 'dukkhito', 'khoda', 'bidai', 'vlo', 'bhlo', 'jacche', 'porichito',
 ]);
 
 // Shorter Banglish particles/words that count when paired together.

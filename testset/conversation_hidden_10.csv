@@ -1,0 +1,11 @@
+id,lang,type,question,expected_ayahs,expected_not_found,checked_by,notes,expected_mode,previous
+1,en,reply,how r u,,false,,kind: greeting | answer contains: How are you?,general,
+2,en,reply,"hello, are you fine?",,false,,kind: greeting | answer contains: How are you?,general,
+3,en,reply,"i'm doing well, thanks. what about you?",,false,,kind: greeting | answer contains: All is well here too,general,
+4,en,reply,see you later,,false,,kind: greeting | answer contains: Allah Hafiz,general,
+5,en,reply,my bad,,false,,kind: greeting | answer contains: No problem,general,
+6,bn,reply,kmn aso?,,false,,kind: greeting | answer contains: আপনি কেমন আছেন?,general,
+7,bn,reply,alhamdulillah bhalo achi,,false,,kind: greeting | answer contains: শুনে ভালো লাগলো,general,
+8,bn,answer,ভালো নেই,94:5,false,,answer contains: শুনে খারাপ লাগলো,quran,
+9,bn,reply,আপনি কেমন আছেন?,,false,,kind: greeting | answer contains: আপনি কেমন আছেন?,general,
+10,bn,reply,pore kotha hobe,,false,,kind: greeting | answer contains: আল্লাহ হাফেজ,general,
