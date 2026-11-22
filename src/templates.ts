@@ -200,6 +200,18 @@ export const MSG = {
     'These ayahs contain the words you wrote.',
     'আপনার লেখা শব্দগুলো এই আয়াতগুলোতে আছে।',
     'هذه الآيات تحتوي على الكلمات التي كتبتها.'),
+  wordMeaning: (term: string, meaning: string, hasAyahs: boolean): T => t(
+    `${term}: ${meaning}\nGeneral lexical meaning only — for detailed tafsir or religious rulings, please ask a qualified scholar.${hasAyahs ? '\n\nRelated ayahs from the Quran:' : ''}`,
+    `${term}: ${meaning}\nএটি সাধারণ শাব্দিক অর্থ — বিস্তারিত তাফসীর বা শরয়ী বিধানের জন্য অনুগ্রহ করে একজন যোগ্য আলেমের কাছে জিজ্ঞাসা করুন।${hasAyahs ? '\n\nকুরআন থেকে সম্পর্কিত আয়াত:' : ''}`,
+    `${term}: ${meaning}\nهذا معنى لغوي عام فقط — للتفسير المفصل أو الأحكام الشرعية يُرجى سؤال أهل العلم.${hasAyahs ? '\n\nآيات ذات صلة من القرآن:' : ''}`),
+  wordMeaningContext: (word: string): T => t(
+    `I do not have a standalone full-word dictionary entry for "${word}", so here are Quran ayahs that mention or relate to it with their published translations:`,
+    `"${word}" শব্দটির জন্য আলাদা পূর্ণাঙ্গ অভিধানভিত্তিক অর্থ আমার কাছে নেই, তবে কুরআনে এই শব্দের সাথে সম্পর্কিত বা শব্দটি উল্লেখ থাকা কিছু আয়াত ও প্রকাশিত অনুবাদ নিচে দেওয়া হলো:`,
+    `لا يتوفر لديّ معجم لغوي مستقل لكلمة «${word}»، لكن إليك آيات من القرآن الكريم تذكرها أو ترتبط بها مع ترجماتها المنشورة:`),
+  wordMeaningNotFound: (word: string): T => t(
+    `I do not have a dictionary meaning for "${word}", and I could not find it in my glossary of common Quranic terms or in the Quran text. Try asking about a common Quranic term (like sabr, taqwa, zakat, ihsan), a surah name, or an ayah reference.`,
+    `"${word}" শব্দটির অভিধানভিত্তিক অর্থ আমার কাছে নেই এবং প্রচলিত কুরআনিক পরিভাষার তালিকা বা কুরআনের পাঠেও এটি খুঁজে পাইনি। প্রচলিত কোনো কুরআনিক শব্দ (যেমন সবর, তাকওয়া, যাকাত, ইহসান), সূরার নাম বা আয়াত নম্বর লিখে চেষ্টা করুন।`,
+    `لا أملك معنى معجميًا لكلمة «${word}»، ولم أجدها في مسرد المصطلحات القرآنية الشائعة ولا في نص القرآن. جرّب السؤال عن مصطلح قرآني شائع (مثل الصبر أو التقوى أو الزكاة) أو اسم سورة أو رقم آية.`),
   storyIntro: (name: string, label: string): T => t(
     `${name}: the passage where the account begins (${label}). Read on in the Quran for the rest.`,
     `${name}: যেখান থেকে বর্ণনা শুরু (${label})। বাকিটা কুরআনে পড়ে নিন।`,
