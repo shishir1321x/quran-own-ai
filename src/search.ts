@@ -41,14 +41,18 @@ export function matchThemes(question: string, isEnglish: (w: string) => boolean 
     return latin.has(raw.toLowerCase());
   };
   const anyHit = (words: string[]) => words.some(wordHit);
-  const hits = THEMES.filter((t) => (t.allOf ? t.allOf.every(anyHit) : anyHit(t.words)));
+  const hits = THEMES.filter((t) => (t.pattern ? t.pattern.test(question) : t.allOf ? t.allOf.every(anyHit) : anyHit(t.words)));
   // "dua for parents" is about a dua for parents, not about parents in general: the specific theme wins
   const specific = hits.filter((t) => t.allOf);
   const hit = specific.length > 0 ? specific : hits;
+  // When another theme also matched, "সময়"/"times" is usually temporal context ("কষ্টের সময় ধৈর্য"), not the "time" theme (103:1).
+  const finalHit = hit.length > 1 && hit.some((t) => t.id === 'time') && !/\babout\s+time\b|সময়ের|সময়\s*(?:নিয়ে|সম্পর্কে|বিষয়ে)/i.test(question)
+    ? hit.filter((t) => t.id !== 'time')
+    : hit;
   const ayahs: ThemeMatch['ayahs'] = [];
   for (let i = 0; ayahs.length < MAX_THEME_AYAHS; i++) {
     let any = false;
-    for (const t of hit) {
+    for (const t of finalHit) {
       const r = t.ayahs[i];
       if (!r) continue;
       any = true;
@@ -56,7 +60,7 @@ export function matchThemes(question: string, isEnglish: (w: string) => boolean 
     }
     if (!any) break;
   }
-  return { themes: hit, ayahs };
+  return { themes: finalHit, ayahs };
 }
 
 // ---------------------------------------------------------------- BM25 search
@@ -67,19 +71,35 @@ export function matchThemes(question: string, isEnglish: (w: string) => boolean 
 const FRAMING = new Set([
   'which', 'surah', 'surahs', 'sura', 'suras', 'surat', 'chapter', 'chapters', 'quran', 'koran', 'quraan', 'talk', 'talks', 'talking',
   'speak', 'speaks', 'speaking', 'mention', 'mentions', 'mentioned', 'mentioning', 'regarding', 'concerning',
-  'er', 'kotha', 'bola', 'bole', 'boleche', 'hoyeche', 'hoise', 'hoyece', 'hoeche', 'kon', 'kono', 'te', 'ki', 'kii', 'ache', 'ase', 'achhe',
-  'asche', 'niye', 'somporke', 'shomporke', 'bishoye', 'korar', 'kora', 'kore', 'korte', 'ayat', 'ayate', 'ayaat', 'surate', 'surahte',
-  'qurane', 'korane', 'kurane', 'quraner', 'kuraner', 'bolo', 'bolun', 'dao', 'din', 'den', 'amake', 'jante', 'chai', 'gulo', 'guli',
-  'dekhao', 'dekhan',
+  'reference', 'references', 'ref', 'translation', 'translations', 'english', 'bangla', 'bengali', 'state', 'states', 'stated',
+  'include', 'including', 'find', 'list', 'only', 'without', 'passage', 'passages', 'containing', 'contain', 'contains', 'word', 'words',
+  'verse', 'verses', 'ayah', 'ayahs', 'ayat', 'ayats', 'exact', 'phrase', 'statement',
+  'er', 'kotha', 'kothata', 'bola', 'bole', 'boleche', 'hoyeche', 'hoise', 'hoyece', 'hoeche', 'kon', 'kono', 'te', 'e', 'o', 'ar',
+  'ki', 'kii', 'ache', 'ase', 'achhe', 'asche', 'niye', 'somporke', 'shomporke', 'bishoye', 'korar', 'kora', 'kore', 'korte', 'koro', 'na',
+  'ayate', 'ayaat', 'ayatgula', 'ayatgulo', 'ayatgular', 'surate', 'surahte', 'suray', 'qurane', 'korane', 'kurane', 'quraner', 'kuraner',
+  'bolo', 'bolun', 'dao', 'din', 'den', 'amake', 'jante', 'chai', 'gulo', 'guli', 'gula', 'dekhao', 'dekhan',
+  'onubad', 'anubad', 'shoho', 'soho', 'shobdo', 'shobdota', 'shobdoti', 'eta', 'emon', 'kache', 'shonkha', 'sonkha', 'scientific', 'inference',
 ].filter((w) => !(w in BANGLISH_TO_EN) && !(w in NAME_TO_EN)));
 
+const AR_TERM_TO_AR: Array<[RegExp, string]> = [
+  [/(?:আর[-\s]*)?(?:রহমান|রাহমান)|\b(?:ar[-\s]*)?rahman\b/gi, 'رحمن'],
+];
+
 export function queryTokens(question: string, isEnglish: (w: string) => boolean = () => false): { en: string[]; bn: string[]; ar: string[] } {
+  let cleaned = question;
+  const extraAr: string[] = [];
+  for (const [re, arTok] of AR_TERM_TO_AR) {
+    if (re.test(cleaned)) {
+      extraAr.push(arTok);
+      cleaned = cleaned.replace(re, ' ');
+    }
+  }
   // A Banglish or foreign word that we translate (namaz -> prayer, Ibrahim -> Abraham) is REPLACED by its
   // translation: the original word is not in the English text and must not count as a missing word.
-  const mapped = mappedEnglishWords(question, isEnglish).map(stemEn);
-  const topic = question.replace(/[A-Za-z']+/g, (w) => (FRAMING.has(w.toLowerCase()) ? ' ' : w));
+  const mapped = mappedEnglishWords(cleaned, isEnglish).map(stemEn);
+  const topic = cleaned.replace(/[A-Za-z']+/g, (w) => (FRAMING.has(w.toLowerCase()) ? ' ' : w));
   const raw = tokensEn(topic).filter((w) => !(w in BANGLISH_TO_EN) && !(w in NAME_TO_EN));
-  return { en: [...new Set([...raw, ...mapped])], bn: tokensBn(question), ar: tokensAr(question) };
+  return { en: [...new Set([...raw, ...mapped])], bn: tokensBn(cleaned), ar: [...new Set([...tokensAr(cleaned), ...extraAr])] };
 }
 
 export interface Found { ayah: Ayah; score: number }
@@ -101,13 +121,16 @@ export function searchAyahs(index: Index, q: Quran, question: string, limit = 5)
     }
   }
   // Precision before recall: an ayah that contains only ONE of several question words ("world cup" ->
-  // "a full cup") is a coincidence, not an answer. Show nothing rather than a wrong ayah.
-  const ranked = [...total.entries()].filter(([d]) => (coverage.get(d) ?? 0) >= MIN_COVERAGE).sort((a, b) => b[1] - a[1] || a[0] - b[0]);
+  // "a full cup") is a coincidence, not an answer. Weight by coverage so full-query matches rank above partial ones.
+  const ranked = [...total.entries()]
+    .filter(([d]) => (coverage.get(d) ?? 0) >= MIN_COVERAGE)
+    .map(([d, raw]) => [d, raw, raw * (0.5 + (coverage.get(d) ?? 0))] as const)
+    .sort((a, b) => b[2] - a[2] || a[0] - b[0]);
   if (ranked.length === 0) return [];
-  const best = ranked[0][1];
-  if (best < MIN_SCORE) return [];
+  if (Math.max(...ranked.map(([, r]) => r)) < MIN_SCORE) return [];
+  const best = ranked[0][2];
   // keep results that are close to the best one: a weak tail is noise
-  return ranked.filter(([, s]) => s >= best * 0.5).slice(0, limit).map(([doc, score]) => ({ ayah: q.ayahs[doc], score }));
+  return ranked.filter(([, , s]) => s >= best * 0.5).slice(0, limit).map(([doc, score]) => ({ ayah: q.ayahs[doc], score }));
 }
 
 /** An ayah must contain at least this share of the question's words (rare words weigh more). */

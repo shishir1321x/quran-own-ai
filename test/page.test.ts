@@ -108,4 +108,19 @@ describe('asking a question in the page', () => {
     expect(doc.querySelector('img')).toBeNull();
     expect(doc.getElementById('chat')!.textContent).toContain('<img src=x');
   });
+  it('an earlier wrong-access-code warning is cleared once a later request succeeds', async () => {
+    const guarded = makeApi(engine, { ACCESS_CODE: 'secret123', RATE_LIMIT: '100000' });
+    const { doc, dom } = openPage();
+    (dom.window as any).fetch = async (_url: string, init: any) => ({ json: async () => guarded(JSON.parse(init.body), 'test-ip').body });
+    await ask(doc, 'help');
+    expect(doc.getElementById('chat')!.textContent).toContain('Wrong or missing access code.');
+    expect(doc.querySelectorAll('#chat .auth-warn')).toHaveLength(1);
+    expect((doc.querySelector('body > details') as HTMLDetailsElement).open).toBe(true);
+
+    (doc.getElementById('access') as HTMLInputElement).value = 'secret123';
+    await ask(doc, 'help');
+    expect(doc.querySelectorAll('#chat .auth-warn')).toHaveLength(0);
+    expect(doc.getElementById('chat')!.textContent).not.toContain('Wrong or missing access code.');
+    expect(doc.getElementById('chat')!.textContent).toContain('I can show ayahs and numbers');
+  });
 });

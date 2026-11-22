@@ -19,7 +19,7 @@ const EXTRA_LATIN: Record<string, number> = {
   iqra: 96, lahab: 111, inshirah: 94, zilzal: 99, yousuf: 12, israil: 17, yaseen: 36, yasin: 36, ayatul: 0,
   // other names, and spellings the consonants cannot reach (too short, or shared with another surah)
   dahr: 76, duha: 93, dhuha: 93, doha: 93, zuha: 93, zoha: 93, toha: 20, twaha: 20, layl: 92, kaf: 50, ahkaf: 46,
-  zariyat: 51, zariat: 51, jariyat: 51, dhariyat: 51, kawsar: 108, kauser: 108, kowsar: 108,
+  zariyat: 51, zariat: 51, jariyat: 51, dhariyat: 51, kawsar: 108, kauser: 108, kowsar: 108, anbya: 21, abasa: 80,
 };
 
 /** The consonants of a surah name: th is s and dh is z (Muddaththir = Muddassir, Dhariyat = Zariyat), then latinSkeleton. */
@@ -27,7 +27,8 @@ const surahSkeleton = (s: string) => latinSkeleton(s.replace(/th/g, 's').replace
 /** The first letter's sound class: a vowel, or k for q/k/c, j for j/z ... ("kiyamah" ~ "qiyama", "zinn" ~ "jinn", not "nam" ~ "anam"). */
 const firstSound = (k: string) => (/^[aeiouyw]/.test(k) ? 'V' : /^[qkc]/.test(k) ? 'k' : /^[jz]/.test(k) ? 'j' : k[0]);
 // Banglish and English words that are never read as a short surah name, even right after "surah"
-const NOT_A_SHORT_NAME = new Set(['nam', 'naam', 'jonno', 'jonne', 'kon', 'kono', 'kar', 'kor', 'koro', 'hoy', 'hobe', 'ache', 'ase', 'nai',
+const NOT_A_SHORT_NAME = new Set(['al', 'ar', 'as', 'at', 'az', 'ad', 'an', 'ash', 'adh', 'ath', 'a',
+  'nam', 'naam', 'jonno', 'jonne', 'kon', 'kono', 'kar', 'kor', 'koro', 'hoy', 'hobe', 'ache', 'ase', 'nai',
   'nei', 'bol', 'bolo', 'dao', 'din', 'den', 'por', 'pore', 'age', 'are', 'ki', 'ta', 'ti', 'ei', 'oi', 'se', 'mon', 'jan', 'jani', 'kaj',
   'kam', 'rat', 'dui', 'one', 'two', 'ten', 'name', 'meaning', 'mean', 'number', 'no', 'from', 'with', 'about', 'many', 'much']);
 // Names that are also ordinary words or names: only accepted together with the word "surah".
@@ -132,8 +133,8 @@ export function makeSurahFinder(q: Quran): SurahFinder {
     name: (s) => q.chapters[s - 1].tr,
     find(text: string): number | null {
       const hasWord = SURAH_WORD.test(text);
-      // Latin names, one or two words ("ya sin")
-      const words = wordsEn(text);
+      // Latin names, one or two words ("ya sin"), dropping leading apostrophes ("'Abasa", "Al-'Ankabut")
+      const words = wordsEn(text.replace(/(^|[\s\-(])['’‘`ʼ]+(?=[A-Za-z])/g, '$1'));
       for (let n = 2; n >= 1; n--) {
         for (let i = 0; i + n <= words.length; i++) {
           const key = skey(words.slice(i, i + n).join(''));

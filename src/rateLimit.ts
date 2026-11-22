@@ -42,4 +42,13 @@ export class RateLimiter {
     // Refused: we change nothing, so the window keeps its original start.
     return false;
   }
+
+  /** Milliseconds remaining in the current window for `key`, or 0 if not currently limited. */
+  retryAfterMs(key: string): number {
+    if (this.limit <= 0) return this.windowMs;
+    const w = this.windows.get(key);
+    if (!w || w.count < this.limit) return 0;
+    const left = this.windowMs - (this.now() - w.start);
+    return left > 0 ? left : 0;
+  }
 }

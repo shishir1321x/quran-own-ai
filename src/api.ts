@@ -1,5 +1,6 @@
 // The /api/ask logic as a plain function, so it can be tested without starting a server.
 import { Engine, type HistoryTurn, type Reply } from './engine.js';
+import { detectLanguage } from './language.js';
 import { RateLimiter } from './rateLimit.js';
 import { cleanTranslation } from './text.js';
 
@@ -52,7 +53,7 @@ export function toJson(engine: Engine, r: Reply): Record<string, unknown> {
 }
 
 export function makeApi(engine: Engine, env: ApiEnv = {}, now: () => number = Date.now) {
-  const limit = Number(env.RATE_LIMIT) > 0 ? Number(env.RATE_LIMIT) : 30;
+  const limit = Number(env.RATE_LIMIT) > 0 ? Number(env.RATE_LIMIT) : 120;
   const limiter = new RateLimiter(limit, 60 * 60_000, now);
 
   return function ask(body: unknown, ip: string): ApiResult {
@@ -65,7 +66,17 @@ export function makeApi(engine: Engine, env: ApiEnv = {}, now: () => number = Da
     if (question.length > MAX_QUESTION_CHARS) {
       return { status: 400, body: { status: 'bad_request', message: `At most ${MAX_QUESTION_CHARS} characters.` } };
     }
-    if (!limiter.allow(ip)) return { status: 429, body: { status: 'rate_limited', message: 'Too many questions. Please try again later.' } };
+    if (!limiter.allow(ip)) {
+      const lang = detectLanguage(question);
+      const mins = Math.max(1, Math.ceil(limiter.retryAfterMs(ip) / 60_000));
+      const bd = (n: number) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[Number(d)]);
+      const message = lang === 'bn'
+        ? `একটু বেশি প্রশ্ন হয়ে গেছে। অনুগ্রহ করে প্রায় ${bd(mins)} মিনিট পর আবার চেষ্টা করুন।`
+        : lang === 'ar'
+          ? `تم إرسال أسئلة كثيرة. يرجى المحاولة مرة أخرى بعد نحو ${mins} دقيقة.`
+          : `Too many questions. Please try again in about ${mins} ${mins === 1 ? 'minute' : 'minutes'}.`;
+      return { status: 429, body: { status: 'rate_limited', lang, message } };
+    }
 
     const t0 = Date.now();
     const reply = engine.ask(question, cleanHistory(b.history));

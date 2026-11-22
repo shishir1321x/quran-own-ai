@@ -8,6 +8,11 @@ const MAX_RESULTS = 8;
 const arabicWords = (s: string): string[] => normAr(s).split(/[^\u0600-\u06FF]+/).filter(Boolean);
 const englishWords = (s: string): string[] => normEn(s).split(/[^a-z]+/).filter(Boolean);
 const bengaliWords = (s: string): string[] => wordsBn(s);
+const bnLooseWord = (w: string): string => w
+  .replace(/য/g, 'জ').replace(/[শষ]/g, 'স').replace(/ণ/g, 'ন').replace(/ৎ/g, 'ত')
+  .replace(/ী/g, 'ি').replace(/ূ/g, 'ু')
+  .replace(/^(.{4,})ই$/, '$1');
+const bengaliLooseWords = (s: string): string[] => wordsBn(s).map(bnLooseWord);
 
 /** The first word of an Arabic text may carry a one-letter prefix: "فإن" for "إن", "والحمد" for "الحمد". */
 const PREFIXES = 'وفبلك';
@@ -28,11 +33,13 @@ export class PhraseIndex {
   private readonly ar: string[][];
   private readonly en: string[][];
   private readonly bn: string[][];
+  private readonly bnLoose: string[][];
 
   constructor(private readonly quran: Quran) {
     this.ar = quran.ayahs.map((y) => arabicWords(y.arc));
     this.en = quran.ayahs.map((y) => englishWords(y.en));
     this.bn = quran.ayahs.map((y) => bengaliWords(y.bn));
+    this.bnLoose = quran.ayahs.map((y) => bengaliLooseWords(y.bn));
   }
 
   /** The ayahs that contain the words of the question, or null. Short or very common phrases are not matched. */
@@ -42,7 +49,10 @@ export class PhraseIndex {
     const ar = arabicWords(question);
     if (ar.length >= 2 && (ar.length >= 3 || ar.length * 2 >= total)) tries.push([ar, this.ar, true]);
     const bn = bengaliWords(question);
-    if (bn.length >= 3 && bn.length * 2 >= total) tries.push([bn, this.bn, false]);
+    if (bn.length >= 3 && bn.length * 2 >= total) {
+      tries.push([bn, this.bn, false]);
+      tries.push([bn.map(bnLooseWord), this.bnLoose, false]);
+    }
     const en = englishWords(question);
     if (en.length >= 4 && !ar.length && !bn.length) tries.push([en, this.en, false]);
     for (const [needle, hay, arabic] of tries) {

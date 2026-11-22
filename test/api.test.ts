@@ -51,7 +51,13 @@ describe('/api/ask', () => {
     const api = makeApi(engine, { RATE_LIMIT: '2' }, () => t);
     expect(api({ question: 'hi' }, 'a').status).toBe(200);
     expect(api({ question: 'hi' }, 'a').status).toBe(200);
-    expect(api({ question: 'hi' }, 'a').status).toBe(429);
+    const limited = api({ question: 'hi' }, 'a');
+    expect(limited.status).toBe(429);
+    expect(limited.body).toMatchObject({ status: 'rate_limited', lang: 'en' });
+    expect(String(limited.body.message)).toMatch(/minute/);
+    const limitedBn = api({ question: 'সাহায্য' }, 'a');
+    expect(limitedBn.status).toBe(429);
+    expect(limitedBn.body.lang).toBe('bn');
     expect(api({ question: 'hi' }, 'b').status).toBe(200);
     t = 60 * 60_000;
     expect(api({ question: 'hi' }, 'a').status).toBe(200);

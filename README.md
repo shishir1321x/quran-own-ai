@@ -129,7 +129,7 @@ npm start           # http://localhost:8787
 `data/quran.json` is in the repository. To rebuild it from the public files: `npm run build-data`.
 
 Optional: `ACCESS_CODE=yourcode npm start` (the page then asks for the code in Settings) and
-`RATE_LIMIT=30` (questions per IP per hour, the default).
+`RATE_LIMIT=120` (questions per IP per hour, the default).
 
 ## Put it on GitHub and deploy it on Render (free)
 

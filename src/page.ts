@@ -257,8 +257,12 @@ $('f').addEventListener('submit', async (ev) => {
     pending.replaceWith(reply);
     reply.scrollIntoView({ block: 'start', behavior: 'smooth' });
     if (r.status === 'ok') {
+      document.querySelectorAll('#chat .auth-warn, #chat .rate-warn').forEach((n) => n.remove());
       history.push({ question, answer: r.answer,
                      citations: (r.ayahs || []).map((a) => ({ surah: a.surah, ayah: a.ayah })) });
+    } else if (r.status === 'forbidden') {
+      const det = document.querySelector('body > details');
+      if (det) det.open = true;
     }
   } catch (e) {
     pending.replaceWith(el('div', 'msg bot wait', 'Could not reach the server. If it was asleep, please wait a few seconds and try again.'));
@@ -271,7 +275,8 @@ $('f').addEventListener('submit', async (ev) => {
 function render(r) {
   const dir = r.lang === 'ar' ? 'rtl' : 'ltr';
   if (r.status !== 'ok') {
-    return el('div', 'msg bot wait', r.message || 'Something went wrong.', { dir: 'auto', lang: r.lang || 'en' });
+    const cls = r.status === 'forbidden' ? 'msg bot wait auth-warn' : r.status === 'rate_limited' ? 'msg bot wait rate-warn' : 'msg bot wait';
+    return el('div', cls, r.message || 'Something went wrong.', { dir: 'auto', lang: r.lang || 'en' });
   }
   const box = el('div', 'msg bot');
   if (r.mode === 'data') box.append(el('div', 'badge data', 'Numbers computed from the Quran text'));

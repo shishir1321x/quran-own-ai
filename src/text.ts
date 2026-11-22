@@ -40,16 +40,25 @@ export function tokensEn(s: string): string[] {
 }
 /** English words of a question, without stop words and WITHOUT stemming (for the lookup tables). */
 export function wordsEn(s: string): string[] {
-  return normEn(s).split(PUNCT).filter((w) => w && /^[a-z]+$/.test(w));
+  // Join Arabic-style internal apostrophes ("ma'al", "Al-A'raf", "qur'an") while keeping English contractions ("Allah's", "don't") split.
+  const joined = s.replace(/([A-Za-z])['’‘`ʼ]+(?!(?:s|t|d|m|ll|re|ve)\b)([A-Za-z])/gi, '$1$2');
+  return normEn(joined).split(PUNCT).filter((w) => w && /^[a-z]+$/.test(w));
 }
 
 // ---- Bengali
 export function normBn(s: string): string {
-  return s.normalize('NFC').replace(/[\u200c\u200d]/g, '').replace(/\[[0-9০-৯]+\]/g, ' ');
+  return s
+    .normalize('NFC')
+    // Remove non-conjunct virama/hasant (trailing "আল্লাহ্" or ZWNJ-separated "আল্লাহ্‌র") before stripping ZWNJ/ZWJ.
+    .replace(/\u09CD(?=[\u200c\u200d]|[^\u0995-\u09B9\u09DC-\u09DF]|$)/g, '')
+    .replace(/[\u200c\u200d]/g, '')
+    .replace(/\[[0-9০-৯]+\]/g, ' ');
 }
-const STOP_BN = new Set(('আমি আমার আমাকে আমরা তুমি তোমার আপনি আপনার সে তার তারা এই ওই এটা ওটা এটি কি কী কে কেন কোন কোথায় কখন কীভাবে কিভাবে কত কতটি কয়টি কয়টা ' +
-  'আছে আছি আছেন নেই না হয় হয়ে হয়েছে হবে হল হলো করা করে করতে করুন করি বলা বলে বলো বলেছে বলা হয়েছে জন্য সম্পর্কে নিয়ে থেকে সাথে সঙ্গে ও এবং বা কিন্তু যদি তবে ' +
-  'কুরআন কোরআন কুরান কোর আন আয়াত সূরা সুরা দাও দিন দেন দেখাও বল বলুন একটা একটি কিছু খুব ভাই দাদা কথা বিষয়ে ব্যাপারে').split(/\s+/));
+const STOP_BN = new Set(('আমি আমার আমাকে আমরা তুমি তোমার আপনি আপনার সে তার তারা তাদের এই ওই এটা ওটা এটি কি কী কে কেন কোন কোনো কোথায় কখন কীভাবে কিভাবে কত কতটি কয়টি কয়টা ' +
+  'আছে আছি আছেন নেই নাই না হয় হয়ে হয়েছে হবে হল হলো করা করে করতে করুন করেন করি বলা বলে বলো বলেছে বলা হয়েছে জন্য সম্পর্কে নিয়ে থেকে সাথে সঙ্গে ও এবং বা কিন্তু যদি তবে ' +
+  'কুরআন কোরআন কুরান কোর আন আয়াত আয়াতে আয়াতগুলো সূরা সুরা দাও দিন দেন দেখাও দেখান বল বলুন একটা একটি কিছু খুব ভাই দাদা কথা বিষয়ে ব্যাপারে ' +
+  'রেফারেন্স রেফারেন্সসহ অনুবাদ অনুবাদসহ সহ বাংলা বাংলায় বাংলাতে আরবি আরবী ইংরেজি ইংরেজিতে শব্দ শব্দটি শব্দটা থাকা বাক্য বাক্যটি সংখ্যা কাছে উল্লেখ নির্দেশ রয়েছে ' +
+  'আর যে যার হলে নিজে বিধান যোগ করবেন').split(/\s+/));
 const BN_SUFFIX = ['গুলোকে', 'গুলোর', 'গুলো', 'গুলির', 'দেরকে', 'দের', 'েরা', 'ের', 'কে', 'রা', 'তে', 'য়', 'ে', 'র', 'টি', 'টা', 'ও'];
 export function stemBn(w: string): string {
   for (const suf of BN_SUFFIX) {

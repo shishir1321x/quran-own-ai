@@ -31,7 +31,7 @@ export const TERMS_HTML = `<!doctype html>
 <body>
 <a class="back" href="/">← Back to the chat</a>
 <h1>Terms &amp; privacy</h1>
-<p class="updated">Last updated: 19 November 2026</p>
+<p class="updated">Last updated: 22 November 2026</p>
 <p>This page explains, in plain words, what this Quran assistant is, what happens with your questions, and what you can
 expect from it. By using the assistant you agree to it.</p>
 
@@ -78,7 +78,7 @@ to: please do not post it or pass it on. If it spreads too widely it will be cha
   chat along with a new question. They are used for that answer only. "New chat" or closing the page clears them.</li>
   <li>For each question the server writes one line to its log: the kind of answer, the language, how many ayahs it showed,
   how long it took, and how many letters the question had. Not the question itself.</li>
-  <li>To prevent overuse, the server counts questions per internet address (30 an hour unless it was set otherwise). That count
+  <li>To prevent overuse, the server counts questions per internet address (120 an hour unless it was set otherwise). That count
   is kept in memory only, and is gone after an hour or a restart.</li>
   <li>The only thing your browser remembers for this site is the voice language you picked.</li>
   <li>There are no accounts, no tracking cookies and no ads.</li>
