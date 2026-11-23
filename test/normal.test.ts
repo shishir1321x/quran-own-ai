@@ -187,7 +187,7 @@ describe('help, who made you, and what cannot be done here', () => {
   it.each(['who made you', 'are you AI', 'are you a robot', 'কে বানিয়েছে তোমাকে'])('about: %s', (q) => expect(e.ask(q).kind).toBe('about'));
   it.each([
     'can you recite ayatul kursi audio', 'play surah rahman', 'prayer time today', 'what time is Jumuah prayer', 'fajr time', 'qibla direction', 'direction of qibla',
-    'when is the next Eid', 'ঈদ কবে', 'নামাজের সময়', 'zakat calculator', 'download the Quran pdf',
+    'when is the next Eid', 'ঈদ কবে', 'আজকের নামাজের সময়', 'zakat calculator', 'download the Quran pdf',
   ])('cannot do: %s', (q) => {
     const r = e.ask(q);
     expect(r.kind).toBe('unsupported');

@@ -1,17 +1,40 @@
-// Finding ayahs for a question, with no AI: checked themes first, then BM25 over the three texts.
+// Finding ayahs for a question, with no AI: checked themes first, then BM25 over English, Bengali,
+// loose Bengali, Banglish phonetic, Arabic, and Arabic phonetic texts.
+import { arPhoneticDocTokens, bnQueryToArKeys, buildArVocabByFirst, latinQueryToArKeys } from './arabicPhonetic.js';
+import { banglishDocTokens, latinQueryToBnKeys, NON_QURAN_WORDS } from './banglishPhonetic.js';
 import { Bm25 } from './bm25.js';
 import type { Ayah, Quran } from './data.js';
 import { BANGLISH_TO_EN, NAME_TO_EN, THEMES, type Theme } from './lexicon.js';
-import { americanize, mappedEnglishWords, normAr, STOP_EN, normBn, stemEn, tokensAr, tokensBn, tokensEn, wordsBn, wordsEn } from './text.js';
+import { phoneticFirstClass, phoneticTermKey, phoneticTermKeyFlex } from './phoneticNorm.js';
+import { americanize, bnLooseNorm, mappedEnglishWords, normAr, STOP_EN, normBn, stemEn, tokensAr, tokensBn, tokensBnLoose, tokensEn, wordsBn, wordsEn } from './text.js';
 
-export interface Index { en: Bm25; bn: Bm25; ar: Bm25 }
+export interface Index {
+  en: Bm25;
+  bn: Bm25;
+  bnLoose: Bm25;
+  bnLat: Bm25;
+  ar: Bm25;
+  arLat: Bm25;
+  arVocab: Map<string, string[]>;
+}
+
+const INDEX_CACHE = new WeakMap<Quran, Index>();
 
 export function buildIndex(q: Quran): Index {
-  return {
+  const cached = INDEX_CACHE.get(q);
+  if (cached) return cached;
+  const arDocs = q.ayahs.map((y) => arPhoneticDocTokens(y.ar));
+  const built: Index = {
     en: new Bm25(q.ayahs.map((y) => tokensEn(y.en))),
     bn: new Bm25(q.ayahs.map((y) => tokensBn(y.bn))),
+    bnLoose: new Bm25(q.ayahs.map((y) => tokensBnLoose(y.bn))),
+    bnLat: new Bm25(q.ayahs.map((y) => banglishDocTokens(y.bn))),
     ar: new Bm25(q.ayahs.map((y) => tokensAr(y.arc))),
+    arLat: new Bm25(arDocs),
+    arVocab: buildArVocabByFirst(arDocs),
   };
+  INDEX_CACHE.set(q, built);
+  return built;
 }
 
 /** Is this word English? True for stop words and for any word that is in the English Quran text. */
@@ -27,23 +50,51 @@ const arWord = (w: string) => { const n = normAr(w); return n.length > 4 && n.st
 
 export interface ThemeMatch { themes: Theme[]; ayahs: Array<{ s: number; a: number; theme: string }> }
 
+const phoneticWordChecker = (index?: Index) => (w: string): boolean =>
+  !!index && (
+    latinQueryToArKeys(w, (k) => index.arLat.df(k), index.arVocab).length > 0
+    || latinQueryToBnKeys(w, (k) => index.bnLat.df(k)).length > 0
+  );
+
 /** Themes (patience, hardship, mercy ...) that the question is about, and their checked ayahs. */
-export function matchThemes(question: string, isEnglish: (w: string) => boolean = () => false): ThemeMatch {
-  const latin = new Set([...wordsEn(question), ...mappedEnglishWords(question, isEnglish).map((w) => w.toLowerCase())]);
+export function matchThemes(question: string, isEnglish: (w: string) => boolean = () => false, index?: Index): ThemeMatch {
+  const rawLatin = wordsEn(question);
+  const latin = new Set([...rawLatin, ...mappedEnglishWords(question, isEnglish, phoneticWordChecker(index)).map((w) => w.toLowerCase())]);
+  // Phonetic keys for non-English Latin/Banglish query tokens (4+ chars) so variants like qurbanee, shoytaan,
+  // taqwah, sadaqaa, zakaat, munafeq, feresta, qiyamath, jannath, namazz, rojah match their themes automatically.
+  const queryPhonetic: Array<{ word: string; key: string; flex: string; first: string }> = [];
+  for (const w of rawLatin) {
+    if (w.length < 4 || isEnglish(w) || NON_QURAN_WORDS.has(w)) continue;
+    queryPhonetic.push({ word: w, key: phoneticTermKey(w), flex: phoneticTermKeyFlex(w), first: phoneticFirstClass(w) });
+  }
   const bn = wordsBn(question);
+  const bnLoose = bn.map(bnLooseNorm);
   const ar = new Set(tokensAr(question).map(arWord));
   const wordHit = (raw: string): boolean => {
     if (isBengali(raw)) {
       const w = normBn(raw);
-      return bn.some((x) => x === w || (w.length >= 3 && x.includes(w)));
+      if (bn.some((x) => x === w || (w.length >= 3 && x.includes(w)))) return true;
+      const wl = bnLooseNorm(w);
+      return wl.length >= 3 && bnLoose.some((x) => x === wl || x.includes(wl));
     }
     if (isArabic(raw)) return ar.has(arWord(raw));
-    return latin.has(raw.toLowerCase());
+    const lo = raw.toLowerCase();
+    if (latin.has(lo)) return true;
+    if (lo.length >= 4 && /^[a-z]+$/.test(lo) && queryPhonetic.length > 0) {
+      const k = phoneticTermKey(lo);
+      const kf = phoneticTermKeyFlex(lo);
+      const fc = phoneticFirstClass(lo);
+      for (const q of queryPhonetic) {
+        if (q.first !== fc || Math.abs(q.word.length - lo.length) > 2) continue;
+        if (q.key === k || (lo.length >= 5 && q.flex === kf)) return true;
+      }
+    }
+    return false;
   };
   const anyHit = (words: string[]) => words.some(wordHit);
   const hits = THEMES.filter((t) => (t.pattern ? t.pattern.test(question) : t.allOf ? t.allOf.every(anyHit) : anyHit(t.words)));
   // "dua for parents" is about a dua for parents, not about parents in general: the specific theme wins
-  const specific = hits.filter((t) => t.allOf);
+  const specific = hits.filter((t) => t.allOf || t.specific);
   const hit = specific.length > 0 ? specific : hits;
   // When another theme also matched, "সময়"/"times" is usually temporal context ("কষ্টের সময় ধৈর্য"), not the "time" theme (103:1).
   const finalHit = hit.length > 1 && hit.some((t) => t.id === 'time') && !/\babout\s+time\b|সময়ের|সময়\s*(?:নিয়ে|সম্পর্কে|বিষয়ে)/i.test(question)
@@ -73,20 +124,73 @@ const FRAMING = new Set([
   'speak', 'speaks', 'speaking', 'mention', 'mentions', 'mentioned', 'mentioning', 'regarding', 'concerning',
   'reference', 'references', 'ref', 'translation', 'translations', 'english', 'bangla', 'bengali', 'state', 'states', 'stated',
   'include', 'including', 'find', 'list', 'only', 'without', 'passage', 'passages', 'containing', 'contain', 'contains', 'word', 'words',
-  'verse', 'verses', 'ayah', 'ayahs', 'ayat', 'ayats', 'exact', 'phrase', 'statement',
+  'verse', 'verses', 'ayah', 'ayahs', 'ayat', 'ayats', 'exact', 'phrase', 'statement', 'particular',
+  'meaning', 'define', 'definition', 'ortho', 'orthho', 'mane',
+  'al', 'ul', 'il', 'el',
   'er', 'kotha', 'kothata', 'bola', 'bole', 'boleche', 'hoyeche', 'hoise', 'hoyece', 'hoeche', 'kon', 'kono', 'te', 'e', 'o', 'ar',
   'ki', 'kii', 'ache', 'ase', 'achhe', 'asche', 'niye', 'somporke', 'shomporke', 'bishoye', 'korar', 'kora', 'kore', 'korte', 'koro', 'na',
   'ayate', 'ayaat', 'ayatgula', 'ayatgulo', 'ayatgular', 'surate', 'surahte', 'suray', 'qurane', 'korane', 'kurane', 'quraner', 'kuraner',
   'bolo', 'bolun', 'dao', 'din', 'den', 'amake', 'jante', 'chai', 'gulo', 'guli', 'gula', 'dekhao', 'dekhan',
-  'onubad', 'anubad', 'shoho', 'soho', 'shobdo', 'shobdota', 'shobdoti', 'eta', 'emon', 'kache', 'shonkha', 'sonkha', 'scientific', 'inference',
+  'onubad', 'anubad', 'shoho', 'soho', 'shobdo', 'shobder', 'shobdota', 'shobdoti', 'eta', 'emon', 'kache', 'shonkha', 'sonkha', 'scientific', 'inference',
 ].filter((w) => !(w in BANGLISH_TO_EN) && !(w in NAME_TO_EN)));
 
 const AR_TERM_TO_AR: Array<[RegExp, string]> = [
   [/(?:আর[-\s]*)?(?:রহমান|রাহমান)|\b(?:ar[-\s]*)?rahman\b/gi, 'رحمن'],
 ];
 
-export function queryTokens(question: string, isEnglish: (w: string) => boolean = () => false): { en: string[]; bn: string[]; ar: string[] } {
-  let cleaned = question;
+// Everyday English synonyms used ONLY when the user's English word itself has df === 0 in Saheeh International.
+const EN_SYNONYMS: Record<string, string> = {
+  ocean: 'sea', oceans: 'sea', money: 'wealth', salary: 'reward', wage: 'reward', wages: 'reward',
+  mom: 'mother', mum: 'mother', mommy: 'mother', dad: 'father', daddy: 'father',
+  kid: 'child', kids: 'child', hubby: 'husband', education: 'knowledge',
+  sadness: 'grief', depression: 'grief', depressed: 'grief', anxiety: 'grief', anxious: 'grief', stress: 'distress',
+  happiness: 'joy', kindness: 'good', courage: 'steadfast', bravery: 'steadfast',
+  humility: 'humble', greed: 'stingy', avarice: 'stingy', jealousy: 'envy', jealous: 'envy',
+  alcohol: 'intoxicants', liquor: 'intoxicants', betting: 'gambling',
+  loan: 'debt', loans: 'debt', theft: 'thief', stealing: 'steal', murder: 'kill', homicide: 'kill',
+  battle: 'fight', devil: 'satan', destiny: 'decree', fate: 'decree', miracle: 'sign', miracles: 'signs',
+  illness: 'sick', disease: 'sick', sickness: 'sick', medicine: 'healing',
+  poverty: 'poor', gossip: 'backbite', wrath: 'anger', afraid: 'fear', scared: 'fear',
+  apologize: 'repent', respect: 'honor', obedience: 'obey', disobedience: 'disobey',
+  exam: 'trial', exams: 'trial', forest: 'garden', tears: 'weep', crying: 'weep', cry: 'weep',
+  smile: 'laugh', wealthy: 'wealth', rich: 'wealth', generous: 'spend', generosity: 'spend',
+  thankful: 'grateful', thankfulness: 'grateful', forgiveness: 'forgive',
+  merciful: 'mercy', truthful: 'truth', truthfulness: 'truth', patience: 'patient',
+  guidance: 'guide', punishment: 'punish', creation: 'create', creator: 'create',
+  believer: 'believe', disbeliever: 'disbelieve', hypocrite: 'hypocrites',
+  hellfire: 'fire', hereafter: 'hereafter', resurrection: 'resurrection',
+  judgment: 'judge', judgement: 'judge', covenant: 'covenant', pilgrimage: 'hajj',
+};
+
+const EN_DERIV_SUFFIXES = ['ation', 'ition', 'ness', 'ment', 'less', 'tion', 'sion', 'able', 'ible', 'ance', 'ence', 'ful', 'ous', 'ive', 'ity', 'ist', 'ly', 'al', 'er', 'or'];
+
+function resolveEnFallback(word: string, enBm: Bm25): string | null {
+  const low = americanize(word.toLowerCase());
+  const syn = EN_SYNONYMS[low] ?? EN_SYNONYMS[stemEn(low)];
+  if (syn) {
+    const s = stemEn(americanize(syn));
+    if (enBm.df(s) > 0) return s;
+  }
+  for (const suf of EN_DERIV_SUFFIXES) {
+    if (low.length - suf.length >= 4 && low.endsWith(suf)) {
+      const base = low.slice(0, -suf.length);
+      for (const cand of [stemEn(base), stemEn(base + 'e'), stemEn(base.replace(/i$/, 'y'))]) {
+        if (cand.length >= 3 && enBm.df(cand) > 0) return cand;
+      }
+    }
+  }
+  return null;
+}
+
+export function queryTokens(
+  question: string,
+  isEnglish: (w: string) => boolean = () => false,
+  index?: Index,
+): { en: string[]; bn: string[]; bnLoose: string[]; bnLat: string[]; ar: string[]; arLat: string[] } {
+  let cleaned = question
+    .replace(/\b(?:bring|pull|fetch|find|show|give|list)\s+(?:me\s+|us\s+)?(?:all\s+|some\s+|any\s+)?(?:the\s+)?(?:ayahs?|ayats?|verses?)\b/gi, ' ')
+    .replace(/\b(?:what\s+(?:does|do)|(?:the\s+)?(?:meaning|definition)\s+of)\b/gi, ' ')
+    .replace(/\bmeans?\s*[?؟!.]*\s*$/i, ' ');
   const extraAr: string[] = [];
   for (const [re, arTok] of AR_TERM_TO_AR) {
     if (re.test(cleaned)) {
@@ -94,27 +198,100 @@ export function queryTokens(question: string, isEnglish: (w: string) => boolean 
       cleaned = cleaned.replace(re, ' ');
     }
   }
-  // A Banglish or foreign word that we translate (namaz -> prayer, Ibrahim -> Abraham) is REPLACED by its
-  // translation: the original word is not in the English text and must not count as a missing word.
-  const mapped = mappedEnglishWords(cleaned, isEnglish).map(stemEn);
+  const arLat: string[] = [];
+  const bnLat: string[] = [];
+  const enFallback: string[] = [];
+  const matchedOtherWords = new Set<string>();
   const topic = cleaned.replace(/[A-Za-z']+/g, (w) => (FRAMING.has(w.toLowerCase()) ? ' ' : w));
-  const raw = tokensEn(topic).filter((w) => !(w in BANGLISH_TO_EN) && !(w in NAME_TO_EN));
-  return { en: [...new Set([...raw, ...mapped])], bn: tokensBn(cleaned), ar: [...new Set([...tokensAr(cleaned), ...extraAr])] };
+  if (index) {
+    for (const w of wordsEn(topic)) {
+      if (isEnglish(w) || w in BANGLISH_TO_EN || w in NAME_TO_EN || FRAMING.has(w)) continue;
+      // 1. Everyday English synonym / derivational root present in Saheeh International
+      const enAlt = resolveEnFallback(w, index.en);
+      if (enAlt) {
+        enFallback.push(enAlt);
+        matchedOtherWords.add(w);
+        matchedOtherWords.add(stemEn(americanize(w)));
+        continue;
+      }
+      // 2. Phonetic Arabic word in Uthmani Quran (y.ar)
+      const arKeys = latinQueryToArKeys(w, (k) => index.arLat.df(k), index.arVocab);
+      if (arKeys.length > 0) {
+        arLat.push(...arKeys);
+        matchedOtherWords.add(w);
+        matchedOtherWords.add(stemEn(americanize(w)));
+        continue;
+      }
+      // 3. Phonetic Banglish word in Dr. Zakaria's Bengali Quran (y.bn)
+      const bnKeys = latinQueryToBnKeys(w, (k) => index.bnLat.df(k));
+      if (bnKeys.length > 0) {
+        bnLat.push(...bnKeys);
+        matchedOtherWords.add(w);
+        matchedOtherWords.add(stemEn(americanize(w)));
+      }
+    }
+  }
+  // A Banglish or foreign word that we translate (namaz -> prayer, Ibrahim -> Abraham) is REPLACED by its
+  // translation; never let fuzzy prophet/Banglish name guessing reinterpret exact Arabic/Banglish Quran words.
+  const mapped = mappedEnglishWords(cleaned, isEnglish, phoneticWordChecker(index)).map(stemEn);
+
+  const raw = tokensEn(topic).filter((w) => !(w in BANGLISH_TO_EN) && !(w in NAME_TO_EN) && !matchedOtherWords.has(w));
+  const rawBn = tokensBn(cleaned);
+  const bnLoose: string[] = [];
+  const matchedBnWords = new Set<string>();
+  if (index) {
+    for (const bw of rawBn) {
+      if (index.bn.df(bw) > 0) continue;
+      // 1. Loose Bengali spelling match ("সুর্য"->"সূর্য", "চাদ"->"চাঁদ", "পাহার"->"পাহাড়", "নবি"->"নবী")
+      const loose = bnLooseNorm(bw);
+      if (loose.length >= 2 && index.bnLoose.df(loose) > 0) {
+        bnLoose.push(loose);
+        matchedBnWords.add(bw);
+        continue;
+      }
+      // 2. Bengali transliteration of an Arabic Quran word ("সাবিকুন", "মুফলিহুন", "ইন্তেহা")
+      const keys = bnQueryToArKeys(bw, (k) => index.arLat.df(k));
+      if (keys.length > 0) {
+        arLat.push(...keys);
+        matchedBnWords.add(bw);
+      }
+    }
+  }
+  const bn = rawBn.filter((w) => !matchedBnWords.has(w));
+  return {
+    en: [...new Set([...raw, ...mapped, ...enFallback])],
+    bn,
+    bnLoose: [...new Set(bnLoose)],
+    bnLat: [...new Set(bnLat)],
+    ar: [...new Set([...tokensAr(cleaned), ...extraAr])],
+    arLat: [...new Set(arLat)],
+  };
 }
 
 export interface Found { ayah: Ayah; score: number }
 
 /** Top ayahs for a question, or [] if nothing in the Quran matches well enough. */
 export function searchAyahs(index: Index, q: Quran, question: string, limit = 5): Found[] {
-  const t = queryTokens(question, englishChecker(index));
+  const t = queryTokens(question, englishChecker(index), index);
   const total = new Map<number, number>();
   const coverage = new Map<number, number>();
-  for (const [bm, toks] of [[index.en, t.en], [index.bn, t.bn], [index.ar, t.ar]] as const) {
+  const missingEnWeight = t.en.filter((w) => index.en.df(w) === 0).length * index.en.unknownIdf();
+  const missingBnWeight = t.bn.filter((w) => index.bn.df(w) === 0).length * index.bn.unknownIdf();
+  const channels = [
+    [index.en, t.en, 0],
+    [index.bn, t.bn, 0],
+    [index.bnLoose, t.bnLoose, missingBnWeight],
+    [index.bnLat, t.bnLat, missingEnWeight + missingBnWeight],
+    [index.ar, t.ar, 0],
+    [index.arLat, t.arLat, missingEnWeight + missingBnWeight],
+  ] as const;
+  for (const [bm, toks, extraMissingWeight] of channels) {
     if (toks.length === 0) continue;
-    // How much of the question does an ayah cover, weighing rare words more? A word that is not in the
-    // Quran at all ("Ibrahim" in an English text that says "Abraham") counts as the rarest word, missing.
+    // How much of the question does an ayah cover, weighing rare words more? Unknown words in the
+    // English/Bengali channels ("cars" in "Tesla cars", "ভিডিও" in "ভিডিও গেম") also count against
+    // phonetic fallback channels so a single accidental match cannot satisfy a multi-word off-topic query.
     const uniq = [...new Set(toks)];
-    const weight = uniq.reduce((sum, w) => sum + (bm.df(w) > 0 ? bm.idf(w) : bm.unknownIdf()), 0);
+    const weight = uniq.reduce((sum, w) => sum + (bm.df(w) > 0 ? bm.idf(w) : bm.unknownIdf()), 0) + extraMissingWeight;
     for (const h of bm.search(toks, 200)) {
       total.set(h.doc, (total.get(h.doc) ?? 0) + h.score);
       coverage.set(h.doc, Math.max(coverage.get(h.doc) ?? 0, h.matchedIdf / weight));
@@ -127,10 +304,17 @@ export function searchAyahs(index: Index, q: Quran, question: string, limit = 5)
     .map(([d, raw]) => [d, raw, raw * (0.5 + (coverage.get(d) ?? 0))] as const)
     .sort((a, b) => b[2] - a[2] || a[0] - b[0]);
   if (ranked.length === 0) return [];
-  if (Math.max(...ranked.map(([, r]) => r)) < MIN_SCORE) return [];
+  const purePhoneticOrLoose = t.en.length === 0 && t.bn.length === 0 && (t.arLat.length > 0 || t.bnLat.length > 0 || t.bnLoose.length > 0);
+  const singleKnownEn = t.en.length === 1 && t.bn.length === 0 && t.ar.length === 0 && index.en.df(t.en[0]) > 0 && index.en.df(t.en[0]) < 1500;
+  const singleKnownBn = t.bn.length === 1 && t.en.length === 0 && t.ar.length === 0 && index.bn.df(t.bn[0]) > 0 && index.bn.df(t.bn[0]) < 1500;
+  const minScore = purePhoneticOrLoose || singleKnownEn || singleKnownBn ? 0.5 : MIN_SCORE;
+  if (Math.max(...ranked.map(([, r]) => r)) < minScore) return [];
   const best = ranked[0][2];
-  // keep results that are close to the best one: a weak tail is noise
-  return ranked.filter(([, , s]) => s >= best * 0.5).slice(0, limit).map(([doc, score]) => ({ ayah: q.ayahs[doc], score }));
+  // keep results that are close to the best one, plus full-coverage hits above minScore (so a 2-word ayah does not hide a longer exact match like 9:100)
+  return ranked
+    .filter(([d, raw, s]) => s >= best * 0.5 || ((coverage.get(d) ?? 0) >= 0.99 && raw >= minScore))
+    .slice(0, limit)
+    .map(([doc, score]) => ({ ayah: q.ayahs[doc], score }));
 }
 
 /** An ayah must contain at least this share of the question's words (rare words weigh more). */

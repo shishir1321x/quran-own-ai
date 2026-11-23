@@ -12,9 +12,9 @@ const SCRIPT_LETTERS: Record<Lang, RegExp> = {
 // Distinctly Banglish (Romanized Bengali) words that do not occur in normal English.
 const STRONG_BANGLISH = new Set([
   // question words
-  'ki', 'keno', 'kivabe', 'kibhabe', 'kothay', 'kokhon', 'koto', 'kon', 'kake', 'kemon', 'kiser',
+  'ki', 'keno', 'kivabe', 'kibhabe', 'kothay', 'kokhon', 'koto', 'kon', 'konti', 'konta', 'kake', 'kemon', 'kiser',
   // how many / how often ("quran e sijda koyta")
-  'koyta', 'koyti', 'koyto', 'kotogulo', 'kotota', 'kototi', 'koybar', 'kotobar', 'sijdar', 'sejda', 'sejdar',
+  'koyta', 'koita', 'koyti', 'koiti', 'koyto', 'kotogulo', 'kotogula', 'kotota', 'kototi', 'koybar', 'koibar', 'kotobar', 'kothobar', 'duibar', 'sijdar', 'sejda', 'sejdar',
   // next / previous / more ("porer ayat", "ager ayat", "aro dekhao")
   'porer', 'poror', 'ager', 'aager', 'aro', 'aaro', 'dekhao',
   // pronouns
@@ -40,8 +40,13 @@ const STRONG_BANGLISH = new Set([
   'biye', 'bibaho', 'talak', 'porda', 'protibeshi', 'gorib', 'dhoni', 'manush', 'manusher',
   'jibon', 'mrittu', 'morar', 'kobor', 'kiyamot', 'qiyamot', 'duniya', 'akhirat', 'akherat',
   'shud', 'ghush', 'gush', 'mittha', 'mithya', 'churi', 'julum', 'foroz',
-  'namaz', 'namaj', 'roza', 'roja', 'jakat', 'oju', 'ozu', 'gosol', 'touba', 'tauba',
-  'jikir', 'jannat', 'behesht', 'jahannam', 'dozokh', 'dojokh', 'fereshta',
+  'namaz', 'namaj', 'namajer', 'namazer', 'roza', 'roja', 'jakat', 'oju', 'ozu', 'gosol', 'touba', 'tauba',
+  'somoy', 'shomoy', 'somoi', 'shomoi', 'wakto', 'oakt', 'oakto', 'pach', 'ajker', 'ajke', 'koy',
+  'jikir', 'zikir', 'jannat', 'behesht', 'jahannam', 'dozokh', 'dojokh', 'fereshta', 'firishta',
+  'jiboner', 'uddesho', 'etim', 'attiyo', 'attiyoshojon', 'choritro', 'amol',
+  'bondhu', 'bondhutto', 'bebsha', 'byabsha', 'poribesh', 'prokriti', 'binoy', 'ohongkar',
+  'gyan', 'shikkha', 'porikkha', 'porikha', 'bhaggo', 'vaggo', 'opochoy', 'ghum', 'ghumer',
+  'shoytan', 'soytan', 'munafik', 'bhorosha', 'vorosha', 'nyaybichar', 'kritoggota', 'shongshar', 'gibot',
   'suray', 'surar', 'bangla', 'banglay', 'banglate', 'arbi', 'arbite',
   'shesh', 'sesh', 'prothom', 'pratham', 'naki', 'dekhao', 'dekhan', 'bolo', 'dao', 'den',
   // a little conversation ("kemon acho", "valo achi", "ki koro", "valo theko", "pore kotha hobe")
@@ -64,17 +69,44 @@ const AMBIGUOUS_WITH_ENGLISH = new Set([
   'pita', 'pora', 'bola', 'hote', 'kore', 'nei', 'nai', 'lage', 'hoy', 'jai', 'pari', 'dite',
 ]);
 
+// Islamic / South-Asian loanwords often used inside otherwise English sentences
+// ("how many times the jannat word appeared", "what does the Quran say about namaz?").
+// Alone or paired with Banglish grammar they indicate Banglish; inside a multi-word English sentence
+// with no Bengali grammar words, the sentence stays English.
+const SHARED_ISLAMIC_LOANWORDS = new Set([
+  'jannat', 'jahannam', 'behesht', 'dozokh', 'dojokh', 'namaz', 'namaj', 'roza', 'roja',
+  'jakat', 'duniya', 'akhirat', 'akherat', 'tauba', 'touba', 'gunah', 'julum', 'foroz',
+  'fereshta', 'firishta', 'kiyamot', 'qiyamot', 'jikir', 'zikir', 'talak', 'porda',
+  'oju', 'ozu', 'shoytan', 'soytan', 'munafik', 'sobor', 'shobor', 'dhairjo', 'dhoirjo',
+]);
+
+// Clearly English function/question words used to distinguish English sentences containing a shared loanword.
+const ENGLISH_FUNC_WORDS = new Set([
+  'the', 'is', 'are', 'was', 'were', 'what', 'where', 'when', 'why', 'who', 'which',
+  'how', 'many', 'much', 'does', 'do', 'did', 'can', 'could', 'would', 'should', 'will',
+  'about', 'say', 'says', 'mean', 'means', 'meaning', 'word', 'words', 'appear', 'appears', 'appeared',
+  'mention', 'mentions', 'mentioned', 'occur', 'occurs', 'occurred', 'times', 'there', 'here',
+  'this', 'that', 'these', 'those', 'from', 'with', 'into', 'have', 'has', 'please',
+  'show', 'give', 'tell', 'explain', 'define', 'list', 'between', 'during', 'after', 'before', 'without',
+]);
+
 export function isBanglish(text: string): boolean {
   const words = text.toLowerCase().match(/[a-z]+/g);
   if (!words || words.length === 0) return false;
-  let strong = 0; // clearly Banglish, never English
-  let soft = 0;   // weak particles and words that are also English
+  let pureBanglish = 0; // distinctly Bengali words, never English
+  let loanwords = 0;    // shared Islamic/South-Asian loanwords
+  let soft = 0;         // weak particles and words that are also English
+  let enFunc = 0;       // English grammar/function words
   for (const w of words) {
+    if (ENGLISH_FUNC_WORDS.has(w)) enFunc++;
     if (AMBIGUOUS_WITH_ENGLISH.has(w)) soft++;
-    else if (STRONG_BANGLISH.has(w)) strong++;
+    else if (SHARED_ISLAMIC_LOANWORDS.has(w)) loanwords++;
+    else if (STRONG_BANGLISH.has(w)) pureBanglish++;
     else if (WEAK_BANGLISH.has(w)) soft++;
   }
-  return strong >= 1 || soft >= 2;
+  if (pureBanglish >= 1) return true;
+  if (loanwords >= 1) return !(enFunc >= 2 && soft === 0);
+  return soft >= 2;
 }
 
 /**

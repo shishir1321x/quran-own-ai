@@ -10,6 +10,7 @@ import type { Quran } from './data.js';
 import type { Lang } from './types.js';
 import { normAr } from './text.js';
 import { stemRe, withoutSurahName } from './animals.js';
+import { phoneticFirstClass, phoneticTermKey, phoneticTermKeyFlex } from './phoneticNorm.js';
 
 export interface Prophet {
   id: string;
@@ -82,14 +83,25 @@ export function prophetsIn(q: Quran, surah?: number): ProphetHit[] {
 /** The prophets a question names ("how many times is MUSA mentioned?"), not counting the name of a surah ("surah yusuf"). */
 export function prophetsNamedIn(question: string): Prophet[] {
   const text = normAr(withoutSurahName(question)).toLowerCase();
-  const latin = new Set(text.match(/[a-z]+(?:-[a-z]+)?/g) ?? []);
+  const latinList = text.match(/[a-z]+(?:-[a-z]+)?/g) ?? [];
+  const latin = new Set(latinList);
+  const latinPhon = latinList
+    .filter((w) => w.length >= 4 && /^[a-z]+$/.test(w))
+    .map((w) => ({ w, k: phoneticTermKey(w), kf: phoneticTermKeyFlex(w), f: phoneticFirstClass(w) }));
   const arabic = (text.match(/[؀-ۿ]+/g) ?? []).flatMap((w) => {
     const out = [w];
     for (const re of [/^(?:و|ف)/, /^(?:ب|ل|ك)/, /^(?:ال|لل)/]) { const last = out[out.length - 1]; if (re.test(last) && last.length > 3) out.push(last.replace(re, '')); }
     return out;
   });
   return PROPHETS.filter((p) => p.ask.some((w) => {
-    if (/^[a-z-]+$/.test(w)) return latin.has(w);
+    if (/^[a-z-]+$/.test(w)) {
+      if (latin.has(w)) return true;
+      if (w.length >= 4 && /^[a-z]+$/.test(w) && latinPhon.length > 0) {
+        const k = phoneticTermKey(w), kf = phoneticTermKeyFlex(w), f = phoneticFirstClass(w);
+        return latinPhon.some((q) => q.f === f && Math.abs(q.w.length - w.length) <= 2 && (q.k === k || (w.length >= 5 && q.kf === kf)));
+      }
+      return false;
+    }
     if (/[ঀ-৿]/.test(w)) return new RegExp(`(?<![\\u0980-\\u09FF])${w.normalize('NFC')}`).test(text);
     return arabic.includes(normAr(w));
   }));

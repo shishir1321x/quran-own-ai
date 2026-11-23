@@ -1,5 +1,6 @@
 // Concise lexical dictionary glosses for common Quranic & Arabic terms (no AI, no fatwas, no tafsir).
 // HAVE THE ARABIC AND BENGALI GLOSSES CHECKED by native readers and someone with religious knowledge.
+import { canonArLatin, canonArLatinFlex, expandArLatinCandidates } from './arabicPhonetic.js';
 import { normAr, normBn } from './text.js';
 import type { Lang } from './types.js';
 
@@ -460,6 +461,132 @@ export const GLOSSARY: GlossaryEntry[] = [
     'মধ্যে, ভেতরে, বিষয়ে',
     'حرف جر يُفيد الظرفية المكانية أو الزمانية',
     ['في']),
+  g('ulaika', 'Ulaika (أولئك)', 'উলাইকা (أولئك)', 'أولئك',
+    '"those" or "those people" — Arabic plural demonstrative pronoun pointing to a specific group just described',
+    'উলাইকা (أولئك) — "তারাই" বা "ওই সকল লোক" (নির্দিষ্ট ব্যক্তি বা দলের দিকে ইঙ্গিতকারী আরবি বহুবচন সর্বনাম)',
+    'اسم إشارة للجمع بمعنى «هؤلاء البعيدون/أولئك»، يُستخدم لتعيين طائفة سبق ذكر أوصافها',
+    ['ulaika', 'ulaikah', 'oolaika', 'oolaaika', 'ulaka', 'উলাইকা', 'উলায়েকা', 'أولئك', 'اولئك'],
+    [[2, 5], [2, 16], [23, 11], [59, 20]]),
+  g('alladhina', 'Alladhina (الذين)', 'আল্লাযীনা (الذين)', 'الذين',
+    '"those who" — Arabic plural relative pronoun introducing people characterized by specific actions or qualities',
+    'আল্লাযীনা (الذين) — "যারা" বা "যাঁরা" (কোনো গুণ বা কাজের অধিকারী মানুষদের বোঝাতে ব্যবহৃত আরবি সম্বন্ধবাচক সর্বনাম)',
+    'اسم موصول لجمع الذكور العقلاء بمعنى «الذين»، يُعرِّف جماعةً بما يصفها من أعمال أو صفات',
+    ['alladhina', 'aladhina', 'allazeena', 'allazina', 'allahdhina', 'allahzina', 'allahjina', 'allahdina', 'আল্লাযীনা', 'আল্লাযিনা', 'আল্লাজিনা', 'الذين'],
+    [[1, 7], [2, 3], [2, 277], [23, 1]]),
+  g('dhalika', 'Dhalika (ذلك)', 'যালিকা (ذلك)', 'ذلك',
+    '"that" — Arabic singular demonstrative pronoun pointing to something lofty, distant, or just mentioned',
+    'যালিকা (ذلك) — "তা" বা "ওই" (দূরবর্তী বা মর্যাদাপূর্ণ কিছুর দিকে ইঙ্গিতকারী আরবি সর্বনাম)',
+    'اسم إشارة للمفرد البعيد بمعنى «ذلك»، ويُستعمل للتعظيم أو الإشارة لما سبق',
+    ['dhalika', 'zalika', 'dhaalika', 'zaalika', 'যালিকা', 'জালিকা', 'ذلك'],
+    [[2, 2], [2, 5]]),
+  g('hadha', 'Hadha (هذا)', 'হাযা (هذا)', 'هذا',
+    '"this" — Arabic singular masculine demonstrative pronoun pointing to what is near or present',
+    'হাযা (هذا) — "এই" বা "এটি" (নিকটবর্তী কিছুর দিকে ইঙ্গিতকারী আরবি সর্বনাম)',
+    'اسم إشارة للمفرد المذكر القريب بمعنى «هذا»',
+    ['hadha', 'haza', 'haadha', 'haaza', 'হাযা', 'হাজা', 'هذا'],
+    [[2, 35], [16, 40]]),
+  g('huwa', 'Huwa (هو)', 'হুওয়া (هو)', 'هو',
+    '"He" or "It" — third-person singular masculine pronoun (very frequently referring to Allah in the Quran)',
+    'হুওয়া (هو) — "তিনি" বা "সে" (কুরআনে প্রায়শই আল্লাহর ক্ষেত্রে ব্যবহৃত সর্বনাম)',
+    'ضمير غائب للمفرد المذكر بمعنى «هو»',
+    ['huwa', 'huva', 'হুওয়া', 'هو'],
+    [[112, 1], [2, 255]]),
+  g('rabbana', 'Rabbana (ربنا)', 'রব্বানা (ربنا)', 'ربنا',
+    '"Our Lord!" — a frequent Quranic call used by believers in supplications (dua)',
+    'রব্বানা (ربنا) — "হে আমাদের প্রতিপালক!" (কুরআনের দোয়াসমূহে বহুল ব্যবহৃত সম্বোধন)',
+    'نداء بمعنى «يا ربَّنا»، يُستهلّ به كثير من أدعية القرآن الكريم',
+    ['rabbana', 'robbana', 'রব্বানা', 'রাব্বানা', 'ربنا'],
+    [[2, 201], [2, 286], [3, 8]]),
+  g('sirat', 'Sirat (صراط)', 'সিরাত (صراط)', 'صراط',
+    'path, road, or clear way (as in Sirat al-Mustaqim: "the straight path")',
+    'সিরাত (صراط) — সুস্পষ্ট পথ বা রাস্তা (যেমন সিরাতুল মুস্তাকীম: সরল-সঠিক পথ)',
+    'الطريق الواسع الواضح، ومنه الصراط المستقيم',
+    ['sirat', 'siraat', 'সিরাত', 'সীরাত', 'صراط', 'الصراط'],
+    [[1, 6], [6, 153]]),
+  g('kitab', 'Kitab (كتاب)', 'কিতাব (كتاب)', 'كتاب',
+    'book, scripture, written record, or divine decree (often referring to the Quran or earlier revelations)',
+    'কিতাব (كتاب) — গ্রন্থ, আসমানি কিতাব, আমলনামা বা নির্ধারিত বিধান',
+    'الكتاب أو الصحيفة أو الفرض المكتوب، ويُطلق كثيرًا على القرآن الكريم',
+    ['kitab', 'kitaab', 'কিতাব', 'كتاب', 'الكتاب'],
+    [[2, 2], [18, 49]]),
+  g('haqq', 'Haqq (حق)', 'হক (حق)', 'حق',
+    'truth, reality, justice, right, or what is true and binding (also a name/attribute of Allah)',
+    'হক (حق) — সত্য, বাস্তবতা, ন্যায় ও যথার্থ অধিকার',
+    'الصدق والعدل والثابت اليقيني، وضد الباطل',
+    ['haqq', 'haq', 'hok', 'হক', 'হক্ব', 'حق', 'الحق'],
+    [[10, 32], [17, 81]]),
+  g('batil', 'Batil (باطل)', 'বাতিল (باطل)', 'باطل',
+    'falsehood, vanity, or whatever lacks truth and lasting substance',
+    'বাতিল (باطل) — মিথ্যা, অসত্য, ভিত্তিহীন বা অসার বিষয়',
+    'الكذب والضلال وما لا أصل له ولا ثبات، وضد الحق',
+    ['batil', 'baatil', 'বাতিল', 'باطل', 'الباطل'],
+    [[17, 81], [22, 62]]),
+  g('khayr', 'Khayr (خير)', 'খায়ের / কল্যাণ (خير)', 'خير',
+    'good, goodness, blessing, or lawful benefit',
+    'কল্যাণ, মঙ্গল, উত্তম বিষয় বা নেকি',
+    'كل ما ينفع ويسرّ من صلاح ونعمة وعمل صالح',
+    ['khayr', 'khair', 'খায়ের', 'খাইর', 'কল্যাণ', 'خير', 'الخير'],
+    [[2, 184], [28, 24], [99, 7]]),
+  g('sabiqun', 'Sabiqun (سابقون)', 'সাবিকুন (سابقون)', 'سابقون',
+    'the foremost, outstrippers — those who race ahead in faith and righteous deeds',
+    'সাবিকুন (سابقون) — অগ্রগামীগণ, যাঁরা ঈমান ও সৎকাজে সবার আগে এগিয়ে যান',
+    'المبادرون المتقدمون إلى الإيمان والخيرات والسبّاقون إلى رضوان الله',
+    ['sabiqun', 'sabikun', 'sabiqoon', 'sabikoon', 'assabiqun', 'সাবিকুন', 'সাবিকূন', 'سابقون', 'السابقون'],
+    [[56, 10], [23, 61], [35, 32], [9, 100]]),
+  g('kafir', 'Kafir / Kafirun (كافر / كافرون)', 'কাফির / কাফিরুন (كافر / كافرون)', 'كافر / كافرون',
+    'disbeliever / ungrateful rejector; lexically "one who covers over" or conceals truth and blessings',
+    'কাফির / কাফিরুন — সত্য অস্বীকারকারী বা অকৃতজ্ঞ; আভিধানিক অর্থ যে সত্য বা অনুগ্রহ ঢেকে রাখে',
+    'الجاحد المنكر للحق ونعمة الله، وأصله في اللغة الساتر المغطي للشيء',
+    ['kafir', 'kafirun', 'kafiroon', 'kaafir', 'কাফির', 'কাফের', 'কাফিরুন', 'كافر', 'كافرون', 'الكافرون'],
+    [[109, 1], [2, 254]]),
+  g('zalim', 'Zalim / Zalimun (ظالم / ظالمون)', 'জালিম / জালিমুন (ظالم / ظالمون)', 'ظالم / ظالمون',
+    'wrongdoer, oppressor, or transgressor — one who commits injustice or puts something out of its rightful place',
+    'জালিম / জালিমুন — অন্যায়কারী, অত্যাচারী বা সীমালঙ্ঘনকারী',
+    'المعتدي الجائر الذي يضع الشيء في غير موضعه ويرتكب الظلم',
+    ['zalim', 'zalimun', 'zalimoon', 'jalim', 'jalimun', 'dhālimūn', 'জালিম', 'জালেম', 'জালিমুন', 'ظالم', 'ظالمون', 'الظالمون'],
+    [[23, 107], [2, 229], [14, 42]]),
+  g('hanif', 'Hanif (حنيف)', 'হানিফ (حنيف)', 'حنيف',
+    'upright and devoted solely to the One God, turning away from all false worship (a title of Prophet Ibrahim)',
+    'হানিফ (حنيف) — একনিষ্ঠভাবে এক আল্লাহর দিকে অভিমুখী ও সকল শিরক থেকে বিমুখ (নবী ইবরাহীম আ.-এর বিশেষণ)',
+    'المستقيم المائل عن الشرك إلى التوحيد الخالص لله وحده',
+    ['hanif', 'haneef', 'হানিফ', 'হানীফ', 'حنيف', 'حنيفا'],
+    [[3, 95], [16, 123], [2, 135]]),
+  g('falah', 'Falah (فلاح)', 'ফালাহ (فلاح)', 'فلاح',
+    'true success, flourishing, and deliverance in this life and the Hereafter (as in Muflihun: "the successful")',
+    'ফালাহ (فلاح) — প্রকৃত সফলতা, কল্যাণ ও পরকালীন মুক্তি (যেমন মুফলিহুন: সফলকামগণ)',
+    'الفوز والنجاح والظفر بالخير والنجاة في الدنيا والآخرة',
+    ['falah', 'muflihun', 'muflihoon', 'ফালাহ', 'মুফলিহুন', 'فلاح', 'المفلحون'],
+    [[2, 5], [23, 1]]),
+  g('mawla', 'Mawla (مولى)', 'মাওলা (مولى)', 'مولى',
+    'Protector, Guardian, Patron, Helper, or Master',
+    'মাওলা (مولى) — অভিভাবক, সাহায্যকারী, বন্ধু বা প্রভু',
+    'الوليّ والناصر والمعين والمالك',
+    ['mawla', 'maula', 'mawlana', 'মাওলা', 'মাওলানা', 'مولى', 'مولانا'],
+    [[2, 286], [8, 40]]),
+  g('arsh', 'Arsh (عرش)', 'আরশ (عرش)', 'عرش',
+    'throne — especially al-Arsh, the Mighty Throne of Allah high above creation',
+    'আরশ (عرش) — সিংহাসন; বিশেষত সমস্ত সৃষ্টির ঊর্ধ্বে আল্লাহর মহা আরশ',
+    'السرير الملكي، ويُراد به غالبًا عرش الله العظيم فوق مخلوقاته',
+    ['arsh', 'al-arsh', 'আরশ', 'عرش', 'العرش'],
+    [[20, 5], [11, 7], [40, 7]]),
+  g('ibadah', 'Ibadah (عبادة)', 'ইবাদত / ইবাদাহ (عبادة)', 'عبادة',
+    'worship, servitude, and loving, humble obedience devoted to Allah alone',
+    'ইবাদত — একমাত্র আল্লাহর প্রতি বিনয়, আনুগত্য ও উপাসনা',
+    'الطاعة والانقياد والخضوع لله وحده مع كمال المحبة والتعظيم',
+    ['ibadah', 'ibadat', 'ibadahh', 'ebadat', 'ebadah', 'ইবাদত', 'ইবাদাহ', 'এবাদত', 'عبادة', 'العبادة'],
+    [[1, 5], [51, 56], [19, 65]]),
+  g('inteha', 'Intaha / Inteha (انتهى / منتهى)', 'ইন্তেহা / মুনতাহা (انتهى / منتهى)', 'انتهى / منتهى',
+    'stopping/desisting from wrongdoing, or reaching the utmost end and final limit (as in al-Muntaha: the final destination/boundary)',
+    'ইন্তেহা / মুনতাহা — অন্যায় থেকে বিরত হওয়া, শেষ সীমা বা চূড়ান্ত গন্তব্য',
+    'الكفّ والامتناع عن الشيء، أو بلوغ الغاية والنهاية (ومنه المنتهى: غاية الأمر وآخره)',
+    ['inteha', 'intaha', 'imteha', 'muntaha', 'ইন্তেহা', 'ইন্তাহা', 'মুনতাহা', 'انتهى', 'منتهى', 'المنتهى'],
+    [[2, 275], [2, 192], [53, 14], [53, 42]]),
+  g('imtehan', 'Imtahan / Imtehan (امتحن / امتحان)', 'ইমতেহান (امتحن / امتحان)', 'امتحن / امتحان',
+    'testing, examining, or trying hearts to purify and reveal sincerity',
+    'ইমতেহান — পরীক্ষা করা, যাচাই করা বা অন্তরের নিষ্ঠা পরিশুদ্ধ করা',
+    'الاختبار والابتلاء لتمحيص القلوب وإظهار صدقها',
+    ['imtehan', 'imtahan', 'imtihan', 'ইমতেহান', 'ইমতিহান', 'امتحن', 'امتحان'],
+    [[49, 3], [2, 155], [29, 2]]),
 ];
 
 const normKey = (s: string) => {
@@ -467,16 +594,26 @@ const normKey = (s: string) => {
   if (/[\u0600-\u06FF]/.test(ar)) return `ar:${ar.replace(/\s+/g, ' ')}`;
   const bn = normBn(s.trim());
   if (/[\u0980-\u09FF]/.test(bn)) return `bn:${bn.replace(/\s+/g, ' ')}`;
-  return `en:${s.trim().toLowerCase().replace(/['’‘`ʼ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()}`;
+  return `en:${s.trim().normalize('NFD').replace(/\p{M}+/gu, '').toLowerCase().replace(/['’‘`ʼʾʿ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()}`;
 };
 
 const BY_KEY = new Map<string, GlossaryEntry>();
+const BY_PHONETIC = new Map<string, GlossaryEntry | null>();
+const setPhonetic = (pk: string, entry: GlossaryEntry) => {
+  if (pk.length >= 4) BY_PHONETIC.set(pk, BY_PHONETIC.has(pk) && BY_PHONETIC.get(pk) !== entry ? null : entry);
+};
 for (const entry of GLOSSARY) {
   for (const k of entry.keys) {
     BY_KEY.set(normKey(k), entry);
-    // Also index Latin keys without spaces ("arrahman", "inshaallah")
-    if (/^[a-z'’\-\s]+$/i.test(k)) {
-      BY_KEY.set(`en:${k.toLowerCase().replace(/[^a-z]/g, '')}`, entry);
+    // Also index Latin keys without spaces and canonical/vowel-flex Arabic-Latin phonetic keys
+    const ascii = k.normalize('NFD').replace(/\p{M}+/gu, '');
+    if (/^[a-z'’‘`ʼʾʿ\-\s]+$/i.test(ascii)) {
+      const tight = ascii.toLowerCase().replace(/[^a-z]/g, '');
+      BY_KEY.set(`en:${tight}`, entry);
+      if (tight.length >= 4 && !/[pvx]|ch|g(?!h)/.test(tight)) {
+        setPhonetic(canonArLatin(tight), entry);
+        setPhonetic(canonArLatinFlex(tight), entry);
+      }
     }
   }
 }
@@ -485,8 +622,23 @@ export function lookupGlossary(word: string): GlossaryEntry | null {
   const k = normKey(word);
   if (BY_KEY.has(k)) return BY_KEY.get(k)!;
   if (k.startsWith('en:')) {
-    const tight = `en:${k.slice(3).replace(/\s+/g, '')}`;
-    if (BY_KEY.has(tight)) return BY_KEY.get(tight)!;
+    const tight = k.slice(3).replace(/\s+/g, '');
+    if (BY_KEY.has(`en:${tight}`)) return BY_KEY.get(`en:${tight}`)!;
+    if (tight.length >= 4 && !/[pvx]|ch|g(?!h)/.test(tight)) {
+      for (const cand of expandArLatinCandidates(tight)) {
+        const hit = BY_PHONETIC.get(cand);
+        if (hit) return hit;
+      }
+      if (/^(?:al|ar|as|at|an|az|ad|ash)/.test(tight) && tight.length >= 7) {
+        const bare = tight.replace(/^(?:ash|al|ar|as|at|an|az|ad)/, '');
+        if (bare.length >= 4) {
+          for (const cand of expandArLatinCandidates(bare)) {
+            const hit = BY_PHONETIC.get(cand);
+            if (hit) return hit;
+          }
+        }
+      }
+    }
   }
   return null;
 }

@@ -24,8 +24,28 @@ const EXTRA_LATIN: Record<string, number> = {
 
 /** The consonants of a surah name: th is s and dh is z (Muddaththir = Muddassir, Dhariyat = Zariyat), then latinSkeleton. */
 const surahSkeleton = (s: string) => latinSkeleton(s.replace(/th/g, 's').replace(/dh/g, 'z'));
-/** The first letter's sound class: a vowel, or k for q/k/c, j for j/z ... ("kiyamah" ~ "qiyama", "zinn" ~ "jinn", not "nam" ~ "anam"). */
-const firstSound = (k: string) => (/^[aeiouyw]/.test(k) ? 'V' : /^[qkc]/.test(k) ? 'k' : /^[jz]/.test(k) ? 'j' : k[0]);
+/** The first letter's sound class: a vowel, or k for q/k/c, z for j/z/dh, s for s/th, f for f/ph, b for b/v. */
+const firstSound = (k: string) => {
+  if (/^[aeiouyw]/.test(k)) return 'V';
+  if (/^[qkc]/.test(k)) return 'k';
+  if (/^[jz]/.test(k) || k.startsWith('dh')) return 'z';
+  if (k.startsWith('th') || k[0] === 's') return 's';
+  if (k.startsWith('ph') || k[0] === 'f') return 'f';
+  if (/^[bv]/.test(k)) return 'b';
+  return k[0];
+};
+// Common English words that must never be fuzzily matched as a surah name via consonant skeleton
+// (e.g. "after" has skeleton "ftr" = Faatir!).
+const ENGLISH_NOT_SURAH = new Set([
+  'after', 'before', 'named', 'woman', 'women', 'first', 'last', 'start', 'starts', 'begin', 'begins',
+  'every', 'about', 'without', 'under', 'other', 'short', 'shortest', 'longest', 'number', 'count', 'total',
+  'order', 'letter', 'letters', 'word', 'words', 'bismillah', 'prophet', 'prophets', 'animal', 'animals',
+  'revealed', 'revelation', 'middle', 'second', 'third', 'fourth', 'fifth', 'which', 'where', 'when', 'what',
+  'many', 'much', 'most', 'fewest', 'least', 'come', 'comes', 'between', 'during', 'inside', 'contains',
+  'contain', 'mention', 'mentions', 'mentioned', 'called', 'means', 'meaning', 'father', 'mother', 'brother',
+  'sister', 'people', 'story', 'stories', 'verse', 'verses', 'chapter', 'chapters', 'reading', 'recite',
+  'reciting', 'water', 'human', 'person', 'there', 'their', 'these', 'those', 'twice', 'double',
+]);
 // Banglish and English words that are never read as a short surah name, even right after "surah"
 const NOT_A_SHORT_NAME = new Set(['al', 'ar', 'as', 'at', 'az', 'ad', 'an', 'ash', 'adh', 'ath', 'a',
   'nam', 'naam', 'jonno', 'jonne', 'kon', 'kono', 'kar', 'kor', 'koro', 'hoy', 'hobe', 'ache', 'ase', 'nai',
@@ -146,13 +166,18 @@ export function makeSurahFinder(q: Quran): SurahFinder {
       // the same names in another spelling
       for (let n = 2; n >= 1; n--) {
         for (let i = 0; i + n <= words.length; i++) {
+          if (n === 1 && ENGLISH_NOT_SURAH.has(words[i])) continue;
           const key = skey(words.slice(i, i + n).join(''));
           // two words ("ki bolse") are only matched when their consonants are the same; a one-letter slip is
           // tolerated in a single, longer word only. Otherwise two unrelated words would make a surah name.
           const sk = surahSkeleton(key);
           const id = n === 1 ? (bySkeleton.exact(key) ?? (sk.length >= 5 ? bySkeleton.near(key) : null)) : (sk.length >= 4 ? bySkeleton.exact(key) : null);
+          if (!id) continue;
+          // Require matching first sound class when using consonant skeleton fallback ("after" != "faatir")
+          const targetKey = skey(q.chapters[id - 1].tr);
+          if (n === 1 && firstSound(key) !== firstSound(targetKey)) continue;
           // Without the word "surah", the written name must also be long enough ("bakara", not "Bakr": Abu Bakr is a person)
-          if (id && (hasWord || (key.length >= 5 && SAFE_WITHOUT_SURAH_WORD.has(skey(q.chapters[id - 1].tr))))) return id;
+          if (hasWord || (key.length >= 5 && SAFE_WITHOUT_SURAH_WORD.has(targetKey))) return id;
         }
       }
       // a short name right next to the word "surah": "surah hazz", "surah zinn", "nohol surah"

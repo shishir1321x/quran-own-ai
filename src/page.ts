@@ -17,14 +17,25 @@ export const PAGE_HTML = `<!doctype html>
   input[type=password] { font: inherit; padding: .3rem .5rem; }
   #chat { display: flex; flex-direction: column; gap: .8rem; padding: 1rem 0; }
   .empty { color: #888; text-align: center; font-size: .95rem; padding: 2rem 0; }
-  .msg { padding: .7rem 1rem; border-radius: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msg { padding: .85rem 1.05rem; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
   .user { align-self: flex-end; max-width: 80%; background: #2a6b4f; color: #fff; border-bottom-right-radius: 4px; }
-  .bot { align-self: flex-start; max-width: 95%; background: #fff; border: 1px solid #ddd; border-bottom-left-radius: 4px; }
-  .thinking { color: #777; font-style: italic; }
+  .bot { align-self: flex-start; max-width: 96%; background: #fdfaf6; border: 1px solid #e7ddd2; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0, 0, 0, .03); }
+  .thinking { color: #777; font-style: italic; background: #fff; border-color: #ddd; }
   .wait { background: #fff8e5; border-color: #f0d48a; }
-  .ayah { margin-top: 1rem; padding-top: .8rem; border-top: 1px solid #eee; }
-  .ref { font-weight: 600; font-size: .9rem; color: #2a6b4f; }
-  .arabic { font-size: 1.6rem; line-height: 2.4; text-align: right; font-family: "Amiri", "Scheherazade New", "Traditional Arabic", serif; }
+  .lead { color: #333; font-size: .96rem; line-height: 1.55; }
+  .sec-head { font-weight: 700; font-size: 1.02rem; color: #1f2924; margin-top: 1.05rem; margin-bottom: .35rem; }
+  .ayah { margin-top: .75rem; padding-top: .55rem; border-top: 1px solid #eee5db; }
+  .ayah:first-of-type { margin-top: .35rem; padding-top: 0; border-top: none; }
+  .ref { font-weight: 700; font-size: .92rem; color: #2a6b4f; margin-bottom: .25rem; }
+  .ayah-quote { border-left: 3px solid #2a6b4f; padding-left: .85rem; margin-top: .3rem; }
+  .arabic { font-size: 1.55rem; line-height: 2.3; text-align: right; font-family: "Amiri", "Scheherazade New", "Traditional Arabic", serif; color: #1b241f; }
+  .trans { margin-top: .3rem; color: #2d2d2d; font-style: italic; line-height: 1.6; }
+  .points-box { margin-top: .95rem; padding-top: .6rem; border-top: 1px solid #eee5db; }
+  .points-head { margin-top: 0; }
+  ul.points { margin: .35rem 0 0; padding-left: 1.2rem; color: #333; font-size: .94rem; line-height: 1.55; white-space: normal; }
+  ul.points li { margin-bottom: .35rem; }
+  ul.points li:last-child { margin-bottom: 0; }
+  .followup-prompt { margin-top: .95rem; font-size: .9rem; color: #555; }
   .meta { font-size: .8rem; color: #777; margin-top: .8rem; }
   .badge { display: inline-block; font-size: .75rem; padding: .1rem .5rem; border-radius: 999px; margin-bottom: .5rem; border: 1px solid #ddd; color: #555; background: #f7f7f7; }
   .badge.data { color: #1d4f8f; border-color: #b9d1ee; background: #eef5fd; }
@@ -280,21 +291,41 @@ function render(r) {
   }
   const box = el('div', 'msg bot');
   if (r.mode === 'data') box.append(el('div', 'badge data', 'Numbers computed from the Quran text'));
-  box.append(el('div', null, r.answer, { dir: 'auto', lang: r.lang }));
+  box.append(el('div', 'lead', r.answer, { dir: 'auto', lang: r.lang }));
   if (r.data && r.data.length) box.append(el('div', 'datalines', 'Data used: ' + r.data.join(' | ')));
-  for (const a of r.ayahs || []) {
-    const d = el('div', 'ayah');
-    d.append(el('div', 'ref', a.surahNameEn + ' ' + a.surah + ':' + a.ayah));
-    if (a.arabic) d.append(el('div', 'arabic', a.arabic, { dir: 'rtl', lang: 'ar' }));
-    if (a.translation) d.append(el('div', null, a.translation, { lang: a.translationEdition.startsWith('bn') ? 'bn' : 'en' }));
-    if (a.note) {
-      // the translator's own note, word for word; open on tap. Text only, never HTML.
-      const det = el('details', 'note');
-      det.append(el('summary', null, 'Translator\u2019s notes: ' + a.note.source));
-      det.append(el('div', 'notetext', a.note.text, { dir: 'auto', lang: a.translationEdition.startsWith('bn') ? 'bn' : 'en' }));
-      d.append(det);
+  if (r.ayahs && r.ayahs.length) {
+    if (r.versesTitle) box.append(el('div', 'sec-head', r.versesTitle, { dir: 'auto', lang: r.lang }));
+    const ayahsWrap = el('div', 'ayahs');
+    for (const a of r.ayahs) {
+      const d = el('div', 'ayah');
+      const refText = r.lang === 'ar'
+        ? 'سورة ' + (a.surahName || a.surahNameEn) + '، ' + a.surah + ':' + a.ayah
+        : r.lang === 'bn'
+          ? 'সূরা ' + a.surahNameEn + ', ' + a.surah + ':' + a.ayah
+          : 'Surah ' + a.surahNameEn + ', ' + a.surah + ':' + a.ayah;
+      d.append(el('div', 'ref', refText, { dir: 'auto', lang: r.lang }));
+      const qwrap = el('div', 'ayah-quote');
+      if (a.arabic) qwrap.append(el('div', 'arabic', a.arabic, { dir: 'rtl', lang: 'ar' }));
+      if (a.translation) qwrap.append(el('div', 'trans', a.translation, { lang: a.translationEdition.startsWith('bn') ? 'bn' : 'en' }));
+      d.append(qwrap);
+      if (a.note) {
+        // the translator's own note, word for word; open on tap. Text only, never HTML.
+        const det = el('details', 'note');
+        det.append(el('summary', null, 'Translator\u2019s notes: ' + a.note.source));
+        det.append(el('div', 'notetext', a.note.text, { dir: 'auto', lang: a.translationEdition.startsWith('bn') ? 'bn' : 'en' }));
+        d.append(det);
+      }
+      ayahsWrap.append(d);
     }
-    box.append(d);
+    box.append(ayahsWrap);
+  }
+  if (r.points && r.points.length) {
+    const pbox = el('div', 'points-box', null, { dir: 'auto', lang: r.lang });
+    if (r.pointsTitle) pbox.append(el('div', 'sec-head points-head', r.pointsTitle));
+    const ul = el('ul', 'points');
+    for (const p of r.points) ul.append(el('li', null, p));
+    pbox.append(ul);
+    box.append(pbox);
   }
   // a page of this site that comes with the answer (the Terms page): only a path on this site, never another address
   if (r.link && typeof r.link.href === 'string' && r.link.href.charAt(0) === '/' && r.link.href.charAt(1) !== '/') {
@@ -304,6 +335,7 @@ function render(r) {
   }
   // what to ask next: a tap puts the question in the box and sends it (text only, never HTML)
   if (r.suggestions && r.suggestions.length) {
+    if (r.followUpPrompt) box.append(el('div', 'followup-prompt', r.followUpPrompt, { dir: 'auto', lang: r.lang }));
     const chips = el('div', 'chips');
     for (const s of r.suggestions) {
       const b = el('button', 'chip', s, { type: 'button', dir: 'auto' });

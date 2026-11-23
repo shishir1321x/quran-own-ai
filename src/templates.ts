@@ -31,6 +31,8 @@ export const THEME_LABEL: Record<string, T> = {
   'gratitude': t('gratitude', 'কৃতজ্ঞতা', 'الشكر'),
   'parents': t('parents', 'পিতা-মাতা', 'الوالدان'),
   'charity': t('charity', 'দান', 'الصدقة'),
+  'prayer times': t('prayer times', 'নামাজের সময়', 'أوقات الصلاة'),
+  'how many prayers': t('daily prayers and prayer times', 'দৈনিক নামাজ ও এর সময়', 'الصلوات اليومية وأوقاتها'),
   'prayer': t('prayer', 'নামায', 'الصلاة'),
   'fasting': t('fasting', 'রোজা', 'الصيام'),
   'trust in Allah': t('trust in Allah', 'আল্লাহর ওপর ভরসা', 'التوكل على الله'),
@@ -113,6 +115,16 @@ export const THEME_LABEL: Record<string, T> = {
   'adultery': t('adultery', 'ব্যভিচার', 'الزنا'),
   'killing': t('killing', 'অন্যায় হত্যা', 'القتل'),
   'bribery': t('bribery', 'ঘুষ', 'الرشوة'),
+  'orphans': t('orphans', 'এতিম', 'اليتامى'),
+  'neighbors': t('neighbors', 'প্রতিবেশী', 'الجيران'),
+  'purpose of life': t('the purpose of life', 'জীবনের উদ্দেশ্য', 'الغاية من الحياة والخلق'),
+  'remembrance of Allah (dhikr)': t('remembrance of Allah (dhikr)', 'আল্লাহর স্মরণ (যিকির)', 'ذكر الله'),
+  'good deeds and righteousness': t('good deeds and righteousness', 'সৎকর্ম ও নেক আমল', 'الأعمال الصالحة والبر'),
+  'character and good manners (akhlaq)': t('character and good manners (akhlaq)', 'উত্তম চরিত্র ও আখলাক', 'الأخلاق الحميدة'),
+  'kindness and mercy to others': t('kindness and mercy to others', 'সদাচরণ ও দয়া', 'الإحسان والرحمة بالناس'),
+  'family and kinship': t('family and kinship', 'আত্মীয়তার সম্পর্ক', 'صلة الرحم والأقارب'),
+  'magic and sihr': t('magic and sihr', 'জাদু ও সিহর', 'السحر'),
+  'signs in creation and reflection': t('signs in creation and reflection', 'সৃষ্টির নিদর্শন ও চিন্তাভাবনা', 'آيات الخلق والتفكر'),
 };
 
 export const MSG = {
@@ -400,6 +412,49 @@ export const STAT_TEXT = {
     `The longest ayah is ${ref} (${words} words in the Arabic text used here).`,
     `সবচেয়ে দীর্ঘ আয়াত ${ref} (এখানকার আরবি পাঠে ${bd(words)}টি শব্দ)।`,
     `أطول آية هي ${ref} (${words} كلمة في النص العربي المستخدم هنا).`),
+  shortestAyah: t(
+    'By letter count in the Tanzil text, the shortest ayahs are two-letter opening ayahs (Huruf al-Muqatta\'at): 20:1 (طه), 36:1 (يسٓ), and حمٓ in 40:1–46:1. Among single-word ayahs that are not disconnected letters, Surah Ar-Rahmaan 55:64 (مُدْهَامَّتَانِ — "Dark green [in color]") is widely cited.',
+    'তানযিলের আরবি পাঠে অক্ষর সংখ্যার দিক থেকে সবচেয়ে ছোট আয়াতগুলো হলো দুই অক্ষরের হুরুফে মুকাত্তাআত: 20:1 (طه), 36:1 (يسٓ) এবং 40:1–46:1 (حمٓ)। আর বিচ্ছিন্ন অক্ষর বাদে এক শব্দের আয়াত হিসেবে সূরা রহমানের 55:64 (مُدْهَامَّتَانِ — "ঘন সবুজ") প্রসিদ্ধ।',
+    'من حيث عدد الحروف في نص تنزيل، أقصر الآيات هي الحروف المقطعة ذات الحرفين: 20:1 (طه) و36:1 (يسٓ) و(حمٓ) في 40:1–46:1. ومن غير الحروف المقطعة تُذكر آية الكلمة الواحدة في سورة الرحمن 55:64 (مُدْهَامَّتَانِ).'),
+  noBismillah: t(
+    'Surah 9, At-Tawba (التوبة), is the only surah in the Quran that does not begin with Bismillah.',
+    'সূরা ৯, আত-তাওবা (التوبة) কুরআনের একমাত্র সূরা যার শুরুতে বিসমিল্লাহ নেই।',
+    'سورة التوبة (رقم 9) هي السورة الوحيدة في القرآن التي لا تبدأ بالبسملة.'),
+  twoBismillahs: t(
+    'Surah 27, An-Naml (النمل), contains Bismillah twice: once at its opening, and once inside ayah 27:30 (in Sulaiman\'s letter, shown below).',
+    'সূরা ২৭, আন-নামল (النمل)-এ দুইবার বিসমিল্লাহ আছে: একবার সূরার শুরুতে এবং আরেকবার 27:30 নম্বর আয়াতের ভেতরে (সুলাইমান আ.-এর চিঠিতে, নিচে দেখানো হলো)।',
+    'سورة النمل (رقم 27) وردت فيها البسملة مرتين: مرة في بدايتها ومرة في الآية 27:30 (في كتاب سليمان، معروضة أدناه).'),
+  firstLastSurah: (which: 'first' | 'last', no: number, name: string, ar: string, ayahs: number, type: string): T => which === 'first'
+    ? t(`The first surah of the Quran is Surah ${no}, ${name} (${ar}) — ${ayahs} ayahs, ${type}.`, `কুরআনের প্রথম সূরা হলো সূরা ${bd(no)}, ${name} (${ar}) — ${bd(ayahs)}টি আয়াত, ${type}।`, `أول سورة في القرآن هي سورة ${ar} (رقم ${no}) — ${ayahs} آيات، ${type}.`)
+    : t(`The last surah of the Quran is Surah ${no}, ${name} (${ar}) — ${ayahs} ayahs, ${type}.`, `কুরআনের শেষ সূরা হলো সূরা ${bd(no)}, ${name} (${ar}) — ${bd(ayahs)}টি আয়াত, ${type}।`, `آخر سورة في القرآن هي سورة ${ar} (رقم ${no}) — ${ayahs} آيات، ${type}.`),
+  surahWordCount: (name: string, words: number, letters: number): T => t(
+    `Surah ${name} has about ${words} words and ${letters} letters in the Arabic text used here (Tanzil simple-clean). Counts differ slightly across mushaf scripts and counting rules.`,
+    `এখানে ব্যবহৃত আরবি পাঠে (তানযিল) সূরা ${name}-এ প্রায় ${bd(words)}টি শব্দ এবং ${bd(letters)}টি হরফ আছে। মুসহাফ ও গোনার পদ্ধতিভেদে সংখ্যা সামান্য ভিন্ন হতে পারে।`,
+    `في سورة ${name} نحو ${words} كلمة و${letters} حرفًا في النص العربي المستخدم هنا (تنزيل). وقد تختلف الأعداد قليلًا باختلاف الرسم وطريقة العدّ.`),
+  juzSurahs: (n: number, count: number, first: string, last: string): T => t(
+    `Juz (para) ${n} contains parts or all of ${count} ${count === 1 ? 'surah' : 'surahs'} (from ${first} to ${last}).`,
+    `${bd(n)} নম্বর পারায় (জুয) মোট ${bd(count)}টি সূরা রয়েছে (${first} থেকে ${last} পর্যন্ত)।`,
+    `يحتوي الجزء ${n} على ${count} سورة (من ${first} إلى ${last}).`),
+  surahNamedWoman: t(
+    'Surah 19, Maryam (مريم — 98 ayahs, Meccan), is the only surah in the Quran named after a woman (Maryam, mother of Prophet Isa).',
+    'সূরা ১৯, মারইয়াম (مريم — ৯৮টি আয়াত, মক্কী) কুরআনের একমাত্র সূরা যা একজন নারীর নামে নামকরণ করা হয়েছে (নবী ঈসা আ.-এর মাতা মারইয়াম)।',
+    'سورة مريم (رقم 19، 98 آية، مكية) هي السورة الوحيدة في القرآن المسمّاة باسم امرأة (مريم أم عيسى عليهما السلام).'),
+  surahsNamedProphets: t(
+    'Six surahs in the Quran are named after prophets: 10 Yunus, 11 Hud, 12 Yusuf, 14 Ibrahim, 47 Muhammad, and 71 Nooh. (Surah 19 Maryam is named after Maryam, and Surah 31 Luqman after Luqman.)',
+    'কুরআনের ৬টি সূরা নবীদের নামে নামকরণ করা হয়েছে: ১০ ইউনুস, ১১ হূদ, ১২ ইউসুফ, ১৪ ইবরাহীম, ৪৭ মুহাম্মাদ এবং ৭১ নূহ। (এছাড়া সূরা ১৯ মারইয়াম এবং সূরা ৩১ লুকমান নামে রয়েছে।)',
+    'ست سور في القرآن مسمّاة بأسماء أنبياء: 10 يونس، 11 هود، 12 يوسف، 14 إبراهيم، 47 محمد، و71 نوح. (وتوجد أيضًا سورة مريم 19 وسورة لقمان 31).'),
+  surahAllahEveryAyah: (count: number): T => t(
+    `Surah 58, Al-Mujaadila (المجادلة — ${count} ayahs, Medinan), is the only surah in the Quran in which the name Allah (الله) appears in every single ayah.`,
+    `সূরা ৫৮, আল-মুজাদালাহ (المجادلة — ${bd(count)}টি আয়াত, মাদানী) কুরআনের একমাত্র সূরা যার প্রতিটি আয়াতে "আল্লাহ" (الله) নামটি রয়েছে।`,
+    `سورة المجادلة (رقم 58، ${count} آية، مدنية) هي السورة الوحيدة في القرآن التي ورد فيها لفظ الجلالة «الله» في كل آية منها.`),
+  manzils: t(
+    'The Quran is traditionally divided into 7 manzils (roughly equal portions for completing recitation in one week). Manzil markings are reading divisions in printed mushafs and are not stored in the ayah dataset used here.',
+    'সাত দিনে পুরো কুরআন খতম করার সুবিধার্থে ঐতিহ্যগতভাবে কুরআনকে ৭টি মনযিলে ভাগ করা হয়েছে। মনযিল মূলত মুসহাফে পাঠের সুবিধার বিভাজন, যা এখানকার মূল আয়াত-ডেটায় আলাদাভাবে সংরক্ষিত নেই।',
+    'يُقسَّم القرآن تقليديًا إلى 7 منازل لتسهيل ختمه في أسبوع. والمنازل تقسيم قرائي في المصاحف وليست مخزّنة كبيانات منفصلة هنا.'),
+  rukus: t(
+    'Many printed mushafs (especially South Asian / Indo-Pak editions) divide the Quran into 558 rukus (thematic sections), while some editions count 540. Ruku markings are editorial reading divisions and are not stored in the Tanzil dataset used here.',
+    'দক্ষিণ এশিয়ার প্রচলিত মুসহাফগুলোতে কুরআনে সাধারণত ৫৫৮টি রুকু (বিষয়ভিত্তিক অনুচ্ছেদ) চিহ্নিত থাকে (কিছু মুসহাফে ৫৪০টি)। রুকু মূলত পাঠের সুবিধার বিভাজন, যা এখানকার তানযিল ডেটায় আলাদাভাবে সংরক্ষিত নেই।',
+    'تُقسِّم كثير من المصاحف المطبوعة (خاصة في شبه القارة الهندية) القرآن إلى 558 ركوعًا (مقاطع موضوعية)، وتذكر بعض الطبعات 540. والركوع تقسيم قرائي غير مخزّن في بيانات تنزيل المستخدمة هنا.'),
   // The sajdah places: the NUMBER and the places come from Tanzil's data (15). Why other counts exist (15, 14, 11, and which
   // places they differ on) is from fiqh sources: fiqh.islamonline.net ("سجود التلاوة: الحكم والمواضع") and binbaz.org.sa
   // fatwa 12469. It names the places of disagreement and does NOT say which count is right (that would be a ruling).

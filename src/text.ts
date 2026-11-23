@@ -19,10 +19,34 @@ export const STOP_EN = new Set(('a an the of in on at to for from by with and or
   'what which who whom whose when where why how whether if then than so as about into over under again further more most some any each both all such only own same too very just ' +
   'say says said tell show give gives please quran koran ayah ayat verse verses surah sura mention mentioned mentions ' +
   'also let lets get got go goes going want wants need needs like likes think know').split(/\s+/));
-/** A light stemmer: patients -> patient, praying -> pray. Good enough for matching, not a dictionary. */
+/** Irregular English plurals and past-tense verbs mapped to their Quran-text stem. */
+const IRREGULAR_EN: Record<string, string> = {
+  children: 'child', women: 'woman', men: 'man', wives: 'wife', lives: 'life', thieves: 'thief', wolves: 'wolf',
+  feet: 'foot', teeth: 'tooth', mice: 'mous', geese: 'goos', oxen: 'ox',
+  forgave: 'forgiv', forgiven: 'forgiv', spoke: 'speak', spoken: 'speak', taught: 'teach', fought: 'fight',
+  built: 'build', brought: 'bring', thought: 'think', sought: 'seek', caught: 'catch', wept: 'weep',
+  slept: 'sleep', kept: 'keep', felt: 'feel', dealt: 'deal', left: 'leav', lost: 'los', sent: 'send',
+  spent: 'spend', lent: 'lend', bent: 'bend', went: 'go', gone: 'go', saw: 'see', seen: 'see',
+  knew: 'know', known: 'know', grew: 'grow', grown: 'grow', threw: 'throw', thrown: 'throw',
+  blew: 'blow', blown: 'blow', flew: 'fly', flown: 'fly', drew: 'draw', drawn: 'draw',
+  wrote: 'writ', written: 'writ', broke: 'break', broken: 'break', chose: 'choos', chosen: 'choos',
+  stole: 'steal', stolen: 'steal', swore: 'swear', sworn: 'swear', tore: 'tear', torn: 'tear',
+  wore: 'wear', worn: 'wear', bore: 'bear', borne: 'bear', forbade: 'forbid', forbidden: 'forbid',
+  ate: 'eat', eaten: 'eat', drank: 'drink', drunk: 'drink', began: 'begin', begun: 'begin',
+  ran: 'run', sat: 'sit', stood: 'stand', understood: 'understand', held: 'hold', told: 'tell',
+  sold: 'sell', paid: 'pay', laid: 'lay', made: 'mak', gave: 'giv', given: 'giv', took: 'tak',
+  taken: 'tak', shook: 'shak', shaken: 'shak', forsook: 'forsak', forsaken: 'forsak',
+  arose: 'aris', arisen: 'aris', rose: 'ris', risen: 'ris', drove: 'driv', driven: 'driv',
+  rode: 'rid', ridden: 'rid', hid: 'hid', hidden: 'hid', fell: 'fall', fallen: 'fall',
+  came: 'com', became: 'becom',
+};
+
+/** A light stemmer: patients -> patient, praying -> pray, children -> child, forgave -> forgiv. */
 export function stemEn(w: string): string {
   if (w.length <= 3) return w;
+  if (IRREGULAR_EN[w]) return IRREGULAR_EN[w];
   if (w.endsWith('ies') && w.length > 4) return w.slice(0, -3) + 'y';
+  if (w.endsWith('ves') && w.length > 4) return w.slice(0, -3) + 'f';
   if (w.endsWith('sses')) return w.slice(0, -2);
   if (w.endsWith('ing') && w.length > 5) return w.slice(0, -3);
   if (w.endsWith('ed') && w.length > 4) return w.slice(0, -2);
@@ -40,8 +64,8 @@ export function tokensEn(s: string): string[] {
 }
 /** English words of a question, without stop words and WITHOUT stemming (for the lookup tables). */
 export function wordsEn(s: string): string[] {
-  // Join Arabic-style internal apostrophes ("ma'al", "Al-A'raf", "qur'an") while keeping English contractions ("Allah's", "don't") split.
-  const joined = s.replace(/([A-Za-z])['’‘`ʼ]+(?!(?:s|t|d|m|ll|re|ve)\b)([A-Za-z])/gi, '$1$2');
+  // Join Arabic-style internal apostrophes ("ma'al", "Al-A'raf", "qur'an", "muʾminūn") while keeping English contractions ("Allah's", "don't") split.
+  const joined = s.replace(/([A-Za-z\u00C0-\u024F\u1E00-\u1EFF])['’‘`ʼʾʿ]+(?!(?:s|t|d|m|ll|re|ve)\b)([A-Za-z\u00C0-\u024F\u1E00-\u1EFF])/gi, '$1$2');
   return normEn(joined).split(PUNCT).filter((w) => w && /^[a-z]+$/.test(w));
 }
 
@@ -59,12 +83,42 @@ const STOP_BN = new Set(('আমি আমার আমাকে আমরা �
   'কুরআন কোরআন কুরান কোর আন আয়াত আয়াতে আয়াতগুলো সূরা সুরা দাও দিন দেন দেখাও দেখান বল বলুন একটা একটি কিছু খুব ভাই দাদা কথা বিষয়ে ব্যাপারে ' +
   'রেফারেন্স রেফারেন্সসহ অনুবাদ অনুবাদসহ সহ বাংলা বাংলায় বাংলাতে আরবি আরবী ইংরেজি ইংরেজিতে শব্দ শব্দটি শব্দটা থাকা বাক্য বাক্যটি সংখ্যা কাছে উল্লেখ নির্দেশ রয়েছে ' +
   'আর যে যার হলে নিজে বিধান যোগ করবেন').split(/\s+/));
-const BN_SUFFIX = ['গুলোকে', 'গুলোর', 'গুলো', 'গুলির', 'দেরকে', 'দের', 'েরা', 'ের', 'কে', 'রা', 'তে', 'য়', 'ে', 'র', 'টি', 'টা', 'ও'];
+const BN_SUFFIX = [
+  'গুলোকে', 'গুলোর', 'গুলোতে', 'গুলো', 'গুলির', 'গুলি', 'দেরকে', 'দেরও', 'দের', 'গণের', 'গণকে', 'গণ',
+  'সমূহের', 'সমূহ', 'টাকে', 'টিকে', 'টার', 'টির', 'খানা', 'খানি', 'য়ের', 'য়ে', 'েরা', 'ের', 'কে', 'রা',
+  'তে', 'য়', 'ে', 'র', 'টি', 'টা', 'ও',
+];
 export function stemBn(w: string): string {
-  for (const suf of BN_SUFFIX) {
-    if (w.length - suf.length >= 3 && w.endsWith(suf)) return w.slice(0, -suf.length);
+  let cur = w;
+  for (let pass = 0; pass < 2; pass++) {
+    let changed = false;
+    for (const suf of BN_SUFFIX) {
+      if (cur.length - suf.length >= 3 && cur.endsWith(suf)) {
+        cur = cur.slice(0, -suf.length);
+        changed = true;
+        break;
+      }
+    }
+    if (!changed) break;
   }
-  return w;
+  return cur;
+}
+/** Spelling-tolerant Bengali form: unifies শ/ষ/স, য/জ, ণ/ন, ী/ি, ূ/ু, ৎ/ত, ড়/ঢ়/র, strips ঁ/ঃ ("সূর্য"=="সুর্য", "চাঁদ"=="চাদ", "ভালোবাসা"=="ভালবাসা"). */
+export function bnLooseNorm(w: string): string {
+  return normBn(w)
+    .replace(/\u09AF\u09BC/g, 'য়')
+    .replace(/\u09A1\u09BC|\u09A2\u09BC/g, 'র')
+    .replace(/[ড়ঢ়]/g, 'র')
+    .replace(/[শষ]/g, 'স')
+    .replace(/য/g, 'জ')
+    .replace(/ণ/g, 'ন')
+    .replace(/ৎ/g, 'ত')
+    .replace(/ী/g, 'ি')
+    .replace(/ূ/g, 'ু')
+    .replace(/ঈ/g, 'ই')
+    .replace(/ঊ/g, 'উ')
+    .replace(/[ঁঃ]/g, '')
+    .replace(/ভালো/g, 'ভাল');
 }
 export function tokensBn(s: string): string[] {
   const out: string[] = [];
@@ -72,6 +126,18 @@ export function tokensBn(s: string): string[] {
     if (!w || !/[\u0980-\u09FF]/.test(w) || STOP_BN.has(w)) continue;
     const stem = stemBn(w);
     if (!STOP_BN.has(stem)) out.push(stem);   // "কুরআনে" -> "কুরআন" is a stop word too
+  }
+  return out;
+}
+/** Spelling-tolerant Bengali tokens (so "সুর্য", "চাদ", "পাহার", "ইমান", "নবি", "রসুল", "ভালবাসা" match Dr. Zakaria's text). */
+export function tokensBnLoose(s: string): string[] {
+  const out: string[] = [];
+  for (const w of normBn(s).split(PUNCT)) {
+    if (!w || !/[\u0980-\u09FF]/.test(w) || STOP_BN.has(w)) continue;
+    const stem = stemBn(w);
+    if (STOP_BN.has(stem)) continue;
+    const loose = bnLooseNorm(stem);
+    if (loose.length >= 2) out.push(loose);
   }
   return out;
 }
@@ -97,13 +163,17 @@ const nameIndex = makeSkeletonIndex(Object.entries(NAME_TO_EN).filter(([k]) => /
 
 /** Banglish and known Bengali words of a question as ENGLISH words (not stemmed): namaz -> prayer.
  *  `isEnglish` says whether a Latin word is a real English word; those are never "corrected". */
-export function mappedEnglishWords(s: string, isEnglish: (w: string) => boolean = () => false): string[] {
+export function mappedEnglishWords(
+  s: string,
+  isEnglish: (w: string) => boolean = () => false,
+  isArabicWord: (w: string) => boolean = () => false,
+): string[] {
   const out: string[] = [];
   for (const w of wordsEn(s)) {
     if (BANGLISH_TO_EN[w]) out.push(BANGLISH_TO_EN[w]);
     else if (NAME_TO_EN[w]) out.push(NAME_TO_EN[w]);
     else if (w.length >= 4 && !isEnglish(w)) {
-      const m = banglishIndex.exact(w) ?? nameIndex.exact(w) ?? nameIndex.near(w);   // another spelling of a known word
+      const m = banglishIndex.exact(w) ?? nameIndex.exact(w) ?? (isArabicWord(w) ? null : nameIndex.near(w));   // another spelling of a known word
       if (m) out.push(m);
     }
   }

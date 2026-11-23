@@ -47,6 +47,9 @@ export function toJson(engine: Engine, r: Reply): Record<string, unknown> {
   return {
     status: 'ok', lang: r.lang, provider: 'own', attempts: ['own'], kind: r.kind, mode: r.mode,
     answer: r.answer, not_found: r.notFound, ayahs, ...(r.data ? { data: r.data } : {}),
+    ...(r.versesTitle ? { versesTitle: r.versesTitle } : {}),
+    ...(r.points?.length ? { points: r.points, ...(r.pointsTitle ? { pointsTitle: r.pointsTitle } : {}) } : {}),
+    ...(r.followUpPrompt ? { followUpPrompt: r.followUpPrompt } : {}),
     ...(r.suggestions?.length ? { suggestions: r.suggestions } : {}),
     ...(r.link ? { link: r.link } : {}),
   };

@@ -16,6 +16,7 @@
 import type { Quran } from './data.js';
 import type { Lang } from './types.js';
 import { normAr } from './text.js';
+import { phoneticFirstClass, phoneticTermKey } from './phoneticNorm.js';
 
 export interface AnimalKind {
   id: string;
@@ -107,14 +108,25 @@ export const withoutSurahName = (question: string) => question.normalize('NFC').
 /** The animal kinds a question asks about by name ("how many times is the COW mentioned?"), in the order of the list. */
 export function animalKindsIn(question: string): AnimalKind[] {
   const text = normAr(question.normalize('NFC')).replace(SURAH_NAME, ' ').toLowerCase();
-  const latin = new Set(text.match(/[a-z]+(?:-[a-z]+)?/g) ?? []);
+  const latinList = text.match(/[a-z]+(?:-[a-z]+)?/g) ?? [];
+  const latin = new Set(latinList);
+  const latinPhon = latinList
+    .filter((w) => w.length >= 5 && /^[a-z]+$/.test(w))
+    .map((w) => ({ w, k: phoneticTermKey(w), f: phoneticFirstClass(w) }));
   const arabic = (text.match(/[؀-ۿ]+/g) ?? []).flatMap((w) => {
     const out = [w];
     for (const re of [/^(?:و|ف)/, /^(?:ب|ل|ك)/, /^(?:ال|لل)/]) { const last = out[out.length - 1]; if (re.test(last) && last.length > 3) out.push(last.replace(re, '')); }
     return out;
   });
   return ANIMALS.filter((kind) => (ASK_WORDS[kind.id] ?? []).some((w) => {
-    if (/^[a-z-]+$/.test(w)) return latin.has(w);
+    if (/^[a-z-]+$/.test(w)) {
+      if (latin.has(w)) return true;
+      if (w.length >= 5 && /^[a-z]+$/.test(w) && latinPhon.length > 0) {
+        const k = phoneticTermKey(w), f = phoneticFirstClass(w);
+        return latinPhon.some((q) => q.f === f && Math.abs(q.w.length - w.length) <= 2 && q.k === k);
+      }
+      return false;
+    }
     if (/[ঀ-৿]/.test(w)) return new RegExp(`(?<![\\u0980-\\u09FF])${w.normalize('NFC')}`).test(text);
     return arabic.includes(w);
   }));

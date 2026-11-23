@@ -3,6 +3,9 @@
 //   safety (crisis, made-up ayah, ruling, hadith/tafsir) -> thanks/wishes/greeting/about -> numbers and facts
 //   -> ayah reference or a famous passage -> juz -> surah (by name or number, a part of it) -> follow-up
 //   -> checked themes -> "something from the Quran" -> BM25 search -> not found
+import { arPhoneticDocTokens, latinQueryToArKeys } from './arabicPhonetic.js';
+import { banglishDocTokens, latinQueryToBnKeys, NON_QURAN_WORDS } from './banglishPhonetic.js';
+import { canonicalizeQuestion, phoneticFirstClass, phoneticTermKey, phoneticTermKeyFlex } from './phoneticNorm.js';
 import { loadQuran, type Quran } from './data.js';
 import { THEMES, GENERAL_AYAHS, NO_TOPIC_WORDS, BANGLISH_TO_EN, NAME_TO_EN } from './lexicon.js';
 import { STORIES, type Story } from './themes_more.js';
@@ -13,6 +16,7 @@ import { buildIndex, englishChecker, matchThemes, searchAyahs, type Index } from
 import { countWord, extremeSurahs, revelationCounts, surahInfo, totals, type WordLang } from './stats.js';
 import { makeSurahFinder, surahNumber, type SurahFinder } from './surahs.js';
 import { MSG, STAT_TEXT, SUGGEST, THEME_LABEL } from './templates.js';
+import { buildReplyPoints, FOLLOWUP_PROMPT, POINTS_HEADING, TOPIC_GUIDE, VERSES_HEADING } from './topicGuide.js';
 import { americanize, normEn, normAr, normBn, tokensAr, tokensEn, wordsBn, wordsEn } from './text.js';
 import { lookupGlossary } from './glossary.js';
 import { animalKindsIn, animalsIn, withoutSurahName, type AnimalKind } from './animals.js';
@@ -43,6 +47,14 @@ export interface Reply {
   rawTranslation?: boolean;
   /** Tappable next questions, in the language of the reply (every one is a question this engine answers). */
   suggestions?: string[];
+  /** Localized heading shown above the ayahs (e.g. "The Quran says"). */
+  versesTitle?: string;
+  /** Localized heading shown above the factual overview points. */
+  pointsTitle?: string;
+  /** Strictly factual overview bullets from the shown ayahs & Quran metadata (never AI tafsir or fatwas). */
+  points?: string[];
+  /** Closing follow-up prompt line shown above the clickable suggestion chips. */
+  followUpPrompt?: string;
   /** A page of this site to open (the Terms page, for "what is this?" and "what are your terms?"). */
   link?: { href: string; label: string };
 }
@@ -76,7 +88,7 @@ const FATWA = [
   /حرام|حلال|فتوى|يجوز|هل يحل/,
 ];
 // Questions that need hadith or tafsir, which this assistant does not have.
-const ASBAB = /\b(?:asbab(?:\s*al[-\s]*nuzul)?|shane\s*nuzul|shan[- ]e[- ]nuzul|reasons?\s+(?:of|for)\s+(?:the\s+)?revelation|historical\s+(?:reason|cause|occasion|context)\s+(?:of|for)\s+(?:the\s+)?revelation|why\s+(?:was\s+)?[^.!?\n]{0,45}\brevealed\b)\b|শানে\s*নুযূল|শানে\s*নুজুল|আসবাব(?:ুন|ু)\s*নুযূল|আসবাব(?:ুন|ু)\s*নুজুল|(?:নাজিলের|নাযিলের|অবতরণের)\s*(?:কারণ|ঐতিহাসিক\s*কারণ|পেছনের\s*ঘটনা|পটভূমি)|কেন\s*(?:নাজিল|নাযিল|অবতীর্ণ)\s*(?:হয়েছে|হয়েছিল|হয়)|(?:naziler|najiler|obotoroner)\s*karon|keno\s*(?:nazil|najil)\s*(?:hoyeche|hoyechilo|hoise|holo)|أسباب\s*النزول|سبب\s*(?:نزول|النزول)|لماذا\s*نزل(?:ت)?/i;
+const ASBAB = /\b(?:asbab(?:\s*al[-\s]*nuzul)?|shane\s*nuzul|shan[- ]e[- ]nuzul|reasons?\s+(?:of|for)\s+(?:the\s+)?revelation|historical\s+(?:reason|cause|occasion|context)\s+(?:of|for)\s+(?:the\s+)?revelation|why\s+(?:was\s+)?[^.!?\n]{0,45}\brevealed\b|(?:which|what)\s+(?:surah|sura|ayah|ayat|verse)\s+(?:was\s+)?revealed\s+(?:first|last)|(?:first|last)\s+(?:surah|sura|ayah|ayat|verse)\s+(?:to\s+be\s+)?revealed)\b|শানে\s*নুযূল|শানে\s*নুজুল|আসবাব(?:ুন|ু)\s*নুযূল|আসবাব(?:ুন|ু)\s*নুজুল|(?:নাজিলের|নাযিলের|অবতরণের)\s*(?:কারণ|ঐতিহাসিক\s*কারণ|পেছনের\s*ঘটনা|পটভূমি)|কেন\s*(?:নাজিল|নাযিল|অবতীর্ণ)\s*(?:হয়েছে|হয়েছিল|হয়)|(?:প্রথম|শেষ)\s*(?:কোন\s*)?(?:সূরা|সুরা|আয়াত)\s*(?:নাজিল|নাযিল|অবতীর্ণ)|(?:সূরা|সুরা|আয়াত)\s*(?:প্রথম|সবার\s*আগে|শেষ)\s*(?:নাজিল|নাযিল|অবতীর্ণ)|(?:naziler|najiler|obotoroner)\s*karon|keno\s*(?:nazil|najil)\s*(?:hoyeche|hoyechilo|hoise|holo)|(?:prothom|shesh)\s*(?:kon\s*)?(?:surah|sura|ayat)\s*(?:nazil|najil)|أسباب\s*النزول|سبب\s*(?:نزول|النزول)|لماذا\s*نزل(?:ت)?|(?:أول|آخر)\s*(?:سورة|آية)\s*نزل(?:ت)?/i;
 const HADITH = /\b(hadith|hadis|hadees|fazilat|fazilah|fazail|virtues? of|sawab|thawab|reward for (?:reading|reciting)|heart of the (?:quran|koran)|greatest (?:surah|ayah|verse)|best (?:surah|ayah|verse)|most rewarding|who is (?:better|best|greater|greatest|superior|more virtuous)|benefits? of (?:reading|reciting|listening))\b|(?:important|best|greatest|top|most important) (?:surah|ayah|ayat|verse)|(?:surah|ayah|ayat)\s+(?:is|er)?\s*(?:the\s+)?(?:most\s+)?(?:important|best|greatest)|(?:ইম্পর্টেন্ট|ইমপর্টেন্ট|ইম্পরট্যান্ট|গুরুত্বপূর্ণ|শ্রেষ্ঠ|সেরা|সবচেয়ে ভালো|সবচেয়ে উত্তম).{0,14}(?:সূরা|আয়াত)|(?:সূরা|আয়াত).{0,14}(?:ইম্পর্টেন্ট|ইমপর্টেন্ট|গুরুত্বপূর্ণ|শ্রেষ্ঠ|সেরা)|\b(?:shreshtho|sreshtho|shera|sera)\s+(?:surah|ayat)|হাদীস|হাদিস|ফজিলত|ফযীলত|সওয়াব|ছওয়াব|সাওয়াব|حديث|فضل سورة/i;
 const PERSONAL_GUIDANCE = /\bwhat\s+(?:does\s+)?(?:allah|god)\s+wants?\s+(?:me|us)\s+to\s+do\b|\b(?:tell|show)\s+me\s+what\s+to\s+do\s+(?:about|in)\s+my\s+(?:personal|life|situation)\b|\bmy\s+personal\s+situation\b/i;
 const NO_FATWA = /\b(?:without|no|not|don'?t|do\s+not)\s+(?:giving|give|issuing|issue|making|make|any)?\s*(?:a\s+)?(?:fatwa|fatawa|ruling|legal\s+ruling)\b|ফতোয়া\s*(?:দেবেন\s*না|দিবেন\s*না|দেবে\s*না|দিও\s*না|ছাড়া|ব্যতীত)|(?:fatwa|hukum|raay)\s*(?:dio\s*na|diben\s*na|deben\s*na|chara)/i;
@@ -96,7 +108,9 @@ const FATWA_MORE: RegExp[] = [
 const HELP = /^\s*(?:help|menu|commands?|options|start|\?)\s*[!?.]*\s*$|\b(?:how (?:do|can|to) i use|how does this (?:bot|work)|what (?:can|may|should) i ask|what questions|which questions|examples? of questions|show me what you can do)\b|^\s*(?:সাহায্য|হেল্প|মেনু|مساعدة)\s*[!?.।]*\s*$|কী কী প্রশ্ন|কি কি প্রশ্ন|কীভাবে ব্যবহার|কিভাবে ব্যবহার|ki ki (?:prosno|jiggesh)|কী জিজ্ঞেস করব|কি জিজ্ঞেস করব|ما الأسئلة|كيف أستخدم/i;
 const UNSUPPORTED: RegExp[] = [
   /\b(?:audio|mp3|recording)\b|\b(?:listen to|hear|play|sound of|voice of)\b.{0,30}\b(?:quran|surah|ayat|ayah|recitation|qari)\b|\b(?:recite|recitation)\b.{0,30}\b(?:audio|aloud|for me|to me)\b|অডিও|শুনাও|শোনাও|শুনতে চাই|সুর করে|استمع|صوت/i,
-  /\b(?:prayer|namaz|salah|salat|azan|adhan|iftar|sehri|suhoor|fajr|zuhr|dhuhr|asr|maghrib|isha|jumm?ah|jumuah|jumua)\s*(?:times?|timings?|schedule)\b|\b(?:time|when|what time)\b.{0,25}\b(?:fajr|zuhr|dhuhr|asr|maghrib|isha|iftar|sehri|suhoor|jumm?ah|jumuah|jumua|namaz|salah|salat|azan|adhan)\b|নামাজের সময়|নামাযের সময়|সালাতের সময়|ইফতারের সময়|সাহরির সময়|আজানের সময়|জুমার সময়|أوقات الصلاة|موعد الصلاة/i,
+  // Live clock schedules & specific daily prayer/fasting times (today, Fajr, Iftar, Jumuah clock time) stay unsupported;
+  // general "prayer time" / "নামাজের সময়" / "namajer somoy" are answered from the Quran (4:103, 17:78, 11:114).
+  /\b(?:azan|adhan|iftar|sehri|suhoor|fajr|zuhr|dhuhr|asr|maghrib|isha|jumm?ah|jumuah|jumua)\s*(?:times?|timings?|schedule)\b|\b(?:time|when|what time)\b.{0,25}\b(?:fajr|zuhr|dhuhr|asr|maghrib|isha|iftar|sehri|suhoor|jumm?ah|jumuah|jumua|azan|adhan)\b|\b(?:prayer|namaz|namaj|salah|salat)\s*(?:times?|timings?)\s*(?:today|now|tonight|tomorrow|schedule|timetable|in\s+[a-z]{3,})\b|\b(?:today'?s?|now|tonight|tomorrow'?s?|current|local)\s+(?:prayer|namaz|namaj|salah|salat)\s*(?:times?|timings?|schedule)\b|\b(?:prayer|namaz|namaj|salah|salat)\s+schedule\b|\b(?:what\s+time|when)\s+(?:is|are)\s+(?:the\s+)?(?:next\s+)?(?:prayer|namaz|namaj|salah|salat)\b|(?:আজকের|আজকে|এখনকার|এখন)\s*(?:নামাজের|নামাযের|সালাতের)\s*(?:সময়|সময়)|(?:নামাজের|নামাযের|সালাতের)\s*(?:সময়সূচী|সময়সূচী)|(?:ajker|ajke|ekhon|kokhon)\s*(?:namaj|namaz|salat)(?:er)?\s*(?:somoy|shomoy|time)|(?:ফজরের|যোহরের|জোহরের|আসরের|মাগরিবের|এশার|ইফতারের|সাহরির|আজানের|জুমার)\s*(?:সময়|সময়)|موعد الصلاة اليوم|متى الصلاة/i,
   /\bqibla\b.{0,25}\b(?:direction|find|where|which way)\b|\bdirection\b.{0,15}\b(?:qibla|kaaba|kabah|mecca|makkah)\b|কিবলার দিক|কিবলা কোন দিকে|اتجاه القبلة/i,
   /\b(?:next|when is|when'?s|date of|today'?s|what is today'?s)\b.{0,18}\b(?:eid|ramadan|ramzan|hijri|islamic date|muharram|shab-?e|laylatul)\b|\bhijri\b.{0,10}\b(?:date|calendar)\b|ঈদ কবে|রমজান কবে|রমযান কবে|ইসলামিক তারিখ|হিজরি তারিখ|متى (?:العيد|رمضان)|التاريخ الهجري/i,
   /\bzakat\b.{0,12}\b(?:calculator|calculation|calculate|amount|nisab|how much)\b|যাকাত (?:ক্যালকুলেটর|হিসাব|কত)|حاسبة الزكاة/i,
@@ -138,6 +152,15 @@ const LIST_WORD = /\b(?:list|names?|which|name)\b|তালিকা|নাম|�
 const NEIGHBOR_AFTER = /\b(?:after|next|following|porer|porey|parer)\b|পরের|পরে|بعد/i;
 const NEIGHBOR_BEFORE = /\b(?:before|previous|preceding|agher|agey|ager)\b|আগের|আগে|قبل/i;
 const LONGEST_AYAH = /\b(?:longest|biggest|largest)\s+(?:ayah|ayat|verse|aya)\b|সবচেয়ে (?:বড়|লম্বা|দীর্ঘ) আয়াত|أطول آية/i;
+const SHORTEST_AYAH = /\b(?:shortest|smallest)\s+(?:ayah|ayat|verse|aya)\b|সবচেয়ে\s*(?:ছোট|ক্ষুদ্র|ক্ষুদ্রতম)\s*আয়াত|\bsobcheye\s*choto\s*(?:ayat|ayah)\b|أقصر\s*آية/i;
+const NO_BISMILLAH = /\b(?:no|without|missing|doesn'?t\s+(?:have|start\s+with)|does\s+not\s+(?:have|start\s+with))\b.{0,20}\bbismillah\b|\bbismillah\b.{0,20}\b(?:nai|nei|na|missing|absent)\b|বিসমিল্লাহ\s*(?:নেই|নাই|ছাড়া)|(?:নেই|নাই|ছাড়া).{0,15}বিসমিল্লাহ|لا\s*تبدأ\s*بالبسملة|بدون\s*بسملة/i;
+const TWO_BISMILLAH = /\b(?:two|2|twice|double)\b.{0,20}\bbismillah\w*|\bbismillah\w*.{0,20}\b(?:two\s+times|twice|duibar|dui\s*bar)\b|(?:দুইবার|২\s*বার|দুবার|দুটি)\s*বিসমিল্লাহ|বিসমিল্লাহ\s*(?:দুইবার|২\s*বার|দুবার)|بسملتان|البسملة\s*مرتين/i;
+const FIRST_LAST_SURAH = /\b(?:which|what)\s+(?:is\s+)?(?:the\s+)?(first|1st|last|final)\s+(?:surah|sura|chapter)\b|\b(first|1st|last|final)\s+(?:surah|sura|chapter)\s+(?:of|in)\s+(?:the\s+)?(?:quran|koran)\b|কুরআনের\s*(প্রথম|শেষ)\s*(?:সূরা|সুরা)|(প্রথম|শেষ)\s*(?:সূরা|সুরা)\s*(?:কোনটি|কোনটা)|\b(?:quraner|kuraner)\s+(prothom|pratham|shesh|sesh)\s+(?:surah|sura)\b|(?:أول|آخر)\s*سورة\s*في\s*القرآن/i;
+const SURAH_WOMAN = /\b(?:surah|sura|chapter)\b.{0,25}\b(?:named\s+after|name\s+of)\s+(?:a\s+)?(?:woman|women|female|lady)\b|(?:নারী|নারীর|মহিলা|মহিলার)\s*নামে\s*(?:কোন\s*)?(?:সূরা|সুরা)|(?:সূরা|সুরা).{0,15}(?:নারী|নারীর|মহিলা|মহিলার)\s*নামে|\b(?:narir|mohilar)\s+name\s+(?:kon\s+)?(?:surah|sura)\b|سورة\s*باسم\s*امرأة/i;
+const SURAH_PROPHETS = /\b(?:which|how\s+many|what)\s+(?:surahs?|suras?|chapters?)\s+(?:are\s+)?named\s+after\s+(?:prophets?|messengers?)\b|(?:নবী|নবীদের)\s*নামে\s*(?:কোন|কয়টি|কতটি).{0,10}(?:সূরা|সুরা)|(?:কোন|কয়টি|কতটি).{0,10}(?:সূরা|সুরা).{0,12}(?:নবী|নবীদের)\s*নামে|\b(?:kon|koyta|koto)\s*(?:kon\s*)?(?:surah|surahs|sura)\s*(?:nobider|nabider)\s*name\b|سور\s*بأسماء\s*(?:الأنبياء|أنبياء)/i;
+const SURAH_ALLAH_EVERY_AYAH = /\b(?:surah|sura|chapter)\b.{0,30}\ballah\b.{0,20}\b(?:every|each|all)\s+(?:ayah|ayat|verse|ayahs|verses)\b|(?:প্রতিটি|প্রত্যেক|সব)\s*আয়াতে\s*আল্লাহ|আল্লাহ.{0,18}(?:প্রতিটি|প্রত্যেক)\s*আয়াতে|\b(?:proti|protiti|shob)\s+ayate\s+allah\b|سورة.{0,20}لفظ\s*الجلالة.{0,15}كل\s*آية/i;
+const MANZIL_COUNT = /\bhow\s+many\s+manzils?\b|\b(?:koyta|koyti|koto)\s+manzil\b|কয়টি\s*মনযিল|কতটি\s*মনযিল|কয়\s*মনযিল|كم\s*منزل/i;
+const RUKU_COUNT = /\bhow\s+many\s+rukus?\b|\b(?:koyta|koyti|koto)\s+ruku\b|কয়টি\s*রুকু|কতটি\s*রুকু|কয়\s*রুকু|كم\s*ركوع/i;
 // every spelling of the word: sajda, sajdah, sajdas, sejda, sijda, sijhda, sijdar, shijda ... (not "sajadah", a prayer mat), and sujud
 const SAJDA = /\b(?:s|sh)[aei][jz]h?d(?:a|ah|ar|as|ahs|e|er|ay)\b|\b(?:sujud|sujood|sujuud|prostrations?)\b|সিজদা|সেজদা|সিজদার|سجدة|آيات السجدة/i;
 const PAGES = /\bhow many pages\b|কয়টি পৃষ্ঠা|কত পৃষ্ঠা|কয় পৃষ্ঠা|كم صفحة/i;
@@ -182,7 +205,7 @@ const AYAH_WORD = /\b(ayah|ayahs|ayat|verse|verses)\b|আয়াত|আয়�
 const SURAH_WORD_RE = /\b(surah|surahs|sura|suras)\b|সূরা|সূরাতে|সূরায়|سورة|سور/i;
 const MOST = /\b(most|longest|biggest|largest|maximum|sobcheye boro|sobcheye beshi)\b|সবচেয়ে বেশি|সবচেয়ে বড়|সর্বাধিক|সবচেয়ে লম্বা|أطول|أكثر/i;
 const FEWEST = /\b(fewest|least|shortest|smallest|minimum|sobcheye choto|sobcheye kom)\b|সবচেয়ে কম|সবচেয়ে ছোট|সর্বনিম্ন|أقصر|أقل/i;
-const REVEL = /\b(meccan|makkan|medinan|madinan|makki|madani)\b|মক্কী|মাদানী|মাক্কী|মাদানি|مكي|مدني|مكية|مدنية/i;
+const REVEL = /\b(meccan|makkan|medinan|madinan|makki|madani)\b|মক্কী|মক্কি|মাদানী|মাদানি|মাক্কী|মাক্কি|মাদিনি|মদীনি|মদিনি|مكي|مدني|مكية|مدنية/i;
 
 // "how many animals are mentioned in the Quran?", "which animals ...?", "কুরআনে কয়টি প্রাণীর নাম আছে?" (src/animals.ts)
 const ANIMAL_WORD = /\b(?:animals?|prani|poshu|pashu|poshupakhi|jibjontu|jontu|janwar|janowar)\b|প্রাণী|পশুপাখি|পশু-পাখি|পশু|জীবজন্তু|জীব-জন্তু|জন্তু|حيوان/i;
@@ -250,14 +273,29 @@ function extractWord(question: string): { word: string; lang: WordLang } | null 
     if (i >= 0 && ar[i + 1]) w = ar[i + 1];
   }
   if (!w) {
-    const drop = new Set(['time', 'times', 'appear', 'appears', 'appeared', 'word', 'often', 'many', 'frequently', 'mention', 'mentioned', 'koybar', 'kotobar', 'bar', 'ache', 'ashe', 'esheche', 'shobdo', 'shobdoti', 'kotha']);
+    const afterWord = question.match(/\bwords?\s+([A-Za-z][A-Za-z'-]{1,29})\b/i)?.[1];
+    const beforeWord = question.match(/\b([A-Za-z][A-Za-z'-]{1,29})\s+words?\b/i)?.[1];
+    const notTarget = new Set([
+      'appear', 'appears', 'appeared', 'occur', 'occurs', 'occurred', 'come', 'comes', 'came',
+      'mention', 'mentioned', 'used', 'written', 'repeated', 'found', 'said', 'in', 'of', 'is', 'are', 'does', 'do', 'did',
+      'the', 'a', 'an', 'this', 'that', 'these', 'those', 'exact', 'arabic', 'english', 'bangla', 'bengali', 'quranic', 'most', 'common', 'frequent',
+    ]);
+    if (afterWord && !notTarget.has(afterWord.toLowerCase())) w = afterWord;
+    else if (beforeWord && !notTarget.has(beforeWord.toLowerCase())) w = beforeWord;
+  }
+  if (!w) {
+    const drop = new Set([
+      'time', 'times', 'appear', 'appears', 'appeared', 'occur', 'occurs', 'occurred', 'come', 'comes', 'came',
+      'word', 'words', 'often', 'many', 'frequently', 'mention', 'mentions', 'mentioned', 'used', 'written', 'repeated', 'found', 'said',
+      'quran', 'koran', 'quraan', 'holy', 'total', 'count', 'number',
+      'koybar', 'koibar', 'kotobar', 'kothobar', 'bar', 'ache', 'ase', 'ashe', 'esheche', 'eseche', 'asche', 'shobdo', 'shobdoti', 'shobdota', 'kotha', 'ullekh', 'hoyeche', 'kuran', 'kurane', 'qurane',
+    ]);
     w = wordsEn(question).find((x) => !drop.has(x) && tokensEn(x).length > 0) ?? '';
   }
   if (!w) return null;
   if (/[\u0980-\u09FF]/.test(w)) return { word: w, lang: 'bn' };
   if (/[\u0600-\u06FF]/.test(w)) return { word: w, lang: 'ar' };
-  const mapped = BANGLISH_TO_EN[w.toLowerCase()];
-  return { word: mapped ?? w, lang: 'en' };
+  return { word: w, lang: 'en' };
 }
 
 // ------------------------------------------------------------------ references
@@ -392,7 +430,7 @@ const JUZ_NAMED: Array<[RegExp, number]> = [
 const JUZ_COUNT = /\bhow many\s+(?:juz|jooz|para|paras|siparah|sipara)\b|কয়টি\s*পারা|কতটি\s*পারা|কয়টা\s*পারা|কত\s*পারা|كم جزء/i;
 
 // What a person asks about a surah itself: Meccan or Medinan, which para, its number, what its name means.
-const SURAH_FACTS = /\b(meccan|makkan|medinan|madinan|makki|madani)\b|মক্কী|মাদানী|মাক্কী|মাদানি|مكي|مدني|مكية|مدنية|\b(?:which|kon|koto|kotho)\s*(?:number\s*)?(?:para|juz|siparah)\b|কোন\s*পারা|কত\s*নম্বর\s*পারা|\b(?:para|juz)\b.{0,12}\b(?:te|e|mein)\b|পারায়|পারাতে|\bwhat\s+(?:does|is)\s+(?:the\s+)?(?:name|meaning)\b|\bname\b.{0,30}\bmean|\bmeans?\b|নামের অর্থ|নামকরণ|(?:where|when)\s+(?:was|were|is)[^.!?\n]{0,30}\brevealed\b|\brevealed\s+in\s+(?:makkah|mecca|madinah|medina)\b|(?:কোথায়|কখন)\s*(?:নাযিল|নাজিল|অবতীর্ণ)|\bwhich\s+juz\b/i;
+const SURAH_FACTS = /\b(meccan|makkan|medinan|madinan|makki|madani)\b|মক্কী|মক্কি|মাদানী|মাদানি|মাক্কী|মাক্কি|মাদিনি|মদীনি|মদিনি|مكي|مدني|مكية|مدنية|\b(?:which|kon|koto|kotho)\s*(?:number\s*)?(?:para|juz|siparah)\b|কোন\s*পারা|কত\s*নম্বর\s*পারা|\b(?:para|juz)\b.{0,12}\b(?:te|e|mein)\b|পারায়|পারাতে|\bwhat\s+(?:does|is)\s+(?:the\s+)?(?:name|meaning)\b|\bname\b.{0,30}\bmean|\bmeans?\b|নামের অর্থ|নামকরণ|(?:where|when)\s+(?:was|were|is)[^.!?\n]{0,30}\brevealed\b|\brevealed\s+in\s+(?:makkah|mecca|madinah|medina)\b|(?:কোথায়|কখন)\s*(?:নাযিল|নাজিল|অবতীর্ণ)|\bwhich\s+juz\b/i;
 
 // Famous passages that people ask for by name.
 const PASSAGES: Array<{ re: RegExp; name: Record<Lang, string>; refs?: Array<[number, number]>; surahs?: number[] }> = [
@@ -482,12 +520,16 @@ export class Engine {
    * Banglish words we know and names are never changed.
    */
   private fix(text: string): string {
-    return text.replace(/[A-Za-z]{6,}/g, (word) => {
+    return text.replace(/[A-Za-z]{5,}/g, (word) => {
       const w = americanize(word.toLowerCase());
-      if (this.isEnglish(w) || BANGLISH_TO_EN[w] || NAME_TO_EN[w] || this.vocab.has(w)) return word;
+      if (
+        this.isEnglish(w) || BANGLISH_TO_EN[w] || NAME_TO_EN[w] || this.vocab.has(w) || NON_QURAN_WORDS.has(w)
+        || latinQueryToArKeys(w, (k) => this.index.arLat.df(k), this.index.arVocab).length > 0
+        || latinQueryToBnKeys(w, (k) => this.index.bnLat.df(k)).length > 0
+      ) return word;
       const near: string[] = [];
       for (const cand of this.vocab.keys()) {
-        if (cand[0] === w[0] && Math.abs(cand.length - w.length) <= 1 && plausibleTypo(w, cand)) near.push(cand);
+        if (cand.length >= 5 && cand[0] === w[0] && Math.abs(cand.length - w.length) <= 1 && plausibleTypo(w, cand)) near.push(cand);
       }
       return near.length === 1 ? near[0] : word;
     });
@@ -567,14 +609,18 @@ export class Engine {
   /** The answer to a question, with the translation the person asked for (and a note if they asked for a transliteration). */
   ask(question: string, history: HistoryTurn[] = []): Reply {
     const q = question.normalize('NFC');
-    const withoutNegExplain = q
-      .replace(/\bwithout\b[^.!?;।\n]{0,40}\b(?:explain\w*|interpret\w*|tafsir\w*|commentary)\b/gi, ' ')
-      .replace(/(?:ব্যাখ্যা|তাফসীর|তাফসির)\s*(?:করবেন\s*না|করো\s*না|যোগ\s*করবেন\s*না|দেবেন\s*না|দিও\s*না|ছাড়া|ব্যতীত)/g, ' ');
+    const withoutNegExplain = canonicalizeQuestion(
+      q
+        .replace(/\bwithout\b[^.!?;।\n]{0,40}\b(?:explain\w*|interpret\w*|tafsir\w*|commentary)\b/gi, ' ')
+        .replace(/(?:ব্যাখ্যা|তাফসীর|তাফসির)\s*(?:করবেন\s*না|করো\s*না|যোগ\s*করবেন\s*না|দেবেন\s*না|দিও\s*না|ছাড়া|ব্যতীত)/g, ' '),
+      this.isEnglish,
+    );
     EXPLAIN.lastIndex = 0;
     if (EXPLAIN.test(withoutNegExplain) || MEANING_BACK.test(q.trim())) {
       EXPLAIN.lastIndex = 0;
       const e = this.explain(q, history);
       e.suggestions = this.suggest(e, q);
+      this.decorateStructured(e);
       return e;
     }
     const r = this.core(q, history);
@@ -601,7 +647,22 @@ export class Engine {
       }
     }
     r.suggestions = this.suggest(r, q);
+    this.decorateStructured(r);
     return r;
+  }
+
+  /** Attach localized section headings, strictly factual overview points, and follow-up prompt (no AI). */
+  private decorateStructured(r: Reply): void {
+    const L = r.lang;
+    if (r.ayahs.length > 0 && !r.versesTitle) r.versesTitle = VERSES_HEADING[L];
+    if (!r.points && r.ayahs.length > 0 && r.kind !== 'explain') {
+      const pts = buildReplyPoints(this.quran, { kind: r.kind, lang: L, translation: r.translation, ayahs: r.ayahs });
+      if (pts.length > 0) r.points = pts;
+    }
+    if (r.points?.length && !r.pointsTitle) r.pointsTitle = POINTS_HEADING[L];
+    if (r.suggestions?.length && (r.ayahs.length > 0 || (r.points?.length ?? 0) > 0) && !r.followUpPrompt) {
+      r.followUpPrompt = FOLLOWUP_PROMPT[L];
+    }
   }
 
   /**
@@ -639,11 +700,19 @@ export class Engine {
         else if (normAr(text).includes(normAr(name))) return st;
       }
     }
-    // another spelling of a name (Yousef -> Yusuf): never for a real English word, and never for "quran" (its consonants are Qarun's)
+    // another spelling of a name (Yousef -> Yusuf, Ibraheem -> Ibrahim, Suleiman -> Sulaiman, Dawood -> Dawud):
+    // never for a real English word, and never for "quran" (its consonants are Qarun's)
     if (trigger) {
       for (const w of latin) {
-        if (w.length < 5 || this.isEnglish(w) || NO_TOPIC_WORDS.has(w)) continue;
-        for (const st of STORIES) for (const n of st.names) if (/^[a-z]{5,}$/.test(n) && editDistance(w, n) === 1) return st;
+        if (w.length < 4 || this.isEnglish(w) || NO_TOPIC_WORDS.has(w)) continue;
+        const wk = phoneticTermKey(w), wkf = phoneticTermKeyFlex(w), wf = phoneticFirstClass(w);
+        for (const st of STORIES) {
+          for (const n of st.names) {
+            if (!/^[a-z]{4,}$/.test(n)) continue;
+            if (wf === phoneticFirstClass(n) && Math.abs(w.length - n.length) <= 2 && (wk === phoneticTermKey(n) || (n.length >= 5 && wkf === phoneticTermKeyFlex(n)))) return st;
+            if (w.length >= 5 && n.length >= 5 && wf === phoneticFirstClass(n) && editDistance(w, n) === 1) return st;
+          }
+        }
       }
     }
     return null;
@@ -653,7 +722,8 @@ export class Engine {
   private core(question: string, history: HistoryTurn[], forceLang?: Lang): Reply {
     const q = question.trim().normalize('NFC');
     const lang = forceLang ?? detectLanguage(q);
-    const text = toAsciiDigits(q);
+    const rawText = toAsciiDigits(q);
+    const text = canonicalizeQuestion(rawText, this.isEnglish);
     const lower = text.toLowerCase();
     const words = wordCount(q);
 
@@ -715,7 +785,7 @@ export class Engine {
     if (animals) return animals;
     const prophets = this.prophets(text, lang);
     if (prophets) return prophets;
-    const stat = this.numbers(text, lang);
+    const stat = this.numbers(text, lang, rawText);
     if (stat) return stat;
 
     // 4. an ayah reference, a famous passage by its name, the ayah of the day
@@ -816,7 +886,7 @@ export class Engine {
     }
 
     // 6. asking for the meaning of a specific word or Quranic term (EN/BN/Banglish/AR)
-    const meaning = this.wordMeaning(text, lang);
+    const meaning = this.wordMeaning(rawText, lang);
     if (meaning) return meaning;
 
     // follow-up "what is the meaning?" after earlier ayahs (only when no specific target word was asked)
@@ -830,11 +900,11 @@ export class Engine {
     }
 
     // 7. "which ayah is this?": the words the person wrote are in an ayah, word for word
-    const quoted = text.match(/["“«]([^"”»]{5,200})["”»]/)?.[1]?.trim();
-    const afterColon = text.match(/:\s*([^.!?\n]{5,200})/)?.[1]?.trim();
+    const quoted = rawText.match(/["“«]([^"”»]{5,200})["”»]/)?.[1]?.trim();
+    const afterColon = rawText.match(/:\s*([^.!?\n]{5,200})/)?.[1]?.trim();
     const phrase = (quoted ? this.phrases.find(quoted) : null)
       ?? (afterColon ? this.phrases.find(afterColon) : null)
-      ?? this.phrases.find(text);
+      ?? this.phrases.find(rawText);
     if (phrase) return this.reply('search', 'quran', lang, MSG.phraseIntro[lang], { ayahs: phrase });
 
     // 8. the story of a prophet or another person
@@ -856,11 +926,22 @@ export class Engine {
     const fixed = this.fix(text);
 
     // 9. checked themes
-    const themed = matchThemes(fixed, this.isEnglish);
+    const themed = matchThemes(fixed, this.isEnglish, this.index);
     if (themed.ayahs.length > 0) {
-      const label = [...new Set(themed.themes.map((t) => THEME_LABEL[t.id]?.[lang] ?? t.id))].join(DOMAIN_JOIN(lang));
+      const themeIds = [...new Set(themed.themes.map((t) => t.id))];
+      const label = themeIds.map((id) => THEME_LABEL[id]?.[lang] ?? id).join(DOMAIN_JOIN(lang));
       const hint = themed.themes.some((t) => t.id === 'animals') ? ' ' + MSG.animalsHint[lang] : '';
-      return this.reply('theme', 'quran', lang, MSG.themeIntro(label)[lang] + hint, { ayahs: themed.ayahs.map((x) => ({ s: x.s, a: x.a })) });
+      const ayahs = themed.ayahs.map((x) => ({ s: x.s, a: x.a }));
+      const guide = themeIds.length === 1 ? TOPIC_GUIDE[themeIds[0]] : undefined;
+      const scopeTail: Record<Lang, string> = {
+        en: ' Shown as they are in the Quran, with a translation; this assistant does not interpret them.',
+        bn: ' আয়াতগুলো কুরআনে যেমন আছে তেমনই অনুবাদসহ দেখানো হলো; এই সহকারী এগুলোর ব্যাখ্যা করে না।',
+        ar: ' تُعرض الآيات كما وردت في القرآن مع ترجمة؛ هذا المساعد لا يفسّرها.',
+      };
+      const intro = guide ? guide.lead[lang] + scopeTail[lang] : MSG.themeIntro(label)[lang];
+      const tr: 'en' | 'bn' | 'none' = lang === 'bn' ? 'bn' : lang === 'ar' ? 'none' : 'en';
+      const points = buildReplyPoints(this.quran, { kind: 'theme', lang, translation: tr, ayahs, themeIds });
+      return this.reply('theme', 'quran', lang, intro + hint, { ayahs, ...(points.length ? { points } : {}) });
     }
 
     // 10. "give me something from the Quran"
@@ -876,6 +957,21 @@ export class Engine {
     // any other question put to the assistant ("can you dance?"): say what it does, instead of searching for its words
     if (words <= 10 && CHAT_TO_YOU.test(`${lower} ${normAr(text)}`) && !QURAN_WORD.test(`${lower} ${normAr(text)}`)) {
       return this.reply('chat', 'general', lang, MSG.chat[lang], { notFound: true });
+    }
+
+    // 10.5. A single bare Quranic/Arabic term or pronoun from the glossary (e.g. "Ulaika", "Alladhina", "Allahjina", "Sabiqun")
+    // Keep bare single Arabic words like "الله" handled by Step 11 (exact phrase/BM25 rules) unless asked with meaning/ortho.
+    if (words <= 3 && !/^[\u0600-\u06FF\s]+$/.test(text)) {
+      const bareEntry = resolveGlossaryEntry(text);
+      if (bareEntry && bareEntry.id !== 'allah') {
+        const ayahs = (bareEntry.ayahs ?? []).map(([s, a]) => ({ s, a }));
+        const tr: 'en' | 'bn' | 'none' = lang === 'bn' ? 'bn' : lang === 'ar' ? 'none' : 'en';
+        const points = buildReplyPoints(this.quran, {
+          kind: 'search', lang, translation: tr, ayahs,
+          glossary: { term: bareEntry.term[lang], meaning: bareEntry.meaning[lang] },
+        });
+        return this.reply('search', 'quran', lang, MSG.wordMeaning(bareEntry.term[lang], bareEntry.meaning[lang], ayahs.length > 0)[lang], { ayahs, ...(points.length ? { points } : {}) });
+      }
     }
 
     // 11. search the text
@@ -895,7 +991,12 @@ export class Engine {
     const entry = resolveGlossaryEntry(target);
     if (entry) {
       const ayahs = (entry.ayahs ?? []).map(([s, a]) => ({ s, a }));
-      return this.reply('search', 'quran', lang, MSG.wordMeaning(entry.term[lang], entry.meaning[lang], ayahs.length > 0)[lang], { ayahs });
+      const tr: 'en' | 'bn' | 'none' = lang === 'bn' ? 'bn' : lang === 'ar' ? 'none' : 'en';
+      const points = buildReplyPoints(this.quran, {
+        kind: 'search', lang, translation: tr, ayahs,
+        glossary: { term: entry.term[lang], meaning: entry.meaning[lang] },
+      });
+      return this.reply('search', 'quran', lang, MSG.wordMeaning(entry.term[lang], entry.meaning[lang], ayahs.length > 0)[lang], { ayahs, ...(points.length ? { points } : {}) });
     }
     if (glossaryOnly) return null;
 
@@ -1024,8 +1125,11 @@ export class Engine {
       case 'notWell': {   // a kind word, then the checked ayahs about hardship and comfort (as for "I am sad")
         const themed = matchThemes('sad', this.isEnglish);
         const label = [...new Set(themed.themes.map((t) => THEME_LABEL[t.id]?.[lang] ?? t.id))].join(DOMAIN_JOIN(lang));
+        const ayahs = themed.ayahs.map((x) => ({ s: x.s, a: x.a }));
+        const tr: 'en' | 'bn' | 'none' = lang === 'bn' ? 'bn' : lang === 'ar' ? 'none' : 'en';
+        const points = buildReplyPoints(this.quran, { kind: 'theme', lang, translation: tr, ayahs, themeIds: ['hardship and comfort'] });
         return this.reply('theme', 'quran', lang, `${open}${MSG.sorryToHear[lang]} ${MSG.themeIntro(label)[lang]}`,
-          { ayahs: themed.ayahs.map((x) => ({ s: x.s, a: x.a })) });
+          { ayahs, ...(points.length ? { points } : {}) });
       }
       case 'jazakallah': return this.reply('thanks', 'general', lang, open + MSG.jazakallah[lang]);
       case 'praise': return this.reply('thanks', 'general', lang, open + MSG.compliment[lang]);
@@ -1101,6 +1205,7 @@ export class Engine {
    * "which / how many prophets are mentioned (in surah X)?". Counted from the text, never interpreted.
    */
   private prophets(text: string, lang: Lang): Reply | null {
+    if (SURAH_PROPHETS.test(text)) return null;
     const both = `${text} ${normAr(text)}`;
     const named = prophetsNamedIn(text);
     const asksCount = HOW_OFTEN.test(text) || (HOW_MANY.test(text) && (MENTION.test(both) || (AYAH_WORD.test(text) && !SURAH_WORD_RE.test(text))));
@@ -1187,7 +1292,7 @@ export class Engine {
   private totals: { words: number; letters: number } | null = null;
 
   /** Questions that ask for a number, a list or a fact about the Quran or a surah. Returns null if this is not one. */
-  private numbers(text: string, lang: Lang): Reply | null {
+  private numbers(text: string, lang: Lang, rawText: string = text): Reply | null {
     const q = this.quran;
     const surah = this.surahOf(text);
     const t = (line: string, answer: string, extra: Partial<Reply> = {}) => this.reply('data', 'data', lang, answer, { data: [line], ...extra });
@@ -1200,9 +1305,33 @@ export class Engine {
     if (ALLAH.test(both) && (HOW_OFTEN.test(text) || (HOW_MANY.test(text) && MENTION.test(both))) && this.onlyAllahAsked(text)) return this.allahCount(named, lang);
 
     if (JUZ_COUNT.test(text)) return t('The Quran has 30 juz (para).', STAT_TEXT.juzCount[lang]);
+    if (MANZIL_COUNT.test(text)) return t('Traditional mushaf division: 7 manzils (reading divisions, not stored in the ayah dataset).', STAT_TEXT.manzils[lang]);
+    if (RUKU_COUNT.test(text)) return t('Traditional Indo-Pak mushaf division: 558 rukus (540 in some editions; editorial reading divisions, not stored in the Tanzil dataset).', STAT_TEXT.rukus[lang]);
+    if (NO_BISMILLAH.test(text)) return t('Surah 9: At-Tawba (التوبة) — the only surah without an opening Bismillah.', STAT_TEXT.noBismillah[lang]);
+    if (TWO_BISMILLAH.test(text)) return t('Surah 27: An-Naml (النمل) — opening Bismillah plus inside 27:30.', STAT_TEXT.twoBismillahs[lang], { ayahs: [{ s: 27, a: 30 }] });
+    if (SURAH_WOMAN.test(text)) return t('Surah 19: Maryam (مريم), 98 ayahs, Meccan — the only surah named after a woman.', STAT_TEXT.surahNamedWoman[lang]);
+    if (SURAH_PROPHETS.test(text)) return t('6 surahs named after prophets: 10 Yunus, 11 Hud, 12 Yusuf, 14 Ibrahim, 47 Muhammad, 71 Nooh.', STAT_TEXT.surahsNamedProphets[lang]);
+    if (SURAH_ALLAH_EVERY_AYAH.test(text)) {
+      const c = q.chapters[57];
+      return t(`Surah 58: ${c.tr} (${c.ar}), ${c.n} ayahs — verified in Tanzil simple-clean text: every ayah contains the name Allah.`, STAT_TEXT.surahAllahEveryAyah(c.n)[lang]);
+    }
+    const fls = text.match(FIRST_LAST_SURAH);
+    if (fls && !NEIGHBOR_AFTER.test(text) && !NEIGHBOR_BEFORE.test(text)) {
+      const isLast = /\b(?:last|final|shesh|sesh)\b|শেষ|آخر/i.test(text);
+      const id = isLast ? 114 : 1;
+      const c = q.chapters[id - 1];
+      const type = STAT_TEXT.type(c.type)[lang];
+      return t(`${isLast ? 'Last' : 'First'} surah: Surah ${id} ${c.tr} (${c.ar}), ${c.n} ayahs, ${c.type === 'meccan' ? 'Meccan' : 'Medinan'}.`, STAT_TEXT.firstLastSurah(isLast ? 'last' : 'first', id, c.tr, c.ar, c.n, type)[lang]);
+    }
     if (PAGES.test(text)) return t(`The Quran has ${q.pages.length} pages in the Madani mushaf (Tanzil data).`, STAT_TEXT.pages(q.pages.length)[lang]);
     if (HIZB.test(text)) return t(`The Quran has ${q.hizbs.length / 4} hizb (${q.hizbs.length} quarters).`, STAT_TEXT.hizb(q.hizbs.length / 4, q.hizbs.length)[lang]);
     if (WORDS_IN_QURAN.test(text) && !HOW_OFTEN.test(text)) {
+      if (surah) {
+        const c = q.chapters[surah - 1];
+        let w = 0, l = 0;
+        for (const y of q.surah(surah)) { w += y.arc.split(/\s+/).filter(Boolean).length; l += y.arc.replace(/\s/g, '').length; }
+        return t(`Surah ${surah} ${c.tr} (Tanzil simple-clean): ${w} words, ${l} letters.`, STAT_TEXT.surahWordCount(c.tr, w, l)[lang]);
+      }
       if (!this.totals) {
         let w = 0, l = 0;
         for (const y of q.ayahs) { w += y.arc.split(/\s+/).filter(Boolean).length; l += y.arc.replace(/\s/g, '').length; }
@@ -1220,20 +1349,23 @@ export class Engine {
       const l = this.longest;
       return t(`Longest ayah: ${l.s}:${l.a}, ${l.words} words.`, STAT_TEXT.longestAyah(`${l.s}:${l.a}`, l.words)[lang], { ayahs: [{ s: l.s, a: l.a }] });
     }
+    if (SHORTEST_AYAH.test(text)) {
+      return t('Shortest ayahs in Tanzil text: 2-letter Huruf al-Muqatta\'at (20:1 طه, 36:1 يسٓ, 40:1–46:1 حمٓ); single non-Muqatta\'at word ayah: 55:64 (مُدْهَامَّتَانِ).', STAT_TEXT.shortestAyah[lang], { ayahs: [{ s: 55, a: 64 }] });
+    }
     // "surah as-sajdah" is Surah 32 (its name means "the prostration"), not the list of sajdah places
     if (SAJDA.test(text) && !(surah === 32 && SURAH_WORD_RE.test(text))) {
       const list = q.sajdas.map(([s, a]) => ({ s, a }));
       if (HOW_MANY.test(text) && !LIST_WORD.test(text)) return t(`${q.sajdas.length} sajdah ayahs: ${refLabel(list)}.`, STAT_TEXT.sajdaCount(q.sajdas.length)[lang]);
       return this.reply('ref', 'quran', lang, STAT_TEXT.sajdaList[lang], { ayahs: list });
     }
+    if (REVEL.test(text) && LIST_WORD.test(text) && !HOW_MANY.test(text) && !surah) {
+      const type = /\b(medinan|madinan|madani)\b|মাদানী|মাদানি|মাদিনি|মদীনি|মদিনি|مدني|مدنية/i.test(text) && !/\b(meccan|makkan|makki)\b|মক্কী|মক্কি|মাক্কী|মাক্কি|مكي|مكية/i.test(text) ? 'medinan' : 'meccan';
+      const ids = q.chapters.filter((c) => c.type === type).map((c) => c.id);
+      return t(`${ids.length} ${type} surahs: ${names(ids)}.`, STAT_TEXT.typeList(type, ids.length, names(ids))[lang]);
+    }
     if (LIST_SURAHS.test(text)) {
       const all = q.chapters.map((c) => c.id);
       return t(`${q.chapters.length} surahs: ${names(all)}.`, STAT_TEXT.surahList(all.length, names(all))[lang]);
-    }
-    if (REVEL.test(text) && LIST_WORD.test(text) && !HOW_MANY.test(text) && !surah) {
-      const type = /\b(medinan|madinan|madani)\b|মাদানী|মাদানি|مدني|مدنية/i.test(text) && !/\b(meccan|makkan|makki)\b|মক্কী|مكي|مكية/i.test(text) ? 'medinan' : 'meccan';
-      const ids = q.chapters.filter((c) => c.type === type).map((c) => c.id);
-      return t(`${ids.length} ${type} surahs: ${names(ids)}.`, STAT_TEXT.typeList(type, ids.length, names(ids))[lang]);
     }
     // the surah before or after another
     if (surah && (SURAH_WORD_RE.test(text) || /সূরা/.test(text)) && (NEIGHBOR_AFTER.test(text) || NEIGHBOR_BEFORE.test(text)) && !HOW_MANY.test(text)) {
@@ -1244,25 +1376,40 @@ export class Engine {
       const o = q.chapters[other - 1];
       return t(`${dir === 'after' ? 'After' : 'Before'} surah ${surah} ${me}: surah ${other} ${o.tr}.`, STAT_TEXT.neighbor(me, dir, o.tr, other)[lang]);
     }
-    // how many ayahs in a juz
-    if (HOW_MANY.test(text) && AYAH_WORD.test(text)) {
+    // how many ayahs or surahs in a juz
+    if ((HOW_MANY.test(text) || LIST_WORD.test(text)) && (AYAH_WORD.test(text) || SURAH_WORD_RE.test(text))) {
       const jm = text.match(JUZ);
       const n = jm ? Number(jm.slice(1).find((x) => x !== undefined)) : 0;
       if (n >= 1 && n <= 30) {
         const [s0, a0] = q.juz[n - 1];
         const [s1, a1] = n < 30 ? q.juz[n] : [115, 1];
-        const count = q.ayahs.filter((y) => (y.s > s0 || (y.s === s0 && y.a >= a0)) && (y.s < s1 || (y.s === s1 && y.a < a1))).length;
-        return t(`Juz ${n}: ${count} ayahs (from ${s0}:${a0}).`, STAT_TEXT.juzAyahs(n, count)[lang]);
+        const inJuz = q.ayahs.filter((y) => (y.s > s0 || (y.s === s0 && y.a >= a0)) && (y.s < s1 || (y.s === s1 && y.a < a1)));
+        if (SURAH_WORD_RE.test(text) && !AYAH_WORD.test(text)) {
+          const ids = [...new Set(inJuz.map((y) => y.s))];
+          const first = `${ids[0]} ${q.chapters[ids[0] - 1].tr}`;
+          const last = `${ids[ids.length - 1]} ${q.chapters[ids[ids.length - 1] - 1].tr}`;
+          return t(`Juz ${n}: ${ids.length} surahs (${names(ids)}).`, STAT_TEXT.juzSurahs(n, ids.length, first, last)[lang]);
+        }
+        return t(`Juz ${n}: ${inJuz.length} ayahs (from ${s0}:${a0}).`, STAT_TEXT.juzAyahs(n, inJuz.length)[lang]);
       }
     }
 
     if (JUZ_COUNT.test(text)) return t('The Quran has 30 juz (para).', STAT_TEXT.juzCount[lang]);
-    if (HOW_OFTEN.test(text)) {
-      const w = extractWord(text);
+    // Count a word's occurrences ONLY when asking about Quran text mentions/words, never for practical worship frequency
+    // like "how many times muslim should pray?" or "dine koybar namaz porte hoy?".
+    const practicalFreq = /\b(?:should|must|ought|a\s+day|per\s+day|daily|every\s+day|in\s+a\s+day|dine|protidin|porte|porbo|korte|rakhte|pray|fast)\b|দিনে|প্রতিদিন|পড়তে|পড়ব|করতে|রাখতে|في\s+اليوم|نصلي|يصلي/i;
+    const occurrenceAsk = /\b(?:in\s+(?:the\s+)?(?:quran|koran|quraan|surah)|quran\s*e|kurane|ache|ase|esheche|eseche|asche|ullekh|used|written|repeated|found)\b|কুরআনে|কোরআনে|সূরায়|এসেছে|আছে|উল্লেখ|ব্যবহৃত|في\s+القرآن|تكرر|جاء/i;
+    const wantsWordCount = HOW_OFTEN.test(text) && (
+      WORD_ASKED.test(both)
+      || /["“”«»'‘’]/.test(text)
+      || ((MENTION.test(both) || occurrenceAsk.test(both)) && !practicalFreq.test(text))
+    );
+    if (wantsWordCount) {
+      const w = extractWord(rawText);
       if (!w) return this.reply('data', 'data', lang, MSG.dataNotUnderstood[lang]);
-      const r = countWord(q, w.word, w.lang);
-      const src = w.lang === 'en' ? 'Saheeh International' : w.lang === 'ar' ? 'Arabic text' : 'Bengali translation';
-      return t(r.line, STAT_TEXT.word(w.word, r.total, r.ayahs, src)[lang]);
+      const resolved = this.countQueryWord(w);
+      const src = resolved.lang === 'en' ? 'Saheeh International' : resolved.lang === 'ar' ? 'Arabic text' : 'Bengali translation';
+      return t(resolved.result.line, STAT_TEXT.word(resolved.word, resolved.result.total, resolved.result.ayahs, src)[lang]);
     }
     // facts about ONE surah: Meccan or Medinan, which para, what its name means
     const meaningCandidate = extractMeaningTarget(text);
@@ -1302,6 +1449,135 @@ export class Engine {
       return t(s.line, STAT_TEXT.totals(q.chapters.length, q.ayahs.length)[lang]);
     }
     return null;
+  }
+
+  /**
+   * Count a requested word across English, Bengali, Banglish, or Arabic transliterations.
+   * Always tries exact match in the queried script first; if 0, resolves via BANGLISH_TO_EN (exact + phonetic),
+   * curated glossary Arabic terms, phonetic Arabic Quran words (arLat), or Banglish phonetic Bengali words (bnLat).
+   */
+  private countQueryWord(extracted: { word: string; lang: WordLang }): { word: string; lang: WordLang; result: ReturnType<typeof countWord> } {
+    const q = this.quran;
+    const direct = countWord(q, extracted.word, extracted.lang);
+    if (direct.total > 0) return { word: extracted.word, lang: extracted.lang, result: direct };
+
+    // Arabic script: try toggling definite article ال if bare form had 0 hits
+    if (extracted.lang === 'ar') {
+      const na = normAr(extracted.word);
+      const alt = na.startsWith('ال') ? na.slice(2) : `ال${na}`;
+      if (alt.length >= 2) {
+        const altRes = countWord(q, alt, 'ar');
+        if (altRes.total > 0) return { word: alt, lang: 'ar', result: altRes };
+      }
+      return { word: extracted.word, lang: 'ar', result: direct };
+    }
+
+    // Bengali script: fallback to mapped English word or glossary Arabic word if Bengali spelling differs
+    if (extracted.lang === 'bn') {
+      const nb = normBn(extracted.word);
+      const mapped = BANGLISH_TO_EN[nb];
+      if (mapped) {
+        const res = countWord(q, mapped, 'en');
+        if (res.total > 0) return { word: mapped, lang: 'en', result: res };
+      }
+      const gl = resolveGlossaryEntry(nb);
+      if (gl) {
+        const arBest = this.bestArabicFormCount(gl.term.ar);
+        if (arBest) return arBest;
+      }
+      return { word: extracted.word, lang: 'bn', result: direct };
+    }
+
+    // Latin input: English, Banglish, or Arabic transliteration
+    const lo = extracted.word.toLowerCase();
+    // 1) Exact or phonetic BANGLISH_TO_EN -> English translation count
+    let mappedEn = BANGLISH_TO_EN[lo];
+    if (!mappedEn && lo.length >= 4 && !NON_QURAN_WORDS.has(lo) && !this.isEnglish(lo)) {
+      const lk = phoneticTermKey(lo), lkf = phoneticTermKeyFlex(lo), lf = phoneticFirstClass(lo);
+      for (const [k, v] of Object.entries(BANGLISH_TO_EN)) {
+        if (!/^[a-z]{4,}$/.test(k)) continue;
+        if (phoneticFirstClass(k) === lf && Math.abs(k.length - lo.length) <= 2 && (phoneticTermKey(k) === lk || (lo.length >= 5 && phoneticTermKeyFlex(k) === lkf))) {
+          mappedEn = v;
+          break;
+        }
+      }
+    }
+    if (mappedEn) {
+      const res = countWord(q, mappedEn, 'en');
+      if (res.total > 0) return { word: mappedEn, lang: 'en', result: res };
+    }
+
+    // 2) Curated glossary Arabic form -> count in Arabic Quran text
+    const gl = resolveGlossaryEntry(lo);
+    if (gl) {
+      const arBest = this.bestArabicFormCount(gl.term.ar);
+      if (arBest) return arBest;
+    }
+
+    // 3) Any Arabic Quran word written phonetically in Latin (e.g. "ulaika", "alladhina", "kafirun", "alamin")
+    if (lo.length >= 4 && !NON_QURAN_WORDS.has(lo) && !this.isEnglish(lo)) {
+      const arKeys = new Set(latinQueryToArKeys(lo, (k) => this.index.arLat.df(k), this.index.arVocab));
+      if (arKeys.size > 0) {
+        const freq = new Map<string, number>();
+        for (const y of q.ayahs) {
+          const arToks = y.ar.split(/\s+/).filter(Boolean);
+          const arcToks = normAr(y.arc).split(/[^\p{L}\p{M}]+/u).filter(Boolean);
+          if (arToks.length !== arcToks.length) continue;
+          for (let i = 0; i < arToks.length; i++) {
+            const pks = arPhoneticDocTokens(arToks[i]);
+            if (pks.some((pk) => arKeys.has(pk))) {
+              const form = arcToks[i];
+              freq.set(form, (freq.get(form) ?? 0) + 1);
+            }
+          }
+        }
+        const bestAr = [...freq.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+        if (bestAr) {
+          const res = countWord(q, bestAr, 'ar');
+          if (res.total > 0) return { word: bestAr, lang: 'ar', result: res };
+        }
+      }
+
+      // 4) Any Bengali Quran word written in Banglish (e.g. "surjo", "agun", "pahar")
+      const bnKeys = new Set(latinQueryToBnKeys(lo, (k) => this.index.bnLat.df(k)));
+      if (bnKeys.size > 0) {
+        const freq = new Map<string, number>();
+        for (const y of q.ayahs) {
+          for (const tok of normBn(y.bn).split(/[^\p{L}\p{M}]+/u).filter((x) => /[\u0980-\u09FF]/.test(x))) {
+            const bks = banglishDocTokens(tok);
+            if (bks.some((bk) => bnKeys.has(bk))) {
+              freq.set(tok, (freq.get(tok) ?? 0) + 1);
+            }
+          }
+        }
+        const bestBn = [...freq.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+        if (bestBn) {
+          const res = countWord(q, bestBn, 'bn');
+          if (res.total > 0) return { word: bestBn, lang: 'bn', result: res };
+        }
+      }
+    }
+
+    return { word: extracted.word, lang: 'en', result: direct };
+  }
+
+  /** Given a glossary Arabic label (e.g. "صبر" or "جنة"), find the highest-frequency exact surface form in y.arc. */
+  private bestArabicFormCount(arLabel: string): { word: string; lang: WordLang; result: ReturnType<typeof countWord> } | null {
+    const rawWords = normAr(arLabel).split(/[^\u0600-\u06FF]+/).filter((x) => x.length >= 2);
+    const cands = new Set<string>();
+    for (const w of rawWords) {
+      cands.add(w);
+      if (w.startsWith('ال') && w.length > 3) cands.add(w.slice(2));
+      else cands.add(`ال${w}`);
+    }
+    let best: { word: string; lang: WordLang; result: ReturnType<typeof countWord> } | null = null;
+    for (const c of cands) {
+      const res = countWord(this.quran, c, 'ar');
+      if (res.total > 0 && (!best || res.total > best.result.total)) {
+        best = { word: c, lang: 'ar', result: res };
+      }
+    }
+    return best;
   }
 }
 
