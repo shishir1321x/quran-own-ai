@@ -50,8 +50,9 @@ const STRONG_BANGLISH = new Set([
   'bondhu', 'bondhutto', 'bebsha', 'byabsha', 'poribesh', 'prokriti', 'binoy', 'ohongkar',
   'gyan', 'shikkha', 'porikkha', 'porikha', 'bhaggo', 'vaggo', 'opochoy', 'ghum', 'ghumer',
   'shoytan', 'soytan', 'munafik', 'bhorosha', 'vorosha', 'nyaybichar', 'kritoggota', 'shongshar', 'gibot',
-  'suray', 'surar', 'bangla', 'banglay', 'banglate', 'arbi', 'arbite',
+  'suray', 'surar', 'surate', 'bangla', 'banglay', 'banglate', 'arbi', 'arbite',
   'shesh', 'sesh', 'prothom', 'pratham', 'naki', 'dekhao', 'dekhan', 'bolo', 'dao', 'den',
+  'gula', 'gulo', 'duagulo', 'duagula', 'doagulo', 'doagula', 'duar', 'doar',
   // a little conversation ("kemon acho", "valo achi", "ki koro", "valo theko", "pore kotha hobe")
   'achi', 'acho', 'aso', 'asen', 'achis', 'achho', 'achhi', 'kmn', 'kmon', 'koro', 'korcho', 'korchen', 'korchis',
   'khobor', 'khbr', 'obostha', 'obosta', 'theko', 'thakben', 'thakun', 'thako', 'acha', 'accha', 'achha', 'thik',
@@ -110,6 +111,7 @@ export function isBanglish(text: string): boolean {
   }
   if (pureBanglish >= 1) return true;
   if (loanwords >= 1) return !(enFunc >= 2 && soft === 0);
+  if (words.includes('er') && enFunc === 0) return true;
   return soft >= 2;
 }
 

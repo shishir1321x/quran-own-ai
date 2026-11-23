@@ -5,7 +5,7 @@
 import { plausibleTypo } from './fuzzy.js';
 
 const BASE_AR: Record<string, string> = {
-  'ا': '', 'ٱ': '', 'أ': '', 'إ': '', 'آ': 'a', 'ء': '', 'ؤ': '', 'ئ': '', 'ى': 'a',
+  'ا': '', 'ٱ': '', 'أ': '', 'إ': '', 'آ': 'a', 'ء': '', 'ؤ': '', 'ئ': '',
   'ب': 'b', 'ت': 't', 'ث': 'th', 'ج': 'j', 'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'dh',
   'ر': 'r', 'ز': 'z', 'س': 's', 'ش': 'sh', 'ص': 's', 'ض': 'd', 'ط': 't', 'ظ': 'z',
   'ع': '', 'غ': 'gh', 'ف': 'f', 'ق': 'q', 'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n',
@@ -16,12 +16,12 @@ const SHORT_HARAKAT = new Set(['\u064e', '\u0650', '\u064f', '\u064b', '\u064c',
 const SUN_LETTERS = new Set(['ت', 'ث', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ل', 'ن']);
 const VOWEL_MAP: Record<string, string> = {
   '\u064e': 'a', '\u0670': 'a', '\u0653': '', '\u0650': 'i', '\u064f': 'u',
-  '\u064b': 'an', '\u064c': 'un', '\u064d': 'in', '\u06e5': 'u', '\u06e6': 'i',
+  '\u064b': 'an', '\u064c': 'un', '\u064d': 'in', '\u06e5': 'u', '\u06e6': 'i', '\u06e7': 'i', '\u06e8': 'n',
 };
 
 // Modern cities, countries, sports, tech, food, and common Banglish chat/kinship words that can
 // happen to sound like a short Quranic Arabic verb/noun (e.g. ذَاقَا ~ "dhaka", عِندِيَ ~ "india", بَابَ ~ "baba").
-const NON_ARABIC_WORDS = new Set([
+export const NON_ARABIC_WORDS = new Set([
   'india', 'dhaka', 'bangladesh', 'pakistan', 'kolkata', 'delhi', 'mumbai', 'karachi', 'lahore', 'islamabad',
   'sylhet', 'chittagong', 'rajshahi', 'khulna', 'london', 'paris', 'berlin', 'tokyo', 'dubai',
   'messi', 'ronaldo', 'neymar', 'elon', 'musk', 'fifa', 'cricket', 'football', 'hockey', 'baseball',
@@ -74,17 +74,25 @@ function romanizeUthmaniWord(ar: string): string {
     // In Uthmani script, و before dagger alif (صلوٰة, زكوٰة, حيوٰة) is a silent seat for long ā.
     if (ch === 'و') {
       if (next === '\u0670') continue;
-      out += (i === 0 || VOWEL_MAP[next] !== undefined) ? 'w' : 'u';
+      out += (i === 0 || Boolean(VOWEL_MAP[next])) ? 'w' : 'u';
       continue;
     }
-    if (ch === 'ي') { out += (i === 0 || VOWEL_MAP[next] !== undefined) ? 'y' : 'i'; continue; }
+    if (ch === 'ي') { out += (i === 0 || Boolean(VOWEL_MAP[next])) ? 'y' : 'i'; continue; }
+    // Uthmani dotless ى: silent after fathatan or before dagger alif; 'y' before an active vowel; silent after kasra (kasra already emitted 'i'); else 'a'.
+    if (ch === 'ى') {
+      if ((i > 0 && w[i - 1] === '\u064b') || next === '\u0670') continue;
+      if (Boolean(VOWEL_MAP[next])) { out += 'y'; continue; }
+      if (i > 0 && w[i - 1] === '\u0650') continue;
+      out += 'a';
+      continue;
+    }
+    if (ch === 'ة') { out += Boolean(VOWEL_MAP[next]) ? 't' : 'h'; continue; }
     if ((ch === 'ا' || ch === 'ٱ') && i === 0) {
       if (next === 'ل') out += 'a';
       else if (ch === 'ٱ') out += hamzatWaslVowel(ar);
       continue;
     }
-    // Silent alif or alif maqsura after fathatan (سَلْسَبِيلًا, هُدًى)
-    if ((ch === 'ا' || ch === 'ى') && i > 0 && w[i - 1] === '\u064b') continue;
+    if (ch === 'ا' && i > 0 && w[i - 1] === '\u064b') continue;
     if (ch === 'ا' && i > 0) { out += 'a'; continue; }
     out += BASE_AR[ch] ?? '';
   }
@@ -132,7 +140,8 @@ export function arPhoneticDocTokens(arText: string): string[] {
     }
     const cleaned = rawAr
       .replace(/.\u06df/g, '')
-      .replace(/[\u06d6-\u06de\u06e0-\u06e4\u06e7-\u06ed\u0640]/g, '');
+      .replace(/.\u06e0/g, '')
+      .replace(/[\u06d6-\u06de\u06e1-\u06e4\u06e9-\u06ed\u0640]/g, '');
 
     const vars: string[] = [cleaned];
     const withAl = cleaned
@@ -169,10 +178,11 @@ export function arPhoneticDocTokens(arText: string): string[] {
       const romPausal = solarPrefix + romanizeUthmaniWord(pausal);
       addKey(romPausal);
 
-      // Keep final short vowel too ("ulaika", "alladhina", "dhalika", "rabbana") in addition to pausal ("ulaik").
+      // Keep final short vowel too ("ulaika", "alladhina", "dhalika", "rabbana"), and Madd al-Iwad -a on fathatan ("ilma", "yusra").
       if (hasShortEnd) {
         const romFull = solarPrefix + romanizeUthmaniWord(noTanwinCarrier);
         addKey(romFull);
+        if (last === '\u064b') addKey(romPausal + 'a');
       }
       if (pausal.endsWith('ة')) {
         addKey(romPausal.replace(/h$/, 't'));
@@ -244,6 +254,13 @@ export function expandArLatinTiers(joined: string): [string[], string[], string[
       push(tier3, flexA);
     }
     for (const c of strict.length >= 5 && consonants >= 3 ? [strict, flexI, flexA] : [strict]) {
+      if (c.length === 4 && consonants >= 2) {
+        if (c.includes('k')) push(tier3, c.replace(/k/g, 'q'));
+        if (c.includes('z')) push(tier3, c.replace(/z/g, 'dh'));
+        if (c.includes('s')) push(tier3, c.replace(/s/g, 'th'));
+        if (/g(?!h)/.test(c)) push(tier3, c.replace(/g(?!h)/g, 'gh'));
+        continue;
+      }
       if (c.length < 5) continue;
       for (const v of arPhoneticVariants(c)) push(tier3, v);
       if (c.length >= 6 && c.includes('j')) push(tier3, c.replace(/j/g, 'z'));
@@ -261,10 +278,9 @@ export function expandArLatinCandidates(joined: string): string[] {
   return [...t1, ...t2, ...t3];
 }
 
-function pickBestArKey(
+function pickBestArKeyExact(
   joined: string,
   dfCheck: (k: string) => number,
-  vocabByFirst?: Map<string, string[]>,
 ): string[] {
   const [t1, t2, t3] = expandArLatinTiers(joined);
   for (const k of t1) if (dfCheck(k) > 0) return [k];
@@ -276,8 +292,14 @@ function pickBestArKey(
     const df = dfCheck(k);
     if (df > bestDf) { bestDf = df; bestKey = k; }
   }
-  if (bestKey) return [bestKey];
+  return bestKey ? [bestKey] : [];
+}
 
+function pickBestArKeyTypo(
+  joined: string,
+  dfCheck: (k: string) => number,
+  vocabByFirst?: Map<string, string[]>,
+): string[] {
   // Tier 4: same-length adjacent-key / transposed-letter typo (e.g. "imteha" -> "intaha" 2:275) on >= 6 chars, >= 3 consonants.
   if (vocabByFirst && !/g(?!h)/.test(joined)) {
     const strict = canonArLatin(joined);
@@ -303,6 +325,15 @@ function pickBestArKey(
   return [];
 }
 
+function pickBestArKey(
+  joined: string,
+  dfCheck: (k: string) => number,
+  vocabByFirst?: Map<string, string[]>,
+): string[] {
+  const exact = pickBestArKeyExact(joined, dfCheck);
+  return exact.length > 0 ? exact : pickBestArKeyTypo(joined, dfCheck, vocabByFirst);
+}
+
 /** Could `raw` be a user-typed Latin transliteration of an Arabic Quran word? Returns phonetic key(s) or []. */
 export function latinQueryToArKeys(
   raw: string,
@@ -314,31 +345,49 @@ export function latinQueryToArKeys(
   // Classical Arabic transliteration never uses p, v, x, or c (only gh/g for غ).
   if (/[pvxc]/.test(joined)) return [];
 
-  const direct = pickBestArKey(joined, dfCheck, vocabByFirst);
+  // 1. Exact & Tier 1-3 phonetic lookup first (before any Tier-4 typo guess).
+  const direct = pickBestArKeyExact(joined, dfCheck);
   if (direct.length > 0) return direct;
 
-  // Construct-state compound suffix ("sidratul" -> "sidrat", "laylatul" -> "laylat", "rabbil" -> "rabb")
+  // 2. Hamzat-al-Wasl / Sun-letter 1-char liaison strip ("siratal" -> "sirata", "rabbil" -> "rabbi", "ihdinas" -> "ihdina", "allahus" -> "allahu").
+  if (joined.length >= 5 && /[aiu][lsrdtnz]$/.test(joined)) {
+    const liaisonHit = pickBestArKeyExact(joined.slice(0, -1), dfCheck);
+    if (liaisonHit.length > 0) return liaisonHit;
+  }
+
+  // Construct-state compound suffix ("sidratul" -> "sidrat", "laylatul" -> "laylat")
   if (joined.length >= 6 && /(?:ul|il|al)$/.test(joined)) {
-    const sufHit = pickBestArKey(joined.slice(0, -2), dfCheck);
+    const sufHit = pickBestArKeyExact(joined.slice(0, -2), dfCheck);
     if (sufHit.length > 0) return sufHit;
   }
-  // Concatenated Allah compounds ("subhanallah", "alhamdulillah", "bismillah")
-  if (joined.length >= 8 && joined.endsWith('allah')) {
-    const stem = joined.slice(0, -5);
-    const stemHits = pickBestArKey(stem, dfCheck);
-    if (stemHits.length > 0 && dfCheck('alah') > 0) return [...stemHits, 'alah'];
+
+  // 3. Concatenated Allah / Lillah compounds ("subhanallah", "alhamdulillah", "hasbunallahu", "innallaha", "huwallahu", "bismillahi")
+  const compMatch = joined.match(/^(.*?)(allah[uai]?[rs]?|ullah[uai]?|lillahi?|billahi?|illahi?)$/);
+  if (joined.length >= 7 && compMatch) {
+    const [, stemRaw, suf] = compMatch;
+    const isLil = suf.startsWith('lil') || suf.startsWith('bil') || suf.startsWith('il');
+    const sufKeys = isLil ? ['lilahi', 'lilah'] : ['alahu', 'alahi', 'alaha', 'alah'];
+    const suffixKey = sufKeys.find((k) => dfCheck(k) > 0);
+    if (stemRaw.length >= 3 && suffixKey) {
+      for (const cand of [stemRaw, stemRaw + 'u', stemRaw + 'a', stemRaw + 'i', stemRaw.replace(/[aiu]$/, '')]) {
+        const stemHits = pickBestArKeyExact(cand, dfCheck);
+        if (stemHits.length > 0) return [...stemHits, suffixKey];
+      }
+    }
   }
-  return [];
+
+  // 4. Tier 4 keyboard-adjacent typo lookup LAST so valid compounds/liaisons are never hijacked.
+  return pickBestArKeyTypo(joined, dfCheck, vocabByFirst);
 }
 
 const BN_AR_CONSONANT: Record<string, string> = {
-  'ক': 'k', 'খ': 'kh', 'গ': 'g', 'ঘ': 'gh', 'ঙ': 'ng',
+  'ক': 'k', 'খ': 'kh', 'গ': 'g', 'ঘ': 'gh', 'ঙ': 'n',
   'চ': 'ch', 'ছ': 's', 'জ': 'j', 'ঝ': 'j',
   'ট': 't', 'ঠ': 'th', 'ড': 'd', 'ঢ': 'dh', 'ণ': 'n',
   'ত': 't', 'থ': 'th', 'দ': 'd', 'ধ': 'dh', 'ন': 'n',
-  'প': 'p', 'ফ': 'f', 'ব': 'b', 'ভ': 'v', 'ম': 'm',
-  'য': 'j', 'র': 'r', 'ল': 'l', 'শ': 'sh', 'ষ': 'sh', 'স': 's', 'হ': 'h',
-  'ড়': 'r', 'ঢ়': 'r', 'য়': 'y', 'ৎ': 't', 'ং': 'ng',
+  'প': 'p', 'ফ': 'f', 'ব': 'b', 'ভ': 'w', 'ম': 'm',
+  'য': 'z', 'র': 'r', 'ল': 'l', 'শ': 'sh', 'ষ': 'sh', 'স': 's', 'হ': 'h',
+  'ড়': 'r', 'ঢ়': 'r', 'য়': 'y', 'Y': 'y', 'W': 'w', 'ৎ': 't', 'ং': 'n', 'ঃ': 'h',
 };
 const BN_AR_VOWEL_SIGN: Record<string, string> = {
   'া': 'a', 'ি': 'i', 'ী': 'i', 'ু': 'u', 'ূ': 'u', 'ে': 'e', 'ৈ': 'ai', 'ো': 'u', 'ৌ': 'au',
@@ -347,8 +396,25 @@ const BN_AR_INDEP_VOWEL: Record<string, string> = {
   'অ': 'a', 'আ': 'a', 'ই': 'i', 'ঈ': 'i', 'উ': 'u', 'ঊ': 'u', 'এ': 'e', 'ঐ': 'ai', 'ও': 'u', 'ঔ': 'au',
 };
 
+function preNormBnForAr(bn: string): string {
+  return bn
+    .normalize('NFC')
+    .replace(/[\u200c\u200d]/g, '')
+    // Convert NFC-decomposed 2-code-unit letters BEFORE per-char iteration ("য়", "ড়", "ঢ়")
+    .replace(/\u09AF\u09BC/g, 'Y')
+    .replace(/\u09A1\u09BC|\u09A2\u09BC|\u09DC|\u09DD/g, 'র')
+    // Emphatic silent ba-phala in Bengali Islamic orthography (ক্ব, ত্ব, দ্ব, স্ব, য্ব, জ্ব)
+    .replace(/([কতদসজযথছ])\u09CDব/g, '$1')
+    // Ya-phala (ইয়্যাকা -> iyaka)
+    .replace(/Y?\u09CDয/g, 'Y')
+    // Arabic و (w) orthographic glides ("ওয়া" = wa, "হুয়া" = huwa, "দোয়া")
+    .replace(/ওY/g, 'W')
+    .replace(/([ুূ])Y(?=া)/g, '$1W')
+    .replace(/োY(?=া)/g, 'aW');
+}
+
 function bnWordToLatin(bn: string, addImplicitA: boolean): string {
-  const s = bn.normalize('NFC').replace(/[\u200c\u200d]/g, '');
+  const s = preNormBnForAr(bn);
   let out = '';
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
@@ -359,7 +425,7 @@ function bnWordToLatin(bn: string, addImplicitA: boolean): string {
     const cons = BN_AR_CONSONANT[ch];
     if (cons !== undefined) {
       out += cons;
-      if (addImplicitA && i < s.length - 1 && next !== '\u09cd' && !BN_AR_VOWEL_SIGN[next] && ch !== 'ং' && ch !== 'ৎ') {
+      if (addImplicitA && i < s.length - 1 && next !== '\u09cd' && !BN_AR_VOWEL_SIGN[next] && !BN_AR_INDEP_VOWEL[next] && ch !== 'ং' && ch !== 'ঃ' && ch !== 'ৎ') {
         out += 'a';
       }
     }
@@ -367,15 +433,50 @@ function bnWordToLatin(bn: string, addImplicitA: boolean): string {
   return out;
 }
 
-/** Convert a casual Bengali-script Arabic loanword/transliteration (e.g. "সাবিকুন", "ইন্তেহা") into indexed arLat keys. */
-export function bnQueryToArKeys(bnWord: string, dfCheck: (k: string) => number): string[] {
-  for (const implicitA of [false, true]) {
-    const lat = bnWordToLatin(bnWord, implicitA);
-    if (!lat || /[pvxc]/.test(lat)) continue;
-    for (const form of lat.includes('j') ? [lat, lat.replace(/j/g, 'z')] : [lat]) {
-      const hit = pickBestArKey(form, dfCheck);
-      if (hit.length > 0) return hit;
+/** Generate clean Latin phonetic transliteration candidates for a Bengali-script Arabic word. */
+export function bnToArLatinCandidates(bnWord: string): string[] {
+  const s = preNormBnForAr(bnWord);
+  const segs: Array<[string, boolean]> = [];
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    const next = s[i + 1] ?? '';
+    if (BN_AR_INDEP_VOWEL[ch]) { segs.push([BN_AR_INDEP_VOWEL[ch], false]); continue; }
+    if (BN_AR_VOWEL_SIGN[ch]) { segs.push([BN_AR_VOWEL_SIGN[ch], false]); continue; }
+    if (ch === '\u09cd') continue;
+    const cons = BN_AR_CONSONANT[ch];
+    if (cons !== undefined) {
+      const slot = i < s.length - 1 && next !== '\u09cd' && !BN_AR_VOWEL_SIGN[next] && !BN_AR_INDEP_VOWEL[next] && ch !== 'ং' && ch !== 'ঃ' && ch !== 'ৎ';
+      segs.push([cons, slot]);
     }
+  }
+  const slotIdx = segs.flatMap(([, slot], idx) => (slot ? [idx] : []));
+  const forms = new Set<string>();
+  const build = (maskFn: (pos: number) => boolean) => {
+    let cur = '';
+    for (let i = 0; i < segs.length; i++) cur += segs[i][0] + (maskFn(i) ? 'a' : '');
+    if (cur && !/[pvxc]/.test(cur)) {
+      forms.add(cur);
+      if (cur.includes('z') || cur.includes('j')) forms.add(cur.replace(/z/g, 'j'));
+      if (cur.includes('j')) forms.add(cur.replace(/j/g, 'z'));
+    }
+  };
+  build(() => false);
+  build((i) => segs[i][1]);
+  if (slotIdx.length >= 1 && slotIdx.length <= 4) {
+    const total = 1 << slotIdx.length;
+    for (let m = 1; m < total - 1; m++) {
+      const on = new Set(slotIdx.filter((_, k) => (m & (1 << k)) !== 0));
+      build((i) => on.has(i));
+    }
+  }
+  return [...forms];
+}
+
+/** Convert a casual Bengali-script Arabic loanword/transliteration (e.g. "সাবিকুন", "ইন্তেহা", "সদরি") into indexed arLat keys. */
+export function bnQueryToArKeys(bnWord: string, dfCheck: (k: string) => number): string[] {
+  for (const cand of bnToArLatinCandidates(bnWord)) {
+    const hit = latinQueryToArKeys(cand, dfCheck);
+    if (hit.length > 0) return hit;
   }
   return [];
 }

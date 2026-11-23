@@ -51,6 +51,12 @@ export const THEME_LABEL: Record<string, T> = {
   'dua for knowledge': t('a supplication for knowledge', 'জ্ঞানের জন্য দোয়া', 'دعاء العلم'),
   'dua for health': t('a supplication for health', 'সুস্থতার জন্য দোয়া', 'دعاء الشفاء'),
   'dua for family': t('a supplication for family', 'পরিবারের জন্য দোয়া', 'دعاء للأسرة'),
+  'dua for guidance': t('a supplication for guidance', 'হেদায়াত ও সঠিক পথের দোয়া', 'دعاء الهداية'),
+  'dua for patience': t('a supplication for patience and steadfastness', 'ধৈর্য ও অবিচলতার দোয়া', 'دعاء الصبر والثبات'),
+  'dua for protection': t('supplications for protection and refuge', 'সুরক্ষা ও আশ্রয় প্রার্থনার দোয়া', 'أدعية الحفظ والاستعاذة'),
+  'dua for sustenance (rizq)': t('a supplication for sustenance and good provision (rizq)', 'রিযিক ও কল্যাণ প্রার্থনার দোয়া', 'دعاء الرزق والخير'),
+  'dua for distress and grief': t('supplications in distress, anxiety, and grief', 'বিপদ, দুঃখ ও দুশ্চিন্তা থেকে মুক্তির দোয়া', 'أدعية تفريج الكرب والهم'),
+  'dua for travel': t('a supplication when traveling or riding', 'সফর ও বাহনে আরোহণের দোয়া', 'دعاء السفر والركوب'),
   'supplications (dua)': t('supplications (dua) in the Quran', 'কুরআনের দোয়া', 'الأدعية في القرآن'),
   'illness and healing': t('illness and healing', 'অসুস্থতা ও আরোগ্য', 'المرض والشفاء'),
   'sacrifice (qurbani)': t('sacrifice (qurbani)', 'কুরবানি', 'القربان والأضحية'),
@@ -232,14 +238,18 @@ export const MSG = {
     'These ayahs contain the words you wrote.',
     'আপনার লেখা শব্দগুলো এই আয়াতগুলোতে আছে।',
     'هذه الآيات تحتوي على الكلمات التي كتبتها.'),
-  wordMeaning: (term: string, meaning: string, hasAyahs: boolean): T => t(
-    `${term}: ${meaning}\nGeneral lexical meaning only — for detailed tafsir or religious rulings, please ask a qualified scholar.${hasAyahs ? '\n\nRelated ayahs from the Quran:' : ''}`,
-    `${term}: ${meaning}\nএটি সাধারণ শাব্দিক অর্থ — বিস্তারিত তাফসীর বা শরয়ী বিধানের জন্য অনুগ্রহ করে একজন যোগ্য আলেমের কাছে জিজ্ঞাসা করুন।${hasAyahs ? '\n\nকুরআন থেকে সম্পর্কিত আয়াত:' : ''}`,
-    `${term}: ${meaning}\nهذا معنى لغوي عام فقط — للتفسير المفصل أو الأحكام الشرعية يُرجى سؤال أهل العلم.${hasAyahs ? '\n\nآيات ذات صلة من القرآن:' : ''}`),
-  wordMeaningContext: (word: string): T => t(
-    `I do not have a standalone full-word dictionary entry for "${word}", so here are Quran ayahs that mention or relate to it with their published translations:`,
-    `"${word}" শব্দটির জন্য আলাদা পূর্ণাঙ্গ অভিধানভিত্তিক অর্থ আমার কাছে নেই, তবে কুরআনে এই শব্দের সাথে সম্পর্কিত বা শব্দটি উল্লেখ থাকা কিছু আয়াত ও প্রকাশিত অনুবাদ নিচে দেওয়া হলো:`,
-    `لا يتوفر لديّ معجم لغوي مستقل لكلمة «${word}»، لكن إليك آيات من القرآن الكريم تذكرها أو ترتبط بها مع ترجماتها المنشورة:`),
+  phraseWithRefs: (refs: string): T => t(
+    `These ayahs contain the words you wrote (${refs}). Shown with their published translation for meaning and context.`,
+    `আপনার লেখা শব্দগুলো এই আয়াতগুলোতে আছে (${refs})। অর্থ ও প্রসঙ্গসহ প্রকাশিত অনুবাদ নিচে দেখানো হলো।`,
+    `هذه الآيات تحتوي على الكلمات التي كتبتها (${refs}). مع ترجمتها المنشورة لبيان المعنى والسياق.`),
+  wordMeaning: (term: string, meaning: string, hasAyahs: boolean, refs?: string): T => t(
+    `${term}: ${meaning}${refs ? `\nQuran reference: ${refs}.` : ''}\nGeneral lexical meaning only — for detailed tafsir or religious rulings, please ask a qualified scholar.${hasAyahs ? '\n\nRelated ayahs from the Quran:' : ''}`,
+    `${term}: ${meaning}${refs ? `\nকুরআনের রেফারেন্স: ${refs}।` : ''}\nএটি সাধারণ শাব্দিক অর্থ — বিস্তারিত তাফসীর বা শরয়ী বিধানের জন্য অনুগ্রহ করে একজন যোগ্য আলেমের কাছে জিজ্ঞাসা করুন।${hasAyahs ? '\n\nকুরআন থেকে সম্পর্কিত আয়াত:' : ''}`,
+    `${term}: ${meaning}${refs ? `\nالمرجع في القرآن: ${refs}.` : ''}\nهذا معنى لغوي عام فقط — للتفسير المفصل أو الأحكام الشرعية يُرجى سؤال أهل العلم.${hasAyahs ? '\n\nآيات ذات صلة من القرآن:' : ''}`),
+  wordMeaningContext: (word: string, refs?: string): T => t(
+    `I do not have a standalone full-word dictionary entry for "${word}", so here are Quran ayahs that mention or relate to it${refs ? ` (${refs})` : ''} with their published translations:`,
+    `"${word}" শব্দটির জন্য আলাদা পূর্ণাঙ্গ অভিধানভিত্তিক অর্থ আমার কাছে নেই, তবে কুরআনে এই শব্দ বা বাক্যাংশের সাথে সম্পর্কিত আয়াত${refs ? ` (${refs})` : ''} ও প্রকাশিত অনুবাদ নিচে দেওয়া হলো:`,
+    `لا يتوفر لديّ معجم لغوي مستقل لعبارة «${word}»، لكن إليك آيات من القرآن الكريم تذكرها أو ترتبط بها${refs ? ` (${refs})` : ''} مع ترجماتها المنشورة:`),
   wordMeaningNotFound: (word: string): T => t(
     `I do not have a dictionary meaning for "${word}", and I could not find it in my glossary of common Quranic terms or in the Quran text. Try asking about a common Quranic term (like sabr, taqwa, zakat, ihsan), a surah name, or an ayah reference.`,
     `"${word}" শব্দটির অভিধানভিত্তিক অর্থ আমার কাছে নেই এবং প্রচলিত কুরআনিক পরিভাষার তালিকা বা কুরআনের পাঠেও এটি খুঁজে পাইনি। প্রচলিত কোনো কুরআনিক শব্দ (যেমন সবর, তাকওয়া, যাকাত, ইহসান), সূরার নাম বা আয়াত নম্বর লিখে চেষ্টা করুন।`,
@@ -276,6 +286,26 @@ export const MSG = {
       : t('The same ayahs, in Arabic only.', 'একই আয়াতগুলো, শুধু আরবি।', 'الآيات نفسها بالعربية فقط.'),
   /** "Which surah talks about ...?": the surahs of the ayahs shown, with their references (lists made in engine.ts). */
   inSurahs: (en: string, bn: string, ar: string): T => t(` These ayahs are in: ${en}.`, ` এই আয়াতগুলো আছে: ${bn}।`, ` هذه الآيات في: ${ar}.`),
+  surahDuas: (surahName: string, surahNo: number, count: number, summary: string, refs: string): T => t(
+    `Quranic supplications (duas) in Surah ${surahName} (Surah ${surahNo}, ${enN(count, 'ayah', 'ayahs')}: ${refs}) — including ${summary}. Shown verbatim with published translation:`,
+    `সূরা ${surahName} (সূরা ${bd(surahNo)})-এ বর্ণিত কুরআনের ${bd(count)}টি দোয়ার আয়াত (${refs}) — যেখানে ${summary} রয়েছে। মূল আরবি ও প্রকাশিত অনুবাদসহ নিচে দেখানো হলো:`,
+    `أدعية قرآنية واردة في سورة ${surahName} (${surahNo}، ${arAyahs(count)}: ${refs}) — تشمل ${summary}. تُعرض كما وردت في القرآن مع ترجمتها المنشورة:`),
+  surahNoDuas: (surahName: string, surahNo: number): T => t(
+    `Surah ${surahName} (Surah ${surahNo}) does not contain a direct supplication (dua) phrased as a prayer from servants or prophets. Try asking for duas in Surah Al-Baqara, Aal-i-Imraan, Ibrahim, Taa-Haa, Al-Anbiyaa, Al-Furqaan, Al-Hashr, or ask "40 Rabbana duas".`,
+    `সূরা ${surahName} (সূরা ${bd(surahNo)})-এ সরাসরি দোয়া বা প্রার্থনামূলক কোনো আয়াত নেই। আপনি সূরা বাকারা, আলে ইমরান, ইবরাহীম, ত্ব-হা, আম্বিয়া, ফুরকান বা হাশর-এর দোয়া, অথবা "রাব্বানা দোয়াগুলো দাও" জিজ্ঞেস করতে পারেন।`,
+    `لا تتضمن سورة ${surahName} (${surahNo}) دعاءً مباشرًا على لسان العباد أو الأنبياء. يمكنك طلب أدعية سورة البقرة أو آل عمران أو إبراهيم أو طه أو الأنبياء أو الفرقان أو الحشر أو «أدعية ربنا».`),
+  rabbanaDuas: (count: number): T => t(
+    `Here are ${count} ayahs from the Quran containing the famous "Rabbana" ("Our Lord...") supplications, shown verbatim in Quran order with published translations:`,
+    `পবিত্র কুরআনে "রাব্বানা" ("হে আমাদের রব...") শব্দে শুরু হওয়া ${bd(count)}টি আয়াতের প্রসিদ্ধ দোয়াসমূহ মূল পাঠ ও প্রকাশিত অনুবাদসহ ক্রমানুসারে নিচে দেওয়া হলো:`,
+    `إليك ${arAyahs(count)} من القرآن الكريم تتضمن أدعية «ربنا» المشهورة مرتبة حسب السور مع ترجمتها المنشورة:`),
+  prophetDuas: (prophetName: string, summary: string, refs: string): T => t(
+    `Quranic supplications of ${prophetName} (${refs}) — ${summary}. Shown verbatim as in the Quran:`,
+    `${prophetName}-এর কুরআনে বর্ণিত দোয়াসমূহ (${refs}) — ${summary}। মূল কুরআন ও প্রকাশিত অনুবাদসহ দেখানো হলো:`,
+    `أدعية ${prophetName} في القرآن الكريم (${refs}) — ${summary}. تُعرض كما وردت في القرآن:`),
+  surahDuaList: (surahCount: number, examples: string): T => t(
+    `Direct supplications (duas) appear in ${surahCount} surahs across the Quran — including ${examples}. Ask for any specific surah (for example, "duas in Surah Ibrahim" or "duas in Surah Al-Baqarah"). Here are representative dua ayahs:`,
+    `পবিত্র কুরআনের ${bd(surahCount)}টি সূরায় সরাসরি দোয়া ও প্রার্থনামূলক আয়াত এসেছে — যেমন ${examples}। যেকোনো নির্দিষ্ট সূরার দোয়া দেখতে চাইলে লিখুন (যেমন "সূরা ইবরাহীমের দোয়া" বা "সূরা বাকারার দোয়া")। নিচে কয়েকটি প্রধান সূরার দোয়া দেওয়া হলো:`,
+    `ترد الأدعية القرآنية في ${surahCount} سورة، منها: ${examples}. يمكنك سؤالنا عن أي سورة محددة (مثل «أدعية سورة إبراهيم»). إليك نماذج من هذه الآيات:`),
   moreIntro: (label: string): T => t(`More ayahs: ${label}.`, `আরও আয়াত: ${label}।`, `مزيد من الآيات: ${label}.`),
   moreSearch: t(
     'More ayahs that contain words from your earlier question. Please read them in context; this assistant does not interpret them.',

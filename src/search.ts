@@ -212,8 +212,10 @@ export function queryTokens(
   const enFallback: string[] = [];
   const matchedOtherWords = new Set<string>();
   const topic = cleaned.replace(/[A-Za-z']+/g, (w) => (FRAMING.has(w.toLowerCase()) ? ' ' : w));
+  const topicWords = index ? wordsEn(topic) : [];
   if (index) {
-    for (const w of wordsEn(topic)) {
+    for (let i = 0; i < topicWords.length; i++) {
+      const w = topicWords[i];
       if (isEnglish(w) || w in BANGLISH_TO_EN || w in NAME_TO_EN || FRAMING.has(w)) continue;
       // 1. Everyday English synonym / derivational root present in Saheeh International
       const enAlt = resolveEnFallback(w, index.en);
@@ -231,6 +233,22 @@ export function queryTokens(
         matchedOtherWords.add(stemEn(americanize(w)));
         continue;
       }
+      // 2b. Adjacent Latin token join ("faya" + "kun" -> "fayakun")
+      if (i + 1 < topicWords.length) {
+        const nextW = topicWords[i + 1];
+        if (!isEnglish(nextW) && !(nextW in BANGLISH_TO_EN) && !(nextW in NAME_TO_EN)) {
+          const joinedKeys = latinQueryToArKeys(w + nextW, (k) => index.arLat.df(k), index.arVocab);
+          if (joinedKeys.length > 0) {
+            arLat.push(...joinedKeys);
+            matchedOtherWords.add(w);
+            matchedOtherWords.add(nextW);
+            matchedOtherWords.add(stemEn(americanize(w)));
+            matchedOtherWords.add(stemEn(americanize(nextW)));
+            i++;
+            continue;
+          }
+        }
+      }
       // 3. Phonetic Banglish word in Dr. Zakaria's Bengali Quran (y.bn)
       const bnKeys = latinQueryToBnKeys(w, (k) => index.bnLat.df(k));
       if (bnKeys.length > 0) {
@@ -246,27 +264,50 @@ export function queryTokens(
 
   const raw = tokensEn(topic).filter((w) => !(w in BANGLISH_TO_EN) && !(w in NAME_TO_EN) && !matchedOtherWords.has(w));
   const rawBn = tokensBn(cleaned);
+  const fullBnWords = wordsBn(cleaned);
   const bnLoose: string[] = [];
   const matchedBnWords = new Set<string>();
+  const unresolvedFullBn = new Set<string>();
   if (index) {
+    // Map each stemmed token back to its raw unstemmed word(s) so -র/-রা ("আকবার", "কাফির", "গাফুর") is tried unstemmed first.
+    const rawByStem = new Map<string, string[]>();
+    for (const fw of fullBnWords) {
+      const sb = stemBn(fw);
+      rawByStem.set(sb, [...(rawByStem.get(sb) ?? []), fw]);
+    }
     for (const bw of rawBn) {
       if (index.bn.df(bw) > 0) continue;
-      // 1. Loose Bengali spelling match ("সুর্য"->"সূর্য", "চাদ"->"চাঁদ", "পাহার"->"পাহাড়", "নবি"->"নবী")
       const loose = bnLooseNorm(bw);
       if (loose.length >= 2 && index.bnLoose.df(loose) > 0) {
         bnLoose.push(loose);
         matchedBnWords.add(bw);
         continue;
       }
-      // 2. Bengali transliteration of an Arabic Quran word ("সাবিকুন", "মুফলিহুন", "ইন্তেহা")
-      const keys = bnQueryToArKeys(bw, (k) => index.arLat.df(k));
+      let hitKeys: string[] = [];
+      for (const unstemmed of [...(rawByStem.get(bw) ?? []), bw]) {
+        const keys = bnQueryToArKeys(unstemmed, (k) => index.arLat.df(k));
+        if (keys.length > 0) { hitKeys = keys; break; }
+      }
+      if (hitKeys.length > 0) {
+        arLat.push(...hitKeys);
+        matchedBnWords.add(bw);
+      } else {
+        unresolvedFullBn.add(bw);
+      }
+    }
+    // Adjacent Bengali token join ("ফায়া" + "কুন" -> "ফায়াকুন")
+    for (let i = 0; i + 1 < fullBnWords.length; i++) {
+      const s1 = stemBn(fullBnWords[i]), s2 = stemBn(fullBnWords[i + 1]);
+      if (!unresolvedFullBn.has(s1) && !unresolvedFullBn.has(s2)) continue;
+      const keys = bnQueryToArKeys(fullBnWords[i] + fullBnWords[i + 1], (k) => index.arLat.df(k));
       if (keys.length > 0) {
         arLat.push(...keys);
-        matchedBnWords.add(bw);
+        matchedBnWords.add(s1);
+        matchedBnWords.add(s2);
       }
     }
   }
-  const bn = rawBn.filter((w) => !matchedBnWords.has(w));
+  const bn = [...new Set(rawBn.filter((w) => !matchedBnWords.has(w)))];
   return {
     en: [...new Set([...raw, ...mapped, ...enFallback])],
     bn,
@@ -279,13 +320,23 @@ export function queryTokens(
 
 export interface Found { ayah: Ayah; score: number }
 
+const ARABIC_SHORT_PARTICLES = new Set([
+  'kun', 'qul', 'la', 'laa', 'wa', 'fa', 'fi', 'fii', 'bi', 'li', 'min', 'an', 'in', 'ma', 'maa', 'ya', 'yaa',
+  'ina', 'inna', 'ila', 'illa', 'ini', 'inni', 'ala', 'huwa', 'hum', 'qad', 'lam', 'lan', 'man', 'din', 'rab', 'haq', 'nur', 'ruh', 'ilm',
+  'কুন', 'কুল', 'লা', 'ওয়া', 'ফা', 'ফি', 'বি', 'লি', 'মিন', 'আন', 'ইন', 'মা', 'ইয়া', 'ইন্না', 'ইল্লা', 'ইন্নি', 'আলা', 'হুয়া', 'হুওয়া',
+  'দিন', 'দ্বীন', 'রব', 'হক', 'নূর',
+]);
+
 /** Top ayahs for a question, or [] if nothing in the Quran matches well enough. */
 export function searchAyahs(index: Index, q: Quran, question: string, limit = 5): Found[] {
   const t = queryTokens(question, englishChecker(index), index);
   const total = new Map<number, number>();
   const coverage = new Map<number, number>();
-  const missingEnWeight = t.en.filter((w) => index.en.df(w) === 0).length * index.en.unknownIdf();
-  const missingBnWeight = t.bn.filter((w) => index.bn.df(w) === 0).length * index.bn.unknownIdf();
+  const hasArLat = t.arLat.length > 0;
+  const nonParticleMissingEn = t.en.filter((w) => index.en.df(w) === 0 && !(hasArLat && ARABIC_SHORT_PARTICLES.has(w)));
+  const nonParticleMissingBn = t.bn.filter((w) => index.bn.df(w) === 0 && !(hasArLat && ARABIC_SHORT_PARTICLES.has(w)));
+  const missingEnWeight = nonParticleMissingEn.length * index.en.unknownIdf();
+  const missingBnWeight = nonParticleMissingBn.length * index.bn.unknownIdf();
   const channels = [
     [index.en, t.en, 0],
     [index.bn, t.bn, 0],
@@ -313,7 +364,9 @@ export function searchAyahs(index: Index, q: Quran, question: string, limit = 5)
     .map(([d, raw]) => [d, raw, raw * (0.5 + (coverage.get(d) ?? 0))] as const)
     .sort((a, b) => b[2] - a[2] || a[0] - b[0]);
   if (ranked.length === 0) return [];
-  const purePhoneticOrLoose = t.en.length === 0 && t.bn.length === 0 && (t.arLat.length > 0 || t.bnLat.length > 0 || t.bnLoose.length > 0);
+  const effectiveEn = hasArLat ? t.en.filter((w) => !ARABIC_SHORT_PARTICLES.has(w)) : t.en;
+  const effectiveBn = hasArLat ? t.bn.filter((w) => !ARABIC_SHORT_PARTICLES.has(w)) : t.bn;
+  const purePhoneticOrLoose = effectiveEn.length === 0 && effectiveBn.length === 0 && (t.arLat.length > 0 || t.bnLat.length > 0 || t.bnLoose.length > 0);
   const singleKnownEn = t.en.length === 1 && t.bn.length === 0 && t.ar.length === 0 && index.en.df(t.en[0]) > 0 && index.en.df(t.en[0]) < 1500;
   const singleKnownBn = t.bn.length === 1 && t.en.length === 0 && t.ar.length === 0 && index.bn.df(t.bn[0]) > 0 && index.bn.df(t.bn[0]) < 1500;
   const minScore = purePhoneticOrLoose || singleKnownEn || singleKnownBn ? 0.5 : MIN_SCORE;

@@ -1,6 +1,6 @@
 // Which surah is the user talking about? ("Surah Al-Baqarah", "baqara", "সূরা ফাতিহা", "سورة الإخلاص")
 import type { Quran } from './data.js';
-import { latinSkeleton, makeSkeletonIndex } from './fuzzy.js';
+import { editDistance, latinSkeleton, makeSkeletonIndex, phoneticTermKeyFlex } from './fuzzy.js';
 import { normAr, tokensAr, wordsBn, wordsEn } from './text.js';
 
 /** Spelling-insensitive key for a Latin surah name: Al-Baqara = baqarah = Baqarah. */
@@ -176,6 +176,8 @@ export function makeSurahFinder(q: Quran): SurahFinder {
           // Require matching first sound class when using consonant skeleton fallback ("after" != "faatir")
           const targetKey = skey(q.chapters[id - 1].tr);
           if (n === 1 && firstSound(key) !== firstSound(targetKey)) continue;
+          // Without "surah", guard skeleton-only matches by phonetic distance so e.g. "khusr" never matches "kawthar"
+          if (!hasWord && (Math.abs(key.length - targetKey.length) > 2 || editDistance(phoneticTermKeyFlex(key), phoneticTermKeyFlex(targetKey)) > 2)) continue;
           // Without the word "surah", the written name must also be long enough ("bakara", not "Bakr": Abu Bakr is a person)
           if (hasWord || (key.length >= 5 && SAFE_WITHOUT_SURAH_WORD.has(targetKey))) return id;
         }

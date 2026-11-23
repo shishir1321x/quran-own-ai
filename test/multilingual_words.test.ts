@@ -20,7 +20,7 @@ describe('Hamzat al-Wasl Arabic words & screenshot queries (inteha / imteha / im
     ['isbir', '2:153'],
     ['ittaqu', '15:69'],
     ['usjudu', '53:62'],
-    ['udkhulu', '2:58'],
+    ['udkhulu', '43:70'],
     ['gafur', '41:32'],
   ])('%s -> finds real Quran ayahs (incl. %s)', (q, expected) => {
     const r = engine.ask(q);

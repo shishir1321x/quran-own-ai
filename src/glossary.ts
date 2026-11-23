@@ -1,7 +1,9 @@
 // Concise lexical dictionary glosses for common Quranic & Arabic terms (no AI, no fatwas, no tafsir).
 // HAVE THE ARABIC AND BENGALI GLOSSES CHECKED by native readers and someone with religious knowledge.
-import { canonArLatin, canonArLatinFlex, expandArLatinCandidates } from './arabicPhonetic.js';
-import { normAr, normBn } from './text.js';
+import { bnToArLatinCandidates, canonArLatin, canonArLatinFlex, expandArLatinCandidates } from './arabicPhonetic.js';
+import { canonArStream } from './arabicPhrase.js';
+import { editDistance } from './fuzzy.js';
+import { bnLooseNorm, normAr, normBn } from './text.js';
 import type { Lang } from './types.js';
 
 export interface GlossaryEntry {
@@ -10,6 +12,7 @@ export interface GlossaryEntry {
   meaning: Record<Lang, string>;
   keys: string[];
   ayahs?: Array<[number, number]>;
+  phrase?: boolean;
 }
 
 const g = (
@@ -22,13 +25,27 @@ const g = (
   arMeaning: string,
   keys: string[],
   ayahs?: Array<[number, number]>,
+  phrase = false,
 ): GlossaryEntry => ({
   id,
   term: { en: enTerm, bn: bnTerm, ar: arTerm },
   meaning: { en: enMeaning, bn: bnMeaning, ar: arMeaning },
   keys,
   ayahs,
+  ...(phrase ? { phrase: true } : {}),
 });
+
+const gp = (
+  id: string,
+  enTerm: string,
+  bnTerm: string,
+  arTerm: string,
+  enMeaning: string,
+  bnMeaning: string,
+  arMeaning: string,
+  keys: string[],
+  ayahs: Array<[number, number]>,
+): GlossaryEntry => g(id, enTerm, bnTerm, arTerm, enMeaning, bnMeaning, arMeaning, keys, ayahs, true);
 
 export const GLOSSARY: GlossaryEntry[] = [
   g('allah', 'Allah (الله)', 'আল্লাহ (الله)', 'الله',
@@ -587,6 +604,440 @@ export const GLOSSARY: GlossaryEntry[] = [
     'الاختبار والابتلاء لتمحيص القلوب وإظهار صدقها',
     ['imtehan', 'imtahan', 'imtihan', 'ইমতেহান', 'ইমতিহান', 'امتحن', 'امتحان'],
     [[49, 3], [2, 155], [29, 2]]),
+  gp('kun-fayakun', 'Kun Fayakun (كن فيكون)', 'কুন ফায়াকুন (كن فيكون)', 'كن فيكون',
+    '"Be, and it is" — expressing Allah\'s effortless creative command whenever He wills a thing',
+    'কুন ফায়াকুন ("হও, আর তা হয়ে যায়") — আল্লাহর ইচ্ছামাত্রই সৃষ্টির অপ্রতিরোধ্য আদেশ',
+    '«كُن فَيَكُونُ» — التعبير عن تمام قدرة الله ونفاذ أمره إذا أراد شيئًا أن يقول له كن فيكون',
+    ['kun fayakun', 'kun faya kun', 'kunfayakun', 'kon faya kon', 'কুন ফায়াকুন', 'কুন ফায়া কুন', 'কুনফায়াকুন', 'كن فيكون'],
+    [[36, 82], [2, 117], [3, 47], [16, 40], [19, 35]]),
+  g('kun', 'Kun (كن)', 'কুন (كن)', 'كن',
+    '"Be!" — the divine imperative word of command in the Quran',
+    'কুন ("হও") — সৃষ্টির ক্ষেত্রে আল্লাহর তাৎক্ষণিক নির্দেশসূচক শব্দ',
+    '«كُنْ» — فعل أمر من الكون يعبر عن سرعة تحقق مشيئة الله وقدرته',
+    ['kun', 'কুন', 'كن'],
+    [[36, 82], [2, 117], [3, 47], [16, 40], [40, 68]]),
+  g('qul', 'Qul (قل)', 'কুল (قل)', 'قل',
+    '"Say" — command in the Quran instructing the Prophet and believers to proclaim a truth',
+    'কুল ("বলুন") — কুরআনে নবী (সা.)-কে কোনো সত্য ঘোষণা করার নির্দেশসূচক শব্দ',
+    '«قُلْ» — فعل أمر يتكرر في القرآن لتبليغ رسالة التوحيد والدعاء والاستعاذة',
+    ['qul', 'কুল', 'ক্বুল', 'قل'],
+    [[112, 1], [113, 1], [114, 1], [109, 1], [72, 1]]),
+
+  // Popular Quranic phrases, duas, and everyday expressions (scholar & native-reader review advised)
+  gp('bismillahir-rahmanir-rahim', 'Bismillahir-Rahmanir-Rahim (بسم الله الرحمن الرحيم)', 'বিসমিল্লাহির রাহমানির রাহিম (بسم الله الرحمن الرحيم)', 'بسم الله الرحمن الرحيم',
+    '"In the name of Allah, the Entirely Merciful, the Especially Merciful" — the opening ayah of the Quran (Al-Fatiha 1:1)',
+    '"পরম করুণাময়, অতি দয়ালু আল্লাহর নামে" — পবিত্র কুরআনের প্রথম আয়াত (সূরা ফাতিহা ১:১)',
+    '«بسم الله الرحمن الرحيم» — أول آية في سورة الفاتحة، بها يُفتتح كل أمر مشروع',
+    ['bismillahir rahmanir rahim', 'bismillahi rahmanir rahim', 'bismillahir rahmanir raheem', 'in the name of allah the entirely merciful the especially merciful', 'বিসমিল্লাহির রাহমানির রাহিম', 'বিসমিল্লাহির রহমানির রহিম', 'বিসমিল্লাহির রহমানির রহীম', 'بسم الله الرحمن الرحيم'],
+    [[1, 1]]),
+  gp('alhamdulillahi-rabbil-alamin', 'Alhamdulillahi Rabbil Alamin (الحمد لله رب العالمين)', 'আলহামদুলিল্লাহি রাব্বিল আলামিন (الحمد لله رب العالمين)', 'الحمد لله رب العالمين',
+    '"All praise is due to Allah, Lord of the worlds" (Al-Fatiha 1:2)',
+    '"সকল প্রশংসা সৃষ্টিকুলের রব আল্লাহর জন্য" (সূরা ফাতিহা ১:২)',
+    '«الحمد لله رب العالمين» — الثناء الكامل والشكر كله لله رب الخلق أجمعين',
+    ['alhamdulillahi rabbil alamin', 'alhamdulillahi rabbil aalameen', 'alhamdu lillahi rabbil alamin', 'all praise is due to allah lord of the worlds', 'আলহামদুলিল্লাহি রাব্বিল আলামিন', 'আলহামদুলিল্লাহি রাব্বিল আলামীন', 'الحمد لله رب العالمين'],
+    [[1, 2]]),
+  gp('maliki-yawmid-din', 'Maliki Yawmid-Din (مالك يوم الدين)', 'মালিকি ইয়াওমিদ্দিন (مالك يوم الدين)', 'مالك يوم الدين',
+    '"Sovereign (Master) of the Day of Recompense" (Al-Fatiha 1:4)',
+    '"বিচার দিনের মালিক" (সূরা ফাতিহা ১:৪)',
+    '«مالك يوم الدين» — المالك المتصرّف في يوم الجزاء والحساب',
+    ['maliki yawmid din', 'maliki yaumid din', 'maaliki yawmid din', 'মালিকি ইয়াওমিদ্দিন', 'মালিকি ইয়াওমিদ্দীন', 'مالك يوم الدين'],
+    [[1, 4]]),
+  gp('iyyaka-nabudu', 'Iyyaka Na\'budu wa Iyyaka Nasta\'in (إياك نعبد وإياك نستعين)', 'ইয়্যাকা না\'বুদু ওয়া ইয়্যাকা নাসতাঈন (إياك نعبد وإياك نستعين)', 'إياك نعبد وإياك نستعين',
+    '"It is You we worship and You we ask for help" (Al-Fatiha 1:5)',
+    '"আমরা শুধু আপনারই ইবাদত করি এবং শুধু আপনারই সাহায্য প্রার্থনা করি" (সূরা ফাতিহা ১:৫)',
+    '«إياك نعبد وإياك نستعين» — نخصّك وحدك بالعبادة ونطلب منك وحدك العون',
+    ['iyyaka nabudu wa iyyaka nastain', 'iyyaka nabudu', 'iyaka nabudu wa iyaka nastain', 'it is you we worship and you we ask for help', 'ইয়্যাকা নাবুদু ওয়া ইয়্যাকা নাসতাঈন', 'ইয়াকা নাবুদু ওয়া ইয়াকা নাসতাইন', 'إياك نعبد وإياك نستعين'],
+    [[1, 5]]),
+  gp('ihdinas-siratal-mustaqim', 'Ihdinas-Siratal-Mustaqim (اهدنا الصراط المستقيم)', 'ইহদিনাস সিরাতাল মুস্তাকীম (اهدنا الصراط المستقيم)', 'اهدنا الصراط المستقيم',
+    '"Guide us to the straight path" (Al-Fatiha 1:6)',
+    '"আমাদেরকে সরল-সঠিক পথের হেদায়াত দিন" (সূরা ফাতিহা ১:৬)',
+    '«اهدنا الصراط المستقيم» — دلّنا ووفّقنا وثبّتنا على الطريق الواضح القويم',
+    ['ihdinas siratal mustaqim', 'ihdinas siratal mustaqeem', 'ihdina sirat al mustaqim', 'guide us to the straight path', 'ইহদিনাস সিরাতাল মুস্তাকীম', 'ইহদিনাস সিরাতাল মুস্তাকিম', 'اهدنا الصراط المستقيم'],
+    [[1, 6]]),
+  gp('wa-huwa-ala-kulli-shayin-qadir', 'Wa Huwa \'Ala Kulli Shay\'in Qadir (وهو على كل شيء قدير)', 'ওয়া হুওয়া আলা কুল্লি শাইইন কাদীর (وهو على كل شيء قدير)', 'وهو على كل شيء قدير',
+    '"And He is over all things competent / All-Powerful" (appearing in Al-Baqarah 2:20, Al-Mulk 67:1, and elsewhere)',
+    '"আর তিনি সব কিছুর ওপর সর্বশক্তিমান" (সূরা বাকারা ২:২০, সূরা মুলক ৬৭:১ সহ বিভিন্ন আয়াতে)',
+    '«وهو على كل شيء قدير» — تمام قدرة الله ونفاذ إرادته في كل شيء',
+    ['wa huwa ala kulli shayin qadir', 'ala kulli shayin qadir', 'kulli shayin qadir', 'ওয়া হুওয়া আলা কুল্লি শাইইন কাদীর', 'আলা কুল্লি শাইইন কাদির', 'وهو على كل شيء قدير', 'على كل شيء قدير'],
+    [[2, 20], [67, 1]]),
+  gp('rabbana-taqabbal-minna', 'Rabbana Taqabbal Minna (ربنا تقبل منا إنك أنت السميع العليم)', 'রাব্বানা তাকাব্বাল মিন্না (ربنا تقبل منا إنك أنت السميع العليم)', 'ربنا تقبل منا',
+    '"Our Lord, accept [this] from us. Indeed You are the Hearing, the Knowing" — supplication of Ibrahim and Ismail (2:127)',
+    '"হে আমাদের রব! আমাদের পক্ষ থেকে কবুল করুন; নিশ্চয় আপনি সর্বশ্রোতা, সর্বজ্ঞ" — ইবরাহীম ও ইসমাঈল (আ.)-এর দোয়া (২:১২৭)',
+    '«ربنا تقبل منا إنك أنت السميع العليم» — دعاء إبراهيم وإسماعيل بقبول العمل والطاعة',
+    ['rabbana taqabbal minna', 'rabbana taqabbal minna innaka antas samiul alim', 'robbana taqabbal minna', 'রাব্বানা তাকাব্বাল মিন্না', 'রব্বানা তাকাব্বাল মিন্না', 'ربنا تقبل منا'],
+    [[2, 127]]),
+  gp('fadhkuruni-adhkurkum', 'Fadhkuruni Adhkurkum (فاذكروني أذكركم)', 'ফাযকুরুনি আযকুরকুম (فاذكروني أذكركم)', 'فاذكروني أذكركم',
+    '"So remember Me; I will remember you. And be grateful to Me and do not deny Me" (2:152)',
+    '"কাজেই তোমরা আমাকে স্মরণ করো, আমিও তোমাদেরকে স্মরণ করব; এবং আমার প্রতি কৃতজ্ঞ হও" (২:১৫২)',
+    '«فاذكروني أذكركم واشكروا لي ولا تكفرون» — الأمر بذكر الله وشكره',
+    ['fadhkuruni adhkurkum', 'fazkuruni azkurkum', 'fazkuruni azkurukum', 'so remember me i will remember you', 'ফাযকুরুনি আযকুরকুম', 'ফাজকুরুনি আজকুরকুম', 'فاذكروني أذكركم'],
+    [[2, 152]]),
+  gp('innallaha-maas-sabirin', 'Innallaha Ma\'as-Sabirin (إن الله مع الصابرين)', 'ইন্নাল্লাহা মা\'আস সাবিরীন (إن الله مع الصابرين)', 'إن الله مع الصابرين',
+    '"Indeed, Allah is with the patient" (2:153)',
+    '"নিশ্চয় আল্লাহ ধৈর্যশীলদের সাথে আছেন" (২:১৫৩)',
+    '«إن الله مع الصابرين» — معية الله الخاصة ونصره وتأييده للصابرين',
+    ['innallaha maas sabirin', 'innallaha maas sabireen', 'inna allaha maa as sabirin', 'indeed allah is with the patient', 'ইন্নাল্লাহা মাআস সাবিরীন', 'ইন্নাল্লাহা মাআস সাবিরিন', 'إن الله مع الصابرين'],
+    [[2, 153]]),
+  gp('inna-lillahi', 'Inna Lillahi wa Inna Ilayhi Raji\'un (إنا لله وإنا إليه راجعون)', 'ইন্না লিল্লাহি ওয়া ইন্না ইলাইহি রাজিউন (إنا لله وإنا إليه راجعون)', 'إنا لله وإنا إليه راجعون',
+    '"Indeed we belong to Allah, and indeed to Him we will return" — words of patience and submission spoken in hardship or loss (2:156)',
+    '"নিশ্চয় আমরা আল্লাহরই জন্য এবং নিশ্চয় আমরা তাঁর দিকেই প্রত্যাবর্তনকারী" — বিপদ বা শোকের সময় উচ্চারিত ধৈর্য ও আত্মসমর্পণের বাণী (২:১৫৬)',
+    '«إنا لله وإنا إليه راجعون» — إقرار بالعبودية لله والرجوع إليه عند المصيبة',
+    ['inna lillahi wa inna ilayhi rajiun', 'inna lillahi wa inna ilaihi rajiun', 'inna lillahi', 'innalillahi', 'indeed we belong to allah and indeed to him we will return', 'ইন্না লিল্লাহি ওয়া ইন্না ইলাইহি রাজিউন', 'ইন্নালিল্লাহি ওয়া ইন্না ইলাইহি রাজিউন', 'ইন্না লিল্লাহি', 'إنا لله وإنا إليه راجعون', 'انا لله وانا اليه راجعون'],
+    [[2, 156]]),
+  gp('rabbana-atina', 'Rabbana Atina fid-Dunya Hasanah (ربنا آتنا في الدنيا حسنة)', 'রাব্বানা আতিনা ফিদ্দুনিয়া হাসানাহ (ربنا آتنا في الدنيا حسنة)', 'ربنا آتنا في الدنيا حسنة',
+    '"Our Lord, give us in this world [that which is] good and in the Hereafter [that which is] good and protect us from the punishment of the Fire" (2:201)',
+    '"হে আমাদের রব! আমাদেরকে দুনিয়াতে কল্যাণ দিন এবং আখিরাতেও কল্যাণ দিন এবং আমাদেরকে আগুনের শাস্তি থেকে রক্ষা করুন" (২:২০১)',
+    '«ربنا آتنا في الدنيا حسنة وفي الآخرة حسنة وقنا عذاب النار» — دعاء جامع لخير الدنيا والآخرة',
+    ['rabbana atina fid dunya hasanah', 'rabbana atina fid dunya hasanatan wa fil akhirati hasanatan wa qina adhaban nar', 'rabbana atina', 'robbana atina', 'রাব্বানা আতিনা ফিদ্দুনিয়া হাসানাহ', 'রব্বানা আতিনা ফিদ্দুনিয়া হাসানাহ', 'রাব্বানা আতিনা', 'ربنا آتنا في الدنيا حسنة'],
+    [[2, 201]]),
+  gp('wa-asa-an-takrahu', 'Wa \'Asa an Takrahu Shay\'an (وعسى أن تكرهوا شيئا وهو خير لكم)', 'ওয়া আসা আন তাকরাহু শাইআন (وعسى أن تكرهوا شيئا وهو خير لكم)', 'وعسى أن تكرهوا شيئا وهو خير لكم',
+    '"But perhaps you hate a thing and it is good for you; and perhaps you love a thing and it is bad for you. And Allah knows, while you know not" (2:216)',
+    '"হতে পারে তোমরা যা অপছন্দ করো তা তোমাদের জন্য কল্যাণকর এবং যা ভালোবাসো তা অকল্যাণকর; আল্লাহ জানেন, তোমরা জানো না" (২:২১৬)',
+    '«وعسى أن تكرهوا شيئًا وهو خير لكم» — بيان أن الخير قد يكون فيما يكرهه الإنسان، والله أعلم',
+    ['wa asa an takrahu shayan', 'asa an takrahu shayan', 'wa asa an takrahu shayan wa huwa khayrul lakum', 'ওয়া আসা আন তাকরাহু শাইআন', 'আসা আন তাকরাহু শাইআন', 'وعسى أن تكرهوا شيئا وهو خير لكم', 'عسى أن تكرهوا شيئا'],
+    [[2, 216]]),
+  gp('rabbana-afrigh-alayna-sabran', 'Rabbana Afrigh \'Alayna Sabran (ربنا أفرغ علينا صبرا)', 'রাব্বানা আফরিগ আলাইনা সাবরান (ربنا أفرغ علينا صبرا)', 'ربنا أفرغ علينا صبرا',
+    '"Our Lord, pour upon us patience" — supplication for steadfastness in difficult moments (2:250, 7:126)',
+    '"হে আমাদের রব! আমাদের ওপর পরিপূর্ণ ধৈর্য ঢেলে দিন" — কঠিন সময়ে অবিচল থাকার দোয়া (২:২৫০, ৭:১২৬)',
+    '«ربنا أفرغ علينا صبرًا» — طلب إفاضة الصبر والثبات عند الشدائد',
+    ['rabbana afrigh alayna sabran', 'rabbana afrigh alaina sabran', 'robbana afrigh alayna sabran', 'রাব্বানা আফরিগ আলাইনা সাবরান', 'রব্বানা আফরিগ আলাইনা সাবরান', 'ربنا أفرغ علينا صبرا'],
+    [[2, 250], [7, 126]]),
+  gp('la-ikraha-fid-din', 'La Ikraha fid-Din (لا إكراه في الدين)', 'লা ইকরাহা ফিদ্দীন (لا إكراه في الدين)', 'لا إكراه في الدين',
+    '"There shall be no compulsion in [acceptance of] the religion" (2:256)',
+    '"দ্বীন গ্রহণের ব্যাপারে কোনো জোর-জবরদস্তি নেই" (২:২৫৬)',
+    '«لا إكراه في الدين» — لا يُكره أحد على الدخول في الدين، فقد تبين الرشد من الغي',
+    ['la ikraha fid din', 'la ikraha fid deen', 'there shall be no compulsion in religion', 'no compulsion in religion', 'লা ইকরাহা ফিদ্দীন', 'লা ইকরাহা ফিদ্দিন', 'لا إكراه في الدين'],
+    [[2, 256]]),
+  gp('la-yukallifullahu-nafsan', 'La Yukallifullahu Nafsan illa Wus\'aha (لا يكلف الله نفسا إلا وسعها)', 'লা ইউকাল্লিফুল্লাহু নাফসান ইল্লা উস\'আহা (لا يكلف الله نفسا إلا وسعها)', 'لا يكلف الله نفسا إلا وسعها',
+    '"Allah does not charge a soul except [with that within] its capacity" (2:286)',
+    '"আল্লাহ কারও ওপর তার সাধ্যের অতিরিক্ত দায়িত্ব চাপিয়ে দেন না" (২:২৮৬)',
+    '«لا يكلف الله نفسًا إلا وسعها» — رحمة الله بعباده وعدم تكليفهم فوق طاقتهم',
+    ['la yukallifullahu nafsan illa wusaha', 'la yukallifullahu nafsan', 'allah does not burden a soul beyond', 'allah does not burden a soul beyond that it can bear', 'allah does not charge a soul except its capacity', 'লা ইউকাল্লিফুল্লাহু নাফসান ইল্লা উসআহা', 'লা ইউকাল্লিফুল্লাহু নাফসান', 'لا يكلف الله نفسا إلا وسعها'],
+    [[2, 286]]),
+  gp('rabbana-la-tuakhidhna', 'Rabbana La Tu\'akhidhna (ربنا لا تؤاخذنا إن نسينا أو أخطأنا)', 'রাব্বানা লা তুআখিযনা (ربنا لا تؤاخذنا إن نسينا أو أخطأنا)', 'ربنا لا تؤاخذنا',
+    '"Our Lord, do not impose blame upon us if we have forgotten or erred" (2:286)',
+    '"হে আমাদের রব! যদি আমরা ভুলে যাই বা ভুল করি তবে আমাদের পাকড়াও করবেন না" (২:২৮৬)',
+    '«ربنا لا تؤاخذنا إن نسينا أو أخطأنا» — دعاء بالعفو عن النسيان والخطأ',
+    ['rabbana la tuakhidhna', 'rabbana la tuakhizna', 'rabbana la tuakhidhna in nasina aw akhtana', 'রাব্বানা লা তুআখিযনা', 'রব্বানা লা তুআখিজনা', 'ربنا لا تؤاخذنا'],
+    [[2, 286]]),
+  gp('rabbana-la-tuzigh-qulubana', 'Rabbana La Tuzigh Qulubana (ربنا لا تزغ قلوبنا بعد إذ هديتنا)', 'রাব্বানা লা তুযিগ কুলূবানা (ربنا لا تزغ قلوبنا بعد إذ هديتنا)', 'ربنا لا تزغ قلوبنا',
+    '"Our Lord, let not our hearts deviate after You have guided us and grant us from Yourself mercy" (3:8)',
+    '"হে আমাদের রব! সরল পথ দেওয়ার পর আমাদের অন্তরকে বক্র করবেন না এবং আপনার কাছ থেকে রহমত দান করুন" (৩:৮)',
+    '«ربنا لا تزغ قلوبنا بعد إذ هديتنا وهب لنا من لدنك رحمة» — دعاء الثبات على الهداية',
+    ['rabbana la tuzigh qulubana', 'rabbana la tuzigh quloobana bada idh hadaytana', 'robbana la tuzigh qulubana', 'রাব্বানা লা তুযিগ কুলূবানা', 'রব্বানা লা তুজিগ কুলুবানা', 'ربنا لا تزغ قلوبنا'],
+    [[3, 8]]),
+  gp('allahumma-malikal-mulk', 'Allahumma Malikal-Mulk (قل اللهم مالك الملك)', 'আল্লাহুম্মা মালিকাল মুলক (قل اللهم مالك الملك)', 'اللهم مالك الملك',
+    '"O Allah, Owner of Sovereignty, You give sovereignty to whom You will..." (3:26)',
+    '"হে সার্বভৌম শক্তির মালিক আল্লাহ! আপনি যাকে ইচ্ছা ক্ষমতা দান করেন..." (৩:২৬)',
+    '«اللهم مالك الملك تؤتي الملك من تشاء» — الإقرار بملك الله المطلق وتصرفه في الخلق',
+    ['allahumma malikal mulk', 'qul allahumma malikal mulk', 'আল্লাহুম্মা মালিকাল মুলক', 'কুলিল্লাহুম্মা মালিকাল মুলক', 'اللهم مالك الملك'],
+    [[3, 26]]),
+  gp('qul-in-kuntum-tuhibbunallaha', 'Qul in Kuntum Tuhibbunallaha Fattabi\'uni (قل إن كنتم تحبون الله فاتبعوني)', 'কুল ইন কুনতুম তুহিব্বুনাল্লাহা (قل إن كنتم تحبون الله فاتبعوني)', 'قل إن كنتم تحبون الله',
+    '"Say, [O Muhammad], \'If you should love Allah, then follow me, [so] Allah will love you and forgive you your sins\'" (3:31)',
+    '"বলুন, যদি তোমরা আল্লাহকে ভালোবাসো তবে আমার অনুসরণ করো, তাহলে আল্লাহ তোমাদের ভালোবাসবেন এবং তোমাদের গুনাহ ক্ষমা করবেন" (৩:৩১)',
+    '«قل إن كنتم تحبون الله فاتبعوني يحببكم الله» — علامة محبة الله اتباع رسوله ﷺ',
+    ['qul in kuntum tuhibbunallaha', 'qul in kuntum tuhibbunallaha fattabiuni', 'in kuntum tuhibbunallaha', 'কুল ইন কুনতুম তুহিব্বুনাল্লাহা', 'ইন কুনতুম তুহিব্বুনাল্লাহা', 'قل إن كنتم تحبون الله'],
+    [[3, 31]]),
+  gp('wallahu-khayrul-makirin', 'Wallahu Khayrul-Makirin (والله خير الماكرين)', 'ওয়াল্লাহু খাইরুল মাকিরীন (والله خير الماكرين)', 'والله خير الماكرين',
+    '"And Allah is the best of planners" — meaning Allah\'s plan and wisdom always prevail over all plots (3:54)',
+    '"আর আল্লাহই সর্বোত্তম কৌশলী / পরিকল্পনাকারী" — মানুষের সব ষড়যন্ত্রের বিপরীতে আল্লাহর পরিকল্পনাই চূড়ান্ত (৩:৫৪)',
+    '«والله خير الماكرين» — أن تدبير الله وحكمته يغلبان كل مكر وتدبير',
+    ['wallahu khayrul makirin', 'wallahu khairul makireen', 'allahu khayrul makirin', 'ওয়াল্লাহু খাইরুল মাকিরীন', 'ওয়াল্লাহু খায়েরুল মাকিরিন', 'والله خير الماكرين'],
+    [[3, 54]]),
+  gp('watasimu-bihablillahi', 'Wa\'tasimu bi-Hablillahi Jami\'an (واعتصموا بحبل الله جميعا ولا تفرقوا)', 'ওয়া\'তাসিমু বিহাবলিল্লাহি জামিআ (واعتصموا بحبل الله جميعا ولا تفرقوا)', 'واعتصموا بحبل الله جميعا',
+    '"And hold firmly to the rope of Allah all together and do not become divided" (3:103)',
+    '"আর তোমরা সবাই মিলে আল্লাহর রশি (কুরআন ও দ্বীন) দৃঢ়ভাবে ধারণ করো এবং পরস্পর বিচ্ছিন্ন হয়ো না" (৩:১০৩)',
+    '«واعتصموا بحبل الله جميعًا ولا تفرقوا» — الأمر بالتمسك بدين الله والوحدة وترك التفرق',
+    ['watasimu bihablillahi jami\'an', 'watasimu bihablillahi', 'hold firmly to the rope of allah', 'ওয়াতাসিমু বিহাবলিল্লাহি জামিআ', 'ওয়াতাসিমু বিহাবলিল্লাহি', 'واعتصموا بحبل الله جميعا'],
+    [[3, 103]]),
+  gp('wa-la-tahinu-wa-la-tahzanu', 'Wa La Tahinu wa La Tahzanu (ولا تهنوا ولا تحزنوا)', 'ওয়া লা তাহিনু ওয়া লা তাহযানু (ولا تهنوا ولا تحزنوا)', 'ولا تهنوا ولا تحزنوا',
+    '"So do not weaken and do not grieve, and you will be superior if you are [true] believers" (3:139)',
+    '"তোমরা হীনবল হয়ো না এবং চিন্তিতও হয়ো না; তোমরাই বিজয়ী হবে যদি তোমরা প্রকৃত মুমিন হও" (৩:১৩৯)',
+    '«ولا تهنوا ولا تحزنوا وأنتم الأعلون إن كنتم مؤمنين» — النهي عن الضعف والحزن وتثبيت المؤمنين',
+    ['wa la tahinu wa la tahzanu', 'la tahinu wa la tahzanu', 'do not weaken and do not grieve', 'ওয়া লা তাহিনু ওয়া লা তাহযানু', 'লা তাহিনু ওয়া লা তাহযানু', 'ولا تهنوا ولا تحزنوا'],
+    [[3, 139]]),
+  gp('rabbana-aghfir-lana-dhunubana', 'Rabbana-ghfir Lana Dhunubana (ربنا اغفر لنا ذنوبنا)', 'রাব্বানাগফির লানা যুনূবানা (ربنا اغفر لنا ذنوبنا)', 'ربنا اغفر لنا ذنوبنا',
+    '"Our Lord, forgive us our sins and the excess [committed] in our affairs and plant firmly our feet" (3:147)',
+    '"হে আমাদের রব! আমাদের গুনাহ ও কাজের সীমালঙ্ঘন ক্ষমা করুন এবং আমাদের পা অবিচল রাখুন" (৩:১৪৭)',
+    '«ربنا اغفر لنا ذنوبنا وإسرافنا في أمرنا وثبّت أقدامنا» — دعاء بالمغفرة والثبات',
+    ['rabbana aghfir lana dhunubana', 'rabbanaghfir lana dhunubana', 'rabbanaghfir lana zunubana', 'রাব্বানাগফির লানা যুনূবানা', 'রব্বানাগফির লানা জুনুবানা', 'ربنا اغفر لنا ذنوبنا'],
+    [[3, 147]]),
+  gp('hasbunallah', 'Hasbunallahu wa Ni\'mal Wakil (حسبنا الله ونعم الوكيل)', 'হাসবুনাল্লাহু ওয়া নি\'মাল ওয়াকীল (حسبنا الله ونعم الوكيل)', 'حسبنا الله ونعم الوكيل',
+    '"Sufficient for us is Allah, and [He is] the best Disposer of affairs" — expression of complete trust in Allah when facing fear or trial (3:173)',
+    '"আমাদের জন্য আল্লাহই যথেষ্ট এবং তিনি কত উত্তম কর্মবিধায়ক" — ভয় বা সংকটের মুখে আল্লাহর ওপর পূর্ণ ভরসার বাণী (৩:১৭৩)',
+    '«حسبنا الله ونعم الوكيل» — الله كافينا، وهو خير من يُفوَّض إليه الأمر ويُتوكل عليه',
+    ['hasbunallahu wa nimal wakil', 'hasbunallahu wa nimal wakeel', 'hasbunallah wa nimal wakeel', 'hasbunallah', 'হাসবুনাল্লাহু ওয়া নিমাল ওয়াকিল', 'হাসবুনাল্লাহু ওয়া নিমাল ওয়াকীল', 'হাসবুনাল্লাহ', 'حسبنا الله ونعم الوكيل'],
+    [[3, 173]]),
+  gp('kullu-nafsin-dhaiqatul-mawt', 'Kullu Nafsin Dha\'iqatul-Mawt (كل نفس ذائقة الموت)', 'কুল্লু নাফসিন যাইকাতুল মাউত (كل نفس ذائقة الموت)', 'كل نفس ذائقة الموت',
+    '"Every soul will taste death" — reminder of mortality and accountability in the Hereafter (3:185, 21:35, 29:57)',
+    '"প্রত্যেক প্রাণকেই মৃত্যুর স্বাদ গ্রহণ করতে হবে" — ক্ষণস্থায়ী দুনিয়া ও আখিরাতের জবাবদিহির স্মরণ (৩:১৮৫, ২১:৩৫, ২৯:৫৭)',
+    '«كل نفس ذائقة الموت» — تذكير بحتمية الموت والرجوع إلى الله للحساب',
+    ['kullu nafsin dhaiqatul mawt', 'kullu nafsin zaiqatul mawt', 'kullu nafsin zaiqatul maut', 'every soul will taste death', 'কুল্লু নাফসিন জাইকাতুল মাউত', 'কুল্লু নাফসিন যাইকাতুল মাউত', 'كل نفس ذائقة الموت'],
+    [[3, 185], [21, 35], [29, 57]]),
+  gp('rabbana-zalamna-anfusana', 'Rabbana Zalamna Anfusana (ربنا ظلمنا أنفسنا)', 'রাব্বানা যালামনা আনফুসানা (ربنا ظلمنا أنفسنا)', 'ربنا ظلمنا أنفسنا',
+    '"Our Lord, we have wronged ourselves, and if You do not forgive us and have mercy upon us, we will surely be among the losers" — supplication of Adam and Hawwa (7:23)',
+    '"হে আমাদের রব! আমরা নিজেদের প্রতি জুলুম করেছি; আপনি যদি আমাদের ক্ষমা না করেন এবং দয়া না করেন, তবে আমরা অবশ্যই ক্ষতিগ্রস্তদের অন্তর্ভুক্ত হব" — আদম ও হাওয়া (আ.)-এর দোয়া (৭:২৩)',
+    '«ربنا ظلمنا أنفسنا وإن لم تغفر لنا وترحمنا لنكونن من الخاسرين» — دعاء آدم عليه السلام بالتوبة والاستغفار',
+    ['rabbana zalamna anfusana', 'rabbana zalamna anfusana wa in lam taghfir lana', 'robbana zalamna anfusana', 'রাব্বানা যালামনা আনফুসানা', 'রব্বানা জালামনা আনফুসানা', 'ربنا ظلمنا أنفسنا'],
+    [[7, 23]]),
+  gp('la-tahzan', 'La Tahzan Innallaha Ma\'ana (لا تحزن إن الله معنا)', 'লা তাহযান ইন্নাল্লাহা মা\'আনা (لا تحزن إن الله معنا)', 'لا تحزن إن الله معنا',
+    '"Do not grieve; indeed Allah is with us" — reassuring words spoken by the Prophet (peace be upon him) to his companion in the cave (9:40)',
+    '"দুঃখিত বা চিন্তিত হয়ো না, নিশ্চয় আল্লাহ আমাদের সাথে আছেন" — গুহায় অবস্থানকালে নবী (সা.)-এর সঙ্গীকে দেওয়া সান্ত্বনার বাণী (৯:৪০)',
+    '«لا تحزن إن الله معنا» — كلمة الطمأنينة التي قالها النبي ﷺ لصاحبه في الغار',
+    ['la tahzan innallaha maana', 'la tahzan inna allaha maana', 'la tahzan', 'do not grieve indeed allah is with us', 'লা তাহযান ইন্নাল্লাহা মাআনা', 'লা তাহযান', 'লা তাহজান', 'لا تحزن إن الله معنا', 'لا تحزن'],
+    [[9, 40]]),
+  gp('qul-lan-yusibana', 'Qul Lan Yusibana illa Ma Kataballahu Lana (قل لن يصيبنا إلا ما كتب الله لنا)', 'কুল লান ইউসীবানা ইল্লা মা কাতাবাল্লাহু লানা (قل لن يصيبنا إلا ما كتب الله لنا)', 'قل لن يصيبنا إلا ما كتب الله لنا',
+    '"Say, \'Never will we be struck except by what Allah has decreed for us; He is our protector.\'" (9:51)',
+    '"বলুন, আল্লাহ আমাদের জন্য যা নির্ধারণ করেছেন তা ছাড়া আমাদের কিছুই ঘটবে না; তিনি আমাদের অভিভাবক" (৯:৫১)',
+    '«قل لن يصيبنا إلا ما كتب الله لنا هو مولانا» — التسليم لقضاء الله والتوكل عليه',
+    ['qul lan yusibana illa ma kataballahu lana', 'lan yusibana illa ma kataballahu lana', 'কুল লান ইউসীবানা ইল্লা মা কাতাবাল্লাহু লানা', 'লান ইউসিবানা ইল্লা মা কাতাবাল্লাহু লানা', 'قل لن يصيبنا إلا ما كتب الله لنا'],
+    [[9, 51]]),
+  gp('hasbiyallahu', 'Hasbiyallahu La Ilaha illa Huwa (حسبي الله لا إله إلا هو)', 'হাসবিয়াল্লাহু লা ইলাহা ইল্লা হুওয়া (حسبي الله لا إله إلا هو)', 'حسبي الله لا إله إلا هو',
+    '"Sufficient for me is Allah; there is no deity except Him. On Him I have relied, and He is the Lord of the Great Throne" (9:129)',
+    '"আমার জন্য আল্লাহই যথেষ্ট, তিনি ছাড়া কোনো সত্য ইলাহ নেই; আমি তাঁরই ওপর ভরসা করি এবং তিনি মহা আরশের রব" (৯:১২৯)',
+    '«حسبي الله لا إله إلا هو عليه توكلت وهو رب العرش العظيم» — إعلان التوكل الكامل على الله',
+    ['hasbiyallahu la ilaha illa huwa', 'hasbiyallahu la ilaha illa huwa alayhi tawakkaltu', 'hasbiyallah', 'হাসবিয়াল্লাহু লা ইলাহা ইল্লা হুওয়া', 'হাসবিয়াল্লাহ', 'حسبي الله لا إله إلا هو'],
+    [[9, 129]]),
+  gp('wa-ma-tawfiqi-illa-billah', 'Wa Ma Tawfiqi illa Billah (وما توفيقي إلا بالله)', 'ওয়া মা তাওফীকি ইল্লা বিল্লাহ (وما توفيقي إلا بالله)', 'وما توفيقي إلا بالله',
+    '"And my success is not but through Allah. Upon Him I have relied, and to Him I return" (11:88)',
+    '"আমার সাফল্য তো কেবল আল্লাহরই সাহায্যে; আমি তাঁরই ওপর নির্ভর করি এবং তাঁরই অভিমুখী" (১১:৮৮)',
+    '«وما توفيقي إلا بالله عليه توكلت وإليه أنيب» — الإقرار بأن التوفيق والنجاح من الله وحده',
+    ['wa ma tawfiqi illa billah', 'ma tawfiqi illa billah', 'wa ma taufiqi illa billah', 'my success is not but through allah', 'ওয়া মা তাওফীকি ইল্লা বিল্লাহ', 'ওয়া মা তাওফিকি ইল্লা বিল্লাহ', 'وما توفيقي إلا بالله'],
+    [[11, 88]]),
+  gp('innal-hasanati-yudhhibnas-sayyiat', 'Innal-Hasanati Yudhhibnas-Sayyi\'at (إن الحسنات يذهبن السيئات)', 'ইন্নাল হাসানাত ইয়ুযহিবনাস সাইয়্যিআত (إن الحسنات يذهبن السيئات)', 'إن الحسنات يذهبن السيئات',
+    '"Indeed, good deeds do away with misdeeds" (11:114)',
+    '"নিশ্চয় সৎকাজ অসৎ কাজগুলোকে মিটিয়ে দেয়" (১১:১১৪)',
+    '«إن الحسنات يذهبن السيئات» — أن الأعمال الصالحة تمحو السيئات وتكفّرها',
+    ['innal hasanati yudhhibnas sayyiat', 'innal hasanati yuzhibnas sayyiat', 'good deeds do away with misdeeds', 'ইন্নাল হাসানাতি ইয়ুযহিবনাস সাইয়্যিআত', 'ইন্নাল হাসানাত ইয়ুজহিবনাস সাইয়্যিআত', 'إن الحسنات يذهبن السيئات'],
+    [[11, 114]]),
+  gp('innama-ashku-baththi', 'Innama Ashku Baththi wa Huzni ilallah (إنما أشكو بثي وحزني إلى الله)', 'ইন্নামা আশকু বাসসী ওয়া হুযনি ইলাল্লাহ (إنما أشكو بثي وحزني إلى الله)', 'إنما أشكو بثي وحزني إلى الله',
+    '"I only complain of my suffering and my grief to Allah" — words of Prophet Ya\'qub (12:86)',
+    '"আমি আমার অসহনীয় বেদনা ও দুঃখ কেবল আল্লাহর কাছেই নিবেদন করছি" — নবী ইয়াকূব (আ.)-এর বাণী (১২:৮৬)',
+    '«إنما أشكو بثي وحزني إلى الله» — توجيه الشكوى والحزن إلى الله وحده كما فعل نبي الله يعقوب',
+    ['innama ashku baththi wa huzni ilallah', 'innama ashku bassi wa huzni ilallah', 'ইন্নামা আশকু বাসসি ওয়া হুযনি ইলাল্লাহ', 'ইন্নামা আশকু বাসসী ওয়া হুযনি ইলাল্লাহ', 'إنما أشكو بثي وحزني إلى الله'],
+    [[12, 86]]),
+  gp('tawaffani-musliman', 'Tawaffani Musliman wa Alhiqni bis-Salihin (توفني مسلما وألحقني بالصالحين)', 'তাওয়াফফানি মুসলিমাম ওয়া আলহিকনি বিস সালিহীন (توفني مسلما وألحقني بالصالحين)', 'توفني مسلما وألحقني بالصالحين',
+    '"Cause me to die a Muslim and join me with the righteous" — supplication of Prophet Yusuf (12:101)',
+    '"আপনি আমাকে মুসলিম হিসেবে মৃত্যু দিন এবং সৎকর্মশীলদের অন্তর্ভুক্ত করুন" — নবী ইউসুফ (আ.)-এর দোয়া (১২:১০১)',
+    '«توفني مسلمًا وألحقني بالصالحين» — دعاء يوسف عليه السلام بحسن الخاتمة ومرافقة الصالحين',
+    ['tawaffani musliman wa alhiqni bis salihin', 'tawaffani musliman', 'cause me to die a muslim', 'তাওয়াফফানি মুসলিমাম', 'তাওয়াফফানি মুসলিমান', 'توفني مسلما وألحقني بالصالحين', 'توفني مسلما'],
+    [[12, 101]]),
+  gp('ala-bidhikrillahi', 'Ala bi-Dhikrillahi Tatma\'innul-Qulub (ألا بذكر الله تطمئن القلوب)', 'আলা বিযিকরিল্লাহি তাতমাইন্নুল কুলূব (ألا بذكر الله تطمئن القلوب)', 'ألا بذكر الله تطمئن القلوب',
+    '"Unquestionably, by the remembrance of Allah hearts are assured (find peace)" (13:28)',
+    '"জেনে রাখো, আল্লাহর স্মরণেই অন্তরসমূহ প্রশান্ত হয়" (১৩:২৮)',
+    '«ألا بذكر الله تطمئن القلوب» — سكون القلوب وراحتها في ذكر الله تعالى',
+    ['ala bidhikrillahi tatmainnul qulub', 'ala bizikrillahi tatmainnul qulub', 'bidhikrillahi tatmainnul qulub', 'by the remembrance of allah hearts are assured', 'আলা বিযিকরিল্লাহি তাতমাইন্নুল কুলূব', 'আলা বিজিকরিল্লাহি তাতমাইন্নুল কুলুব', 'ألا بذكر الله تطمئن القلوب'],
+    [[13, 28]]),
+  gp('lain-shakartum', 'La\'in Shakartum la-Azidannakum (لئن شكرتم لأزيدنكم)', 'লাইন শাকারতুম লা-আযীদন্নাকুম (لئن شكرتم لأزيدنكم)', 'لئن شكرتم لأزيدنكم',
+    '"If you are grateful, I will surely increase you [in favor]" (14:7)',
+    '"তোমরা কৃতজ্ঞ হলে আমি অবশ্যই তোমাদেরকে আরও বাড়িয়ে দেব" (১৪:৭)',
+    '«لئن شكرتم لأزيدنكم» — وعد الله بالزيادة في النعم لمن شكره',
+    ['lain shakartum la azidannakum', 'lain shakartum laazidannakum', 'lain shakartum', 'if you are grateful i will surely increase you', 'লাইন শাকারতুম লা আযীদন্নাকুম', 'লাইন শাকারতুম', 'لئن شكرتم لأزيدنكم'],
+    [[14, 7]]),
+  gp('rabbijalni-muqimas-salat', 'Rabbij\'alni Muqimas-Salati (رب اجعلني مقيم الصلاة)', 'রাব্বিজ\'আলনী মুকীমাস সালাত (رب اجعلني مقيم الصلاة)', 'رب اجعلني مقيم الصلاة',
+    '"My Lord, make me an establisher of prayer, and [many] from my descendants. Our Lord, and accept my supplication" — supplication of Ibrahim (14:40)',
+    '"হে আমার রব! আমাকে সালাত কায়েমকারী করুন এবং আমার বংশধরদের মধ্য থেকেও; হে আমাদের রব, আমার দোয়া কবুল করুন" — ইবরাহীম (আ.)-এর দোয়া (১৪:৪০)',
+    '«رب اجعلني مقيم الصلاة ومن ذريتي ربنا وتقبل دعاء» — دعاء إبراهيم بالثبات على الصلاة له ولذريته',
+    ['rabbijalni muqimas salati', 'rabbijalni muqimas salat', 'rabbi ijalni muqimas salati', 'রাব্বিজআলনী মুকীমাস সালাত', 'রাব্বিজআলনি মুকিমাস সালাত', 'رب اجعلني مقيم الصلاة'],
+    [[14, 40]]),
+  gp('rabbana-aghfir-li-wa-li-walidayya', 'Rabbana-ghfir Li wa li-Walidayya (ربنا اغفر لي ولوالدي وللمؤمنين)', 'রাব্বানাগফির লী ওয়া লি-ওয়ালিদাইয়্যা (ربنا اغفر لي ولوالدي وللمؤمنين)', 'ربنا اغفر لي ولوالدي',
+    '"Our Lord, forgive me and my parents and the believers the Day the account is established" (14:41)',
+    '"হে আমাদের রব! যেদিন হিসাব কায়েম হবে সেদিন আমাকে, আমার পিতা-মাতাকে এবং সকল মুমিনকে ক্ষমা করুন" (১৪:৪১)',
+    '«ربنا اغفر لي ولوالدي وللمؤمنين يوم يقوم الحساب» — دعاء المغفرة للنفس وللوالدين وللمؤمنين',
+    ['rabbana aghfir li wa li walidayya', 'rabbanaghfir li wa li walidayya', 'rabbana igfir li wa li walidayya', 'রাব্বানাগফির লী ওয়ালিওয়ালিদাইয়্যা', 'রাব্বানাগফির লি ওয়ালি ওয়ালিদাইয়া', 'ربنا اغفر لي ولوالدي'],
+    [[14, 41]]),
+  gp('rabbir-hamhuma', 'Rabbir-hamhuma Kama Rabbayani Saghira (رب ارحمهما كما ربياني صغيرا)', 'রাব্বির হামহুমা কামা রাব্বায়ানি সাগীরা (رب ارحمهما كما ربياني صغيرا)', 'رب ارحمهما كما ربياني صغيرا',
+    '"My Lord, have mercy upon them [my parents] as they brought me up [when I was] small" (17:24)',
+    '"হে আমার রব! পিতা-মাতার প্রতি দয়া করুন, যেভাবে শৈশবে তাঁরা আমাকে লালন-পালন করেছিলেন" (১৭:২৪)',
+    '«رب ارحمهما كما ربياني صغيرًا» — الدعاء للوالدين بالرحمة وفاءً لتربيتهما',
+    ['rabbir hamhuma kama rabbayani saghira', 'rabbi irhamhuma kama rabbayani saghira', 'rabbir hamhuma', 'my lord have mercy upon them as they brought me up small', 'রাব্বির হামহুমা কামা রাব্বায়ানি সাগীরা', 'রাব্বির হামহুমা কামা রাব্বায়ানি সাগিরা', 'رب ارحمهما كما ربياني صغيرا'],
+    [[17, 24]]),
+  gp('wa-la-taqrabuz-zina', 'Wa La Taqrabuz-Zina (ولا تقربوا الزنى)', 'ওয়া লা তাকরাবুয যিনা (ولا تقربوا الزنى)', 'ولا تقربوا الزنا',
+    '"And do not approach unlawful sexual intercourse. Indeed, it is ever an immorality and is evil as a way" (17:32)',
+    '"আর ব্যভিচারের (যিনার) ধারে-কাছেও যেও না; নিশ্চয় তা অশ্লীল কাজ এবং নিকৃষ্ট পথ" (১৭:৩২)',
+    '«ولا تقربوا الزنى إنه كان فاحشة وساء سبيلًا» — النهي عن الزنا وعن كل طريق يفضي إليه',
+    ['wa la taqrabuz zina', 'la taqrabuz zina', 'do not approach unlawful sexual intercourse', 'ওয়া লা তাকরাবুয যিনা', 'লা তাকরাবুয যিনা', 'ওয়া লা তাকরাবুজ জিনা', 'ولا تقربوا الزنى', 'ولا تقربوا الزنا'],
+    [[17, 32]]),
+  gp('rabbi-adkhilni-mudkhala-sidqin', 'Rabbi Adkhilni Mudkhala Sidqin (رب أدخلني مدخل صدق)', 'রাব্বি আদখিলনী মুদখালা সিদকিন (رب أدخلني مدخل صدق)', 'رب أدخلني مدخل صدق',
+    '"My Lord, cause me to enter a sound entrance and to exit a sound exit and grant me from Yourself a supporting authority" (17:80)',
+    '"হে আমার রব! আমাকে সত্য ও কল্যাণের সাথে প্রবেশ করান এবং সত্য ও কল্যাণের সাথে বের করুন এবং আপনার পক্ষ থেকে সাহায্যকারী শক্তি দান করুন" (১৭:৮০)',
+    '«رب أدخلني مدخل صدق وأخرجني مخرج صدق» — الدعاء بتيسير الدخول والخروج على الحق والصدق',
+    ['rabbi adkhilni mudkhala sidqin', 'rabbi adkhilni mudkhala sidq', 'রাব্বি আদখিলনী মুদখালা সিদকিন', 'রাব্বি আদখিলনি মুদখালা সিদক', 'رب أدخلني مدخل صدق'],
+    [[17, 80]]),
+  gp('jaal-haqqu-wa-zahaqal-batil', 'Ja\'al-Haqqu wa Zahaqal-Batil (جاء الحق وزهق الباطل)', 'জা\'আল হাক্কু ওয়া যাহাকাল বাতিল (جاء الحق وزهق الباطل)', 'جاء الحق وزهق الباطل',
+    '"Truth has come, and falsehood has departed. Indeed is falsehood, [by nature], ever bound to depart" (17:81)',
+    '"সত্য এসেছে এবং মিথ্যা বিলুপ্ত হয়েছে; নিশ্চয় মিথ্যা বিলুপ্ত হওয়ারই ছিল" (১৭:৮১)',
+    '«جاء الحق وزهق الباطل إن الباطل كان زهوقًا» — ظهور الحق وزوال الباطل',
+    ['jaal haqqu wa zahaqal batil', 'jaa al haqqu wa zahaqa al batil', 'truth has come and falsehood has departed', 'জাআল হাক্কু ওয়া যাহাকাল বাতিল', 'جاء الحق وزهق الباطل'],
+    [[17, 81]]),
+  gp('mashaallah-la-quwwata', 'Masha\'Allah La Quwwata illa Billah (ما شاء الله لا قوة إلا بالله)', 'মাশাআল্লাহ লা কুওয়্যাতা ইল্লা বিল্লাহ (ما شاء الله لا قوة إلا بالله)', 'ما شاء الله لا قوة إلا بالله',
+    '"What Allah willed [has occurred]; there is no power except in Allah" (18:39)',
+    '"আল্লাহ যা চান তাই হয়; আল্লাহর সাহায্য ছাড়া কোনো শক্তি নেই" (১৮:৩৯)',
+    '«ما شاء الله لا قوة إلا بالله» — إرجاع الفضل والقوة والنعمة إلى مشيئة الله وقدرته',
+    ['mashaallah la quwwata illa billah', 'masha allah la quwwata illa billah', 'মাশাআল্লাহ লা কুওয়্যাতা ইল্লা বিল্লাহ', 'মাশাআল্লাহ লা কুওয়াতা ইল্লা বিল্লাহ', 'ما شاء الله لا قوة إلا بالله'],
+    [[18, 39]]),
+  gp('rabbi-ishrah-li-sadri', 'Rabbi-shrah Li Sadri wa Yassir Li Amri (رب اشرح لي صدري ويسر لي أمري)', 'রাব্বিশরাহ লী সাদরী ওয়া ইয়াসসির লী আমরী (رب اشرح لي صدري ويسر لي أمري)', 'رب اشرح لي صدري',
+    '"My Lord, expand [relax] for me my breast [with assurance] and ease for me my task..." — supplication of Prophet Musa (20:25-28)',
+    '"হে আমার রব! আমার বক্ষ প্রশস্ত করে দিন এবং আমার কাজ সহজ করে দিন..." — নবী মূসা (আ.)-এর দোয়া (২০:২৫-২৮)',
+    '«رب اشرح لي صدري ويسّر لي أمري» — دعاء موسى عليه السلام بالانشراح والتيسير والفصاحة',
+    ['rabbi ishrah li sadri', 'rabbishrah li sadri', 'rabbi ishrah li sadri wa yassir li amri', 'rabbishrah li sadri wa yassir li amri', 'রাব্বিশরাহ লী সাদরী', 'রাব্বি ইশরাহ লি সাদরি', 'রাব্বিশরাহ লি সাদরি ওয়া ইয়াসসির লি আমরি', 'رب اشرح لي صدري'],
+    [[20, 25], [20, 26], [20, 27], [20, 28]]),
+  gp('rabbi-zidni-ilma', 'Rabbi Zidni \'Ilma (رب زدني علما)', 'রাব্বি যিদনী ইলমা (رب زدني علما)', 'رب زدني علما',
+    '"My Lord, increase me in knowledge" (20:114)',
+    '"হে আমার রব! আমার জ্ঞান বৃদ্ধি করে দিন" (২০:১১৪)',
+    '«رب زدني علمًا» — دعاء بزيادة العلم النافع والفهم',
+    ['rabbi zidni ilma', 'rabbi zidni ilman', 'robbi zidni ilma', 'my lord increase me in knowledge', 'রাব্বি যিদনী ইলমা', 'রাব্বি যিদনি ইলমা', 'রাব্বি জিদনি ইলমা', 'رب زدني علما'],
+    [[20, 114]]),
+  gp('anni-massaniyad-durru', 'Anni Massaniyad-Durru wa Anta Arhamur-Rahimin (أني مسني الضر وأنت أرحم الراحمين)', 'আন্নী মাসসানিয়াদ দুররু ওয়া আনতা আরহামুর রাহিমীন (أني مسني الضر وأنت أرحم الراحمين)', 'أني مسني الضر وأنت أرحم الراحمين',
+    '"Indeed, adversity has touched me, and You are the most merciful of the merciful" — supplication of Prophet Ayyub (21:83)',
+    '"নিশ্চয় আমাকে দুঃখ-কষ্ট স্পর্শ করেছে, আর আপনি তো সর্বশ্রেষ্ঠ দয়ালু" — নবী আইয়ূব (আ.)-এর দোয়া (২১:৮৩)',
+    '«أني مسني الضر وأنت أرحم الراحمين» — دعاء أيوب عليه السلام بالشفاء والرحمة',
+    ['anni massaniyad durru wa anta arhamur rahimin', 'rabbi anni massaniyad durru', 'massaniyad durru wa anta arhamur rahimin', 'আন্নী মাসসানিয়াদ দুররু ওয়া আনতা আরহামুর রাহিমীন', 'আন্নি মাসসানিয়াদ দুররু', 'أني مسني الضر وأنت أرحم الراحمين'],
+    [[21, 83]]),
+  gp('la-ilaha-illa-anta-subhanaka', 'La Ilaha illa Anta Subhanaka Inni Kuntu minaz-Zalimin (لا إله إلا أنت سبحانك إني كنت من الظالمين)', 'লা ইলাহা ইল্লা আনতা সুবহানাকা ইন্নী কুনতু মিনায যালিমীন (لا إله إلا أنت سبحانك إني كنت من الظالمين)', 'لا إله إلا أنت سبحانك إني كنت من الظالمين',
+    '"There is no deity except You; exalted are You. Indeed, I have been of the wrongdoers" — supplication of Prophet Yunus (21:87)',
+    '"আপনি ব্যতীত কোনো সত্য ইলাহ নেই; আপনি পবিত্র ও মহান, নিশ্চয় আমি জালিমদের অন্তর্ভুক্ত হয়ে গেছি" — নবী ইউনুস (আ.)-এর দোয়া (২১:৮৭)',
+    '«لا إله إلا أنت سبحانك إني كنت من الظالمين» — دعاء يونس عليه السلام بالتوحيد والتسبيح والاستغفار',
+    ['la ilaha illa anta subhanaka inni kuntu minaz zalimin', 'la ilaha illa anta subhanaka', 'la ilaha illa anta', 'লা ইলাহা ইল্লা আনতা সুবহানাকা ইন্নী কুনতু মিনায যালিমীন', 'লা ইলাহা ইল্লা আনতা সুবহানাকা', 'لا إله إلا أنت سبحانك إني كنت من الظالمين', 'لا إله إلا أنت سبحانك'],
+    [[21, 87]]),
+  gp('rabbi-la-tadharni-fardan', 'Rabbi La Tadharni Fardan (رب لا تذرني فردا وأنت خير الوارثين)', 'রাব্বি লা তাযারনী ফারদান (رب لا تذرني فردا وأنت خير الوارثين)', 'رب لا تذرني فردا',
+    '"My Lord, do not leave me alone [with no heir], while You are the best of inheritors" — supplication of Prophet Zakariyya (21:89)',
+    '"হে আমার রব! আমাকে একা (নিঃসন্তান) রেখে দেবেন না; আপনিই তো সর্বোত্তম উত্তরাধিকারী" — নবী যাকারিয়্যা (আ.)-এর দোয়া (২১:৮৯)',
+    '«رب لا تذرني فردًا وأنت خير الوارثين» — دعاء زكريا عليه السلام بالذرية الصالحة',
+    ['rabbi la tadharni fardan', 'rabbi la tazarni fardan', 'rabbi la tadharni fardan wa anta khayrul warithin', 'রাব্বি লা তাযারনী ফারদান', 'রাব্বি লা তাজারনি ফারদান', 'رب لا تذرني فردا'],
+    [[21, 89]]),
+  gp('wa-ma-arsalnaka-illa-rahmatan', 'Wa Ma Arsalnaka illa Rahmatan lil-Alamin (وما أرسلناك إلا رحمة للعالمين)', 'ওয়া মা আরসালনাকা ইল্লা রাহমাতাল্লিল আলামীন (وما أرسلناك إلا رحمة للعالمين)', 'وما أرسلناك إلا رحمة للعالمين',
+    '"And We have not sent you, [O Muhammad], except as a mercy to the worlds" (21:107)',
+    '"আর আমি তো আপনাকে সৃষ্টিকুলের জন্য কেবল রহমতস্বরূপই প্রেরণ করেছি" (২১:১০৭)',
+    '«وما أرسلناك إلا رحمة للعالمين» — بيان أن رسالة النبي محمد ﷺ رحمة للخلق أجمعين',
+    ['wa ma arsalnaka illa rahmatan lil alamin', 'rahmatan lil alamin', 'mercy to the worlds', 'ওয়া মা আরসালনাকা ইল্লা রাহমাতাল্লিল আলামীন', 'রাহমাতাল্লিল আলামিন', 'وما أرسلناك إلا رحمة للعالمين'],
+    [[21, 107]]),
+  gp('rabbi-audhu-bika-min-hamazat', 'Rabbi A\'udhu bika min Hamazatish-Shayatin (رب أعوذ بك من همزات الشياطين)', 'রাব্বি আঊযু বিকা মিন হামাযাতিশ শায়াতীন (رب أعوذ بك من همزات الشياطين)', 'رب أعوذ بك من همزات الشياطين',
+    '"My Lord, I seek refuge in You from the incitements of the devils" (23:97)',
+    '"হে আমার রব! শয়তানের প্ররোচনা থেকে আমি আপনার আশ্রয় প্রার্থনা করি" (২৩:৯৭)',
+    '«رب أعوذ بك من همزات الشياطين» — الاستعاذة بالله من وساوس الشياطين ونزغاتهم',
+    ['rabbi audhu bika min hamazatish shayatin', 'rabbi auzu bika min hamazatish shayatin', 'audhu bika min hamazatish shayatin', 'রাব্বি আউযু বিকা মিন হামাযাতিশ শায়াতীন', 'রাব্বি আউজু বিকা মিন হামাজাতিশ শায়াতিন', 'رب أعوذ بك من همزات الشياطين'],
+    [[23, 97]]),
+  gp('allahu-nurus-samawati', 'Allahu Nurus-Samawati wal-Ard (الله نور السماوات والأرض)', 'আল্লাহু নূরুস সামাওয়াতি ওয়াল আরদ (الله نور السماوات والأرض)', 'الله نور السماوات والأرض',
+    '"Allah is the Light of the heavens and the earth" (24:35)',
+    '"আল্লাহ আসমানসমূহ ও পৃথিবীর নূর (জ্যোতি)" (২৪:৩৫)',
+    '«الله نور السماوات والأرض» — مطلع آية النور الدالة على هداية الله ونوره في الكون',
+    ['allahu nurus samawati wal ard', 'nurus samawati wal ard', 'allah is the light of the heavens and the earth', 'আল্লাহু নূরুস সামাওয়াতি ওয়াল আরদ', 'নূরুস সামাওয়াতি ওয়াল আরদ', 'الله نور السماوات والأرض'],
+    [[24, 35]]),
+  gp('rabbana-hab-lana-min-azwajina', 'Rabbana Hab Lana min Azwajina wa Dhurriyyatina Qurrata A\'yun (ربنا هب لنا من أزواجنا وذرياتنا قرة أعين)', 'রাব্বানা হাব লানা মিন আযওয়াজিনা ওয়া যুররিয়্যাতিনা কুররাতা আ\'ইউন (ربنا هب لنا من أزواجنا وذرياتنا قرة أعين)', 'ربنا هب لنا من أزواجنا وذرياتنا قرة أعين',
+    '"Our Lord, grant us from among our wives and offspring comfort to our eyes and make us an example for the righteous" (25:74)',
+    '"হে আমাদের রব! আমাদের জন্য এমন স্ত্রী ও সন্তান-সন্ততি দান করুন যাঁরা আমাদের চোখ জুড়ানো হবে এবং আমাদেরকে মুত্তাকীদের জন্য অনুসরণযোগ্য করুন" (২৫:৭৪)',
+    '«ربنا هب لنا من أزواجنا وذرياتنا قرة أعين واجعلنا للمتقين إمامًا» — دعاء بصلاح الزوج والأولاد',
+    ['rabbana hab lana min azwajina', 'rabbana hab lana min azwajina wa dhurriyyatina qurrata ayun', 'hab lana min azwajina', 'রাব্বানা হাব লানা মিন আযওয়াজিনা', 'রব্বানা হাব লানা মিন আজওয়াজিনা', 'ربنا هب لنا من أزواجنا وذرياتنا قرة أعين', 'ربنا هب لنا من أزواجنا'],
+    [[25, 74]]),
+  gp('rabbi-inni-lima-anzalta', 'Rabbi Inni lima Anzalta ilayya min Khayrin Faqir (رب إني لما أنزلت إلي من خير فقير)', 'রাব্বি ইন্নী লিমা আনযালতা ইলাইয়্যা মিন খাইরিন ফাকীর (رب إني لما أنزلت إلي من خير فقير)', 'رب إني لما أنزلت إلي من خير فقير',
+    '"My Lord, indeed I am, for whatever good You would send down to me, in need" — supplication of Prophet Musa (28:24)',
+    '"হে আমার রব! আপনি আমার প্রতি যে কল্যাণই নাযিল করবেন, আমি তার মুখাপেক্ষী (কাঙাল)" — নবী মূসা (আ.)-এর দোয়া (২৮:২৪)',
+    '«رب إني لما أنزلت إليّ من خير فقير» — دعاء موسى عليه السلام بإظهار الافتقار إلى فضل الله',
+    ['rabbi inni lima anzalta ilayya min khayrin faqir', 'rabbi inni lima anzalta ilayya', 'inni lima anzalta ilayya min khayrin faqir', 'রাব্বি ইন্নী লিমা আনযালতা ইলাইয়্যা মিন খাইরিন ফাকীর', 'রাব্বি ইন্নি লিমা আনজালতা ইলাইয়া মিন খাইরিন ফাকির', 'رب إني لما أنزلت إلي من خير فقير'],
+    [[28, 24]]),
+  gp('salamun-qawlan-min-rabbin-rahim', 'Salamun Qawlan min Rabbin Rahim (سلام قولا من رب رحيم)', 'সালামুন কাওলাম মির রাব্বির রাহীম (سلام قولا من رب رحيم)', 'سلام قولا من رب رحيم',
+    '"[And] \'Peace,\' a word from a Merciful Lord" — greeting of peace to the people of Paradise (36:58)',
+    '"পরম দয়ালু রবের পক্ষ থেকে সালাম (শান্তি ও নিরাপত্তার বাণী)" (৩৬:৫৮)',
+    '«سلام قولًا من رب رحيم» — تحية السلام لأهل الجنة من الله الرحيم',
+    ['salamun qawlan min rabbin rahim', 'salamun qaulam mir rabbir rahim', 'সালামুন কাওলাম মির রাব্বির রাহীম', 'সালামুন কাওলান মিন রাব্বিন রাহিম', 'سلام قولا من رب رحيم'],
+    [[36, 58]]),
+  gp('rabbi-hab-li-minas-salihin', 'Rabbi Hab Li minas-Salihin (رب هب لي من الصالحين)', 'রাব্বি হাব লী মিনাস সালিহীন (رب هب لي من الصالحين)', 'رب هب لي من الصالحين',
+    '"My Lord, grant me [a child] from among the righteous" — supplication of Prophet Ibrahim (37:100)',
+    '"হে আমার রব! আমাকে একজন সৎকর্মপরায়ণ সন্তান দান করুন" — নবী ইবরাহীম (আ.)-এর দোয়া (৩৭:১০০)',
+    '«رب هب لي من الصالحين» — دعاء إبراهيم عليه السلام بالولد الصالح',
+    ['rabbi hab li minas salihin', 'rabbi hab li minas saliheen', 'রাব্বি হাব লী মিনাস সালিহীন', 'রাব্বি হাব লি মিনাস সালেহিন', 'رب هب لي من الصالحين'],
+    [[37, 100]]),
+  gp('la-taqnatu-min-rahmatillah', 'La Taqnatu min Rahmatillah (لا تقنطوا من رحمة الله)', 'লা তাকনাতু মির রাহমাতিল্লাহ (لا تقنطوا من رحمة الله)', 'لا تقنطوا من رحمة الله',
+    '"Do not despair of the mercy of Allah. Indeed, Allah forgives all sins" (39:53)',
+    '"আল্লাহর অনুগ্রহ (রহমত) থেকে নিরাশ হয়ো না; নিশ্চয় আল্লাহ সমস্ত গুনাহ ক্ষমা করে দেবেন" (৩৯:৫৩)',
+    '«لا تقنطوا من رحمة الله إن الله يغفر الذنوب جميعًا» — فتح باب الأمل والتوبة مهما عظمت الذنوب',
+    ['la taqnatu min rahmatillah', 'la taknatu min rahmatillah', 'do not despair of the mercy of allah', 'লা তাকনাতু মির রাহমাতিল্লাহ', 'লা তাকনাতু মিন রাহমাতিল্লাহ', 'لا تقنطوا من رحمة الله'],
+    [[39, 53]]),
+  gp('ufawwidu-amri-ilallah', 'Ufawwidu Amri ilallah (وأفوض أمري إلى الله)', 'উফাওয়্যিদু আমরী ইলাল্লাহ (وأفوض أمري إلى الله)', 'وأفوض أمري إلى الله',
+    '"And I entrust my affair to Allah. Indeed, Allah is Seeing of [His] servants" (40:44)',
+    '"আর আমি আমার সমস্ত ব্যাপার আল্লাহর নিকট সমর্পণ করছি; নিশ্চয় আল্লাহ তাঁর বান্দাদের ব্যাপারে সর্বদ্রষ্টা" (৪০:৪৪)',
+    '«وأفوض أمري إلى الله إن الله بصير بالعباد» — تسليم الأمر وتفويضه لله مع الثقة برعايته',
+    ['ufawwidu amri ilallah', 'wa ufawwidu amri ilallah', 'ufawidu amri ilallah', 'i entrust my affair to allah', 'উফাওয়িদু আমরী ইলাল্লাহ', 'ওয়া উফাওয়িদু আমরি ইলাল্লাহ', 'وأفوض أمري إلى الله', 'أفوض أمري إلى الله'],
+    [[40, 44]]),
+  gp('alla-takhafu-wa-la-tahzanu', 'Alla Takhafu wa La Tahzanu (ألا تخافوا ولا تحزنوا)', 'আল্লা তাখাফু ওয়া লা তাহযানু (ألا تخافوا ولا تحزنوا)', 'ألا تخافوا ولا تحزنوا',
+    '"Do not fear and do not grieve but receive good tidings of Paradise, which you were promised" (41:30)',
+    '"তোমরা ভয় পেয়ো না এবং চিন্তিত হয়ো না; আর তোমাদেরকে যে জান্নাতের প্রতিশ্রুতি দেওয়া হয়েছিল তার সুসংবাদ গ্রহণ করো" (৪১:৩০)',
+    '«ألا تخافوا ولا تحزنوا وأبشروا بالجنة» — بشارة الملائكة للمؤمنين المستقيمين',
+    ['alla takhafu wa la tahzanu', 'ala takhafu wa la tahzanu', 'do not fear and do not grieve', 'আল্লা তাখাফু ওয়া লা তাহযানু', 'আলা তাখাফু ওয়া লা তাহজানু', 'ألا تخافوا ولا تحزنوا'],
+    [[41, 30]]),
+  gp('fafirru-ilallah', 'Fafirru ilallah (ففروا إلى الله)', 'ফাফিররু ইলাল্লাহ (ففروا إلى الله)', 'ففروا إلى الله',
+    '"So flee to Allah. Indeed, I am to you from Him a clear warner" (51:50)',
+    '"অতএব তোমরা আল্লাহর দিকে ধাবিত হও (আশ্রয় নাও); নিশ্চয় আমি তোমাদের প্রতি তাঁর পক্ষ থেকে এক স্পষ্ট সতর্ককারী" (৫১:৫০)',
+    '«ففروا إلى الله» — الهروب من كل خوف إلى رحمة الله وطاعته',
+    ['fafirru ilallah', 'fafiru ilallah', 'so flee to allah', 'flee to allah', 'ফাফিররু ইলাল্লাহ', 'ফাফিরু ইলাল্লাহ', 'ففروا إلى الله'],
+    [[51, 50]]),
+  gp('wa-ma-khalaqtul-jinna', 'Wa Ma Khalaqtul-Jinna wal-Insa illa li-Ya\'budun (وما خلقت الجن والإنس إلا ليعبدون)', 'ওয়া মা খালাকতুল জিন্না ওয়াল ইনসা ইল্লা লিয়া\'বুদূন (وما خلقت الجن والإنس إلا ليعبدون)', 'وما خلقت الجن والإنس إلا ليعبدون',
+    '"And I did not create the jinn and mankind except to worship Me" (51:56)',
+    '"আর আমি জিন ও মানুষকে কেবল আমারই ইবাদত করার জন্য সৃষ্টি করেছি" (৫১:৫৬)',
+    '«وما خلقت الجن والإنس إلا ليعبدون» — بيان الغاية من خلق الجن والإنس وهي عبادة الله وحده',
+    ['wa ma khalaqtul jinna wal insa illa liyabudun', 'wa ma khalaqtul jinna wal insa', 'ma khalaqtul jinna wal insa', 'i did not create the jinn and mankind except to worship me', 'ওয়া মা খালাকতুল জিন্না ওয়াল ইনসা ইল্লা লিয়াবুদুন', 'ওয়া মা খালাকতুল জিন্না ওয়াল ইনসা', 'وما خلقت الجن والإنس إلا ليعبدون'],
+    [[51, 56]]),
+  gp('fabi-ayyi-alai-rabbikuma', 'Fa bi-Ayyi Ala-i Rabbikuma Tukadhdhiban (فبأي آلاء ربكما تكذبان)', 'ফাবিআইয়্যি আলাই রাব্বিকুমা তুকাযযিবান (فبأي آلاء ربكما تكذبان)', 'فبأي آلاء ربكما تكذبان',
+    '"So which of the favors of your Lord would you deny?" — recurring refrain in Surah Ar-Rahman reminding of Allah\'s blessings (55:13)',
+    '"অতএব, তোমরা উভয়ে তোমাদের রবের কোন কোন অনুগ্রহকে অস্বীকার করবে?" — সূরা আর-রহমানের পুনরাবৃত্ত বাণী (৫৫:১৩)',
+    '«فبأي آلاء ربكما تكذبان» — آية متكررة في سورة الرحمن لتذكير الجن والإنس بنعم الله',
+    ['fabi ayyi alai rabbikuma tukadhdhiban', 'fabi ayyi ala i rabbikuma tukadhdhiban', 'fabiayyi alai rabbikuma tukazziban', 'which of the favors of your lord would you deny', 'ফাবিআইয়্যি আলাই রাব্বিকুমা তুকাযযিবান', 'ফাবিআইয়ি আলাই রাব্বিকুমা তুকাজ্জিবান', 'فبأي آلاء ربكما تكذبان'],
+    [[55, 13], [55, 16], [55, 18]]),
+  gp('hal-jazaul-ihsani', 'Hal Jaza\'ul-Ihsani illal-Ihsan (هل جزاء الإحسان إلا الإحسان)', 'হাল জাযাউল ইহসানি ইল্লাল ইহসান (هل جزاء الإحسان إلا الإحسان)', 'هل جزاء الإحسان إلا الإحسان',
+    '"Is the reward for good [anything] but good?" (55:60)',
+    '"ইহসান (উত্তম কর্ম)-এর প্রতিদান ইহসান (উত্তম প্রতিদান) ছাড়া আর কী হতে পারে?" (৫৫:৬০)',
+    '«هل جزاء الإحسان إلا الإحسان» — أن جزاء من أحسن العمل هو الإحسان والنعيم من الله',
+    ['hal jazaul ihsani illal ihsan', 'hal jaza ul ihsani illal ihsan', 'hal jazail ihsani', 'is the reward for good anything but good', 'হাল জাযাউল ইহসানি ইল্লাল ইহসান', 'হাল জাজাউল ইহসানি ইল্লাল ইহসান', 'هل جزاء الإحسان إلا الإحسان'],
+    [[55, 60]]),
+  gp('wa-man-yattaqillaha', 'Wa Man Yattaqillaha Yaj\'al Lahu Makhraja (ومن يتق الله يجعل له مخرجا)', 'ওয়া মাইঁ ইয়াত্তাকিল্লাহা ইয়াজ\'আল লাহু মাখরাজা (ومن يتق الله يجعل له مخرجا)', 'ومن يتق الله يجعل له مخرجا',
+    '"And whoever fears Allah [has taqwa] - He will make for him a way out and will provide for him from where he does not expect" (65:2-3)',
+    '"আর যে কেউ আল্লাহর তাকওয়া অবলম্বন করে, আল্লাহ তার জন্য উত্তরণের পথ করে দেবেন এবং তাকে ধারণাতীত উৎস থেকে রিযিক দেবেন" (৬৫:২-৩)',
+    '«ومن يتق الله يجعل له مخرجًا ويرزقه من حيث لا يحتسب» — ثمرة التقوى بتفريج الكرب والرزق',
+    ['wa man yattaqillaha yajal lahu makhraja', 'man yattaqillaha yajal lahu makhraja', 'yattaqillaha yajal lahu makhraja', 'whoever fears allah he will make for him a way out', 'ওয়া মাই ইয়াত্তাকিল্লাহা ইয়াজআল লাহু মাখরাজা', 'মান ইয়াত্তাকিল্লাহা ইয়াজআল লাহু মাখরাজা', 'ومن يتق الله يجعل له مخرجا'],
+    [[65, 2], [65, 3]]),
+  gp('wa-man-yatawakkal-alallahi', 'Wa Man Yatawakkal \'alallahi Fahuwa Hasbuh (ومن يتوكل على الله فهو حسبه)', 'ওয়া মাইঁ ইয়াতাওয়াক্কাল আলাল্লাহি ফাহুওয়া হাসবুহ (ومن يتوكل على الله فهو حسبه)', 'ومن يتوكل على الله فهو حسبه',
+    '"And whoever relies upon Allah - then He is sufficient for him" (65:3)',
+    '"আর যে ব্যক্তি আল্লাহর ওপর তাওয়াক্কুল (ভরসা) করে, তার জন্য আল্লাহই যথেষ্ট" (৬৫:৩)',
+    '«ومن يتوكل على الله فهو حسبه» — كفاية الله لمن صدق في الاعتماد والتوكل عليه',
+    ['wa man yatawakkal alallahi fahuwa hasbuh', 'man yatawakkal alallahi fahuwa hasbuhu', 'wa man yatawakkal alallah', 'whoever relies upon allah then he is sufficient for him', 'ওয়া মাই ইয়াতাওয়াক্কাল আলাল্লাহি ফাহুওয়া হাসবুহ', 'মান ইয়াতাওয়াক্কাল আলাল্লাহি ফাহুওয়া হাসবুহু', 'ومن يتوكل على الله فهو حسبه'],
+    [[65, 3]]),
+  gp('tabarakalladhi-biyadihil-mulk', 'Tabarakalladhi bi-Yadihil-Mulk (تبارك الذي بيده الملك)', 'তাবারাকাল্লাযী বিয়াদিহিল মুলক (تبارك الذي بيده الملك)', 'تبارك الذي بيده الملك',
+    '"Blessed is He in whose hand is dominion, and He is over all things competent" (67:1)',
+    '"বরকতময় তিনি, সর্বময় কর্তৃত্ব যাঁর হাতে; এবং তিনি সব কিছুর ওপর ক্ষমতাবান" (৬৭:১)',
+    '«تبارك الذي بيده الملك وهو على كل شيء قدير» — تمجيد الله المالك للملك كله',
+    ['tabarakalladhi biyadihil mulk', 'tabarakallazi biyadihil mulk', 'blessed is he in whose hand is dominion', 'তাবারাকাল্লাযী বিয়াদিহিল মুলক', 'তাবারাকাল্লাজি বিয়াদিহিল মুলক', 'تبارك الذي بيده الملك'],
+    [[67, 1]]),
+  gp('wa-khalaqnakum-azwaja', 'Wa Khalaqnakum Azwaja (وخلقناكم أزواجا)', 'ওয়া খালাকনাকুম আযওয়াজা (وخلقناكم أزواجا)', 'وخلقناكم أزواجا',
+    '"And We created you in pairs" (78:8)',
+    '"আর আমি তোমাদেরকে সৃষ্টি করেছি জোড়ায় জোড়ায়" (৭৮:৮)',
+    '«وخلقناكم أزواجًا» — خلق الإنسان أصنافًا وأزواجًا ذكرًا وأنثى',
+    ['wa khalaqnakum azwaja', 'khalaqnakum azwaja', 'and we created you in pairs', 'ওয়া খালাকনাকুম আযওয়াজা', 'খালাকনাকুম আজওয়াজা', 'وخلقناكم أزواجا'],
+    [[78, 8]]),
+  gp('ya-ayyatuhan-nafsul-mutmainnah', 'Ya Ayyatuhan-Nafsul-Mutma\'innah (يا أيتها النفس المطمئنة)', 'ইয়া আইয়্যাতুহান নাফসুল মুতমাইন্নাহ (يا أيتها النفس المطمئنة)', 'يا أيتها النفس المطمئنة',
+    '"O reassured soul, return to your Lord, well-pleased and pleasing [to Him]" (89:27-28)',
+    '"হে প্রশান্ত আত্মা! তুমি তোমার রবের কাছে ফিরে এসো সন্তুষ্ট ও সন্তোষভাজন হয়ে" (৮৯:২৭-২৮)',
+    '«يا أيتها النفس المطمئنة ارجعي إلى ربك راضية مرضية» — نداء الكرامة للنفس المؤمنة المطمئنة',
+    ['ya ayyatuhan nafsul mutmainnah', 'nafsul mutmainnah', 'ya ayatuhan nafsul mutmainnah', 'o reassured soul', 'ইয়া আইয়্যাতুহান নাফসুল মুতমাইন্নাহ', 'নাফসুল মুতমাইন্নাহ', 'يا أيتها النفس المطمئنة'],
+    [[89, 27], [89, 28]]),
+  gp('fa-inna-maal-usri-yusra', 'Fa Inna Ma\'al-\'Usri Yusra (فإن مع العسر يسرا)', 'ফা ইন্না মা\'আল উসরি ইউসরা (فإن مع العسر يسرا)', 'فإن مع العسر يسرا',
+    '"For indeed, with hardship [will be] ease" — repeated in Surah Ash-Sharh to assure believers that relief accompanies difficulty (94:5-6)',
+    '"সুতরাং নিশ্চয়ই কষ্টের সাথেই স্বস্তি রয়েছে" — সূরা আল-ইনশিরাহতে দুবার বর্ণিত সান্ত্বনা ও আশার বাণী (৯৪:৫-৬)',
+    '«فإن مع العسر يسرًا * إن مع العسر يسرًا» — تأكيد أن الفرج واليسر مصاحبان للشدة والعسر',
+    ['fa inna maal usri yusra', 'inna maal usri yusra', 'maal usri yusra', 'with hardship will be ease', 'indeed with hardship will be ease', 'for indeed with hardship will be ease', 'ফা ইন্না মাআল উসরি ইউসরা', 'ইন্না মাআল উসরি ইউসরা', 'মাআল উসরি ইউসরা', 'فإن مع العسر يسرا', 'إن مع العسر يسرا'],
+    [[94, 5], [94, 6]]),
+  gp('lakum-dinukum-waliya-din', 'Lakum Dinukum wa Liya Din (لكم دينكم ولي دين)', 'লাকুম দীনুকুম ওয়ালিয়া দীন (لكم دينكم ولي دين)', 'لكم دينكم ولي دين',
+    '"For you is your religion, and for me is my religion" (109:6)',
+    '"তোমাদের দ্বীন তোমাদের জন্য, আর আমার দ্বীন আমার জন্য" (১০৯:৬)',
+    '«لكم دينكم ولي دين» — البراءة والتمايز في العقيدة والعبادة',
+    ['lakum dinukum waliya din', 'lakum deenukum waliya deen', 'lakum dinukum wa liya din', 'for you is your religion and for me is my religion', 'লাকুম দীনুকুম ওয়ালিয়া দীন', 'লাকুম দিনুকুম ওয়ালিয়া দিন', 'لكم دينكم ولي دين'],
+    [[109, 6]]),
+  gp('qul-huwallahu-ahad', 'Qul Huwallahu Ahad (قل هو الله أحد)', 'কুল হুওয়াল্লাহু আহাদ (قل هو الله أحد)', 'قل هو الله أحد',
+    '"Say, \'He is Allah, [who is] One\'" — affirming Allah\'s absolute Oneness (112:1)',
+    '"বলুন, তিনি আল্লাহ, এক ও অদ্বিতীয়" — আল্লাহর তাওহীদ বা একত্ববাদের ঘোষণা (১১২:১)',
+    '«قل هو الله أحد» — إعلان التوحيد الخالص وأحدية الله تعالى',
+    ['qul huwallahu ahad', 'huwallahu ahad', 'kul huwallahu ahad', 'say he is allah who is one', 'কুল হুওয়াল্লাহু আহাদ', 'হুওয়াল্লাহু আহাদ', 'قل هو الله أحد'],
+    [[112, 1]]),
 ];
 
 const normKey = (s: string) => {
@@ -597,14 +1048,52 @@ const normKey = (s: string) => {
   return `en:${s.trim().normalize('NFD').replace(/\p{M}+/gu, '').toLowerCase().replace(/['’‘`ʼʾʿ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()}`;
 };
 
+const ENGLISH_PROSE_KEY_RE = /\b(?:the|and|for|from|with|will|that|this|does|beyond|soul|bear|burden|taste|death|hardship|ease|religion|compulsion|belong|return|except|capacity|there|shall|allah is|love|mercy|worlds|path|guide|worship|help|praise|indeed|never|good|bad|you|him|one|all|not)\b/;
+
 const BY_KEY = new Map<string, GlossaryEntry>();
+const BY_BN_LOOSE = new Map<string, GlossaryEntry>();
+const BY_AR_TIGHT = new Map<string, GlossaryEntry>();
 const BY_PHONETIC = new Map<string, GlossaryEntry | null>();
+const BY_PHRASE_STREAM = new Map<string, GlossaryEntry | null>();
+const PHRASE_STREAMS: Array<{ stream: string; cons: number; entry: GlossaryEntry }> = [];
+
 const setPhonetic = (pk: string, entry: GlossaryEntry) => {
   if (pk.length >= 4) BY_PHONETIC.set(pk, BY_PHONETIC.has(pk) && BY_PHONETIC.get(pk) !== entry ? null : entry);
 };
+const setPhraseStream = (stream: string, entry: GlossaryEntry) => {
+  const cons = stream.replace(/[aiu]/g, '').length;
+  if (stream.length < 7 || cons < 4) return;
+  if (BY_PHRASE_STREAM.has(stream) && BY_PHRASE_STREAM.get(stream) !== entry) {
+    BY_PHRASE_STREAM.set(stream, null);
+    return;
+  }
+  if (!BY_PHRASE_STREAM.has(stream)) {
+    BY_PHRASE_STREAM.set(stream, entry);
+    PHRASE_STREAMS.push({ stream, cons, entry });
+  }
+};
+
 for (const entry of GLOSSARY) {
   for (const k of entry.keys) {
-    BY_KEY.set(normKey(k), entry);
+    const nk = normKey(k);
+    BY_KEY.set(nk, entry);
+    if (nk.startsWith('ar:')) {
+      const tightAr = nk.slice(3).replace(/\s+/g, '');
+      if (tightAr.length >= 4) {
+        BY_AR_TIGHT.set(tightAr, entry);
+        if ((tightAr.startsWith('و') || tightAr.startsWith('ف')) && tightAr.length >= 7) {
+          BY_AR_TIGHT.set(tightAr.slice(1), entry);
+        }
+      }
+    }
+    if (nk.startsWith('bn:')) {
+      const tightBn = nk.slice(3).replace(/\s+/g, '');
+      if (tightBn.length >= 4) {
+        BY_KEY.set(`bn:${tightBn}`, entry);
+        BY_BN_LOOSE.set(bnLooseNorm(tightBn), entry);
+        BY_BN_LOOSE.set(bnLooseNorm(nk.slice(3)), entry);
+      }
+    }
     // Also index Latin keys without spaces and canonical/vowel-flex Arabic-Latin phonetic keys
     const ascii = k.normalize('NFD').replace(/\p{M}+/gu, '');
     if (/^[a-z'’‘`ʼʾʿ\-\s]+$/i.test(ascii)) {
@@ -614,13 +1103,92 @@ for (const entry of GLOSSARY) {
         setPhonetic(canonArLatin(tight), entry);
         setPhonetic(canonArLatinFlex(tight), entry);
       }
+      if (entry.phrase && !/[pvxc]/.test(tight) && !ENGLISH_PROSE_KEY_RE.test(ascii.toLowerCase())) {
+        const stream = canonArStream(ascii);
+        setPhraseStream(stream, entry);
+        const noConj = ascii.trim().replace(/^(?:wa|fa)\s+/i, '');
+        if (noConj !== ascii.trim()) {
+          const s2 = canonArStream(noConj);
+          if (s2.length >= 8) setPhraseStream(s2, entry);
+        }
+      }
     }
   }
+}
+
+function matchPhraseStream(stream: string): GlossaryEntry | null {
+  const cons = stream.replace(/[aiu]/g, '').length;
+  if (stream.length < 7 || cons < 4) return null;
+  const exact = BY_PHRASE_STREAM.get(stream);
+  if (exact) return exact;
+
+  // Prefix match for longer recitations extending past a stored popular phrase opening
+  if (stream.length >= 16) {
+    let best: { len: number; entry: GlossaryEntry } | null = null;
+    for (const p of PHRASE_STREAMS) {
+      if (BY_PHRASE_STREAM.get(p.stream) !== p.entry) continue;
+      if (p.stream.length >= 16 && stream.startsWith(p.stream) && (!best || p.stream.length > best.len)) {
+        best = { len: p.stream.length, entry: p.entry };
+      }
+    }
+    if (best) return best.entry;
+  }
+
+  // Unique 1-edit (len >= 13) or 2-edit (len >= 22) match with same first consonant
+  const maxEdits = stream.length >= 22 && cons >= 10 ? 2 : stream.length >= 13 && cons >= 6 ? 1 : 0;
+  if (maxEdits === 0) return null;
+  const firstCons = stream.replace(/[aiu]/g, '')[0] ?? '';
+  let winner: GlossaryEntry | null = null;
+  for (const p of PHRASE_STREAMS) {
+    if (BY_PHRASE_STREAM.get(p.stream) !== p.entry) continue;
+    if (Math.abs(p.stream.length - stream.length) > maxEdits) continue;
+    if (firstCons && (p.stream.replace(/[aiu]/g, '')[0] ?? '') !== firstCons) continue;
+    if (editDistance(p.stream, stream) <= maxEdits) {
+      if (winner && winner !== p.entry) return null;
+      winner = p.entry;
+    }
+  }
+  return winner;
 }
 
 export function lookupGlossary(word: string): GlossaryEntry | null {
   const k = normKey(word);
   if (BY_KEY.has(k)) return BY_KEY.get(k)!;
+  if (k.startsWith('ar:')) {
+    const tightAr = k.slice(3).replace(/\s+/g, '');
+    if (BY_AR_TIGHT.has(tightAr)) return BY_AR_TIGHT.get(tightAr)!;
+    if ((tightAr.startsWith('و') || tightAr.startsWith('ف')) && tightAr.length >= 7 && BY_AR_TIGHT.has(tightAr.slice(1))) {
+      return BY_AR_TIGHT.get(tightAr.slice(1))!;
+    }
+  }
+  if (k.startsWith('bn:')) {
+    const body = k.slice(3);
+    const tight = body.replace(/\s+/g, '');
+    if (tight.length >= 4) {
+      if (BY_KEY.has(`bn:${tight}`)) return BY_KEY.get(`bn:${tight}`)!;
+      const loose = BY_BN_LOOSE.get(bnLooseNorm(body)) ?? BY_BN_LOOSE.get(bnLooseNorm(tight));
+      if (loose) return loose;
+    }
+    if (!/[পভচঝঙঞটডঢ]/.test(body)) {
+      const tokens = body.split(/\s+/).filter(Boolean);
+      if (tokens.length >= 2 || tight.length >= 8) {
+        const perWord = tokens.map((tok) => bnToArLatinCandidates(tok).slice(0, 3));
+        if (perWord.every((c) => c.length > 0)) {
+          let combos = [''];
+          for (const list of perWord) {
+            const next: string[] = [];
+            for (const pref of combos) for (const c of list) if (next.length < 16) next.push(pref + c);
+            combos = next;
+          }
+          for (const combo of combos) {
+            const stream = canonArStream(combo);
+            const hit = matchPhraseStream(stream);
+            if (hit) return hit;
+          }
+        }
+      }
+    }
+  }
   if (k.startsWith('en:')) {
     const tight = k.slice(3).replace(/\s+/g, '');
     if (BY_KEY.has(`en:${tight}`)) return BY_KEY.get(`en:${tight}`)!;
@@ -638,6 +1206,10 @@ export function lookupGlossary(word: string): GlossaryEntry | null {
           }
         }
       }
+    }
+    if (!/[pvxc]/.test(tight) && tight.length >= 7) {
+      const hit = matchPhraseStream(canonArStream(k.slice(3)));
+      if (hit) return hit;
     }
   }
   return null;

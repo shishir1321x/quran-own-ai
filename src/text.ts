@@ -73,6 +73,8 @@ export function wordsEn(s: string): string[] {
 export function normBn(s: string): string {
   return s
     .normalize('NFC')
+    // Join internal apostrophes inside Bengali transliterations ("মা’ওয়া", "লা’নত") so index.bn does not split them.
+    .replace(/([\u0980-\u09FF])['’‘`ʼʾʿ]+([\u0980-\u09FF])/g, '$1$2')
     // Remove non-conjunct virama/hasant (trailing "আল্লাহ্" or ZWNJ-separated "আল্লাহ্‌র") before stripping ZWNJ/ZWJ.
     .replace(/\u09CD(?=[\u200c\u200d]|[^\u0995-\u09B9\u09DC-\u09DF]|$)/g, '')
     .replace(/[\u200c\u200d]/g, '')
@@ -106,9 +108,8 @@ export function stemBn(w: string): string {
 /** Spelling-tolerant Bengali form: unifies শ/ষ/স, য/জ, ণ/ন, ী/ি, ূ/ু, ৎ/ত, ড়/ঢ়/র, strips ঁ/ঃ ("সূর্য"=="সুর্য", "চাঁদ"=="চাদ", "ভালোবাসা"=="ভালবাসা"). */
 export function bnLooseNorm(w: string): string {
   return normBn(w)
-    .replace(/\u09AF\u09BC/g, 'য়')
-    .replace(/\u09A1\u09BC|\u09A2\u09BC/g, 'র')
-    .replace(/[ড়ঢ়]/g, 'র')
+    .replace(/\u09AF\u09BC/g, 'Y')
+    .replace(/\u09A1\u09BC|\u09A2\u09BC|\u09DC|\u09DD/g, 'র')
     .replace(/[শষ]/g, 'স')
     .replace(/য/g, 'জ')
     .replace(/ণ/g, 'ন')
@@ -118,7 +119,8 @@ export function bnLooseNorm(w: string): string {
     .replace(/ঈ/g, 'ই')
     .replace(/ঊ/g, 'উ')
     .replace(/[ঁঃ]/g, '')
-    .replace(/ভালো/g, 'ভাল');
+    .replace(/ভালো/g, 'ভাল')
+    .replace(/Y/g, '\u09AF\u09BC');
 }
 export function tokensBn(s: string): string[] {
   const out: string[] = [];

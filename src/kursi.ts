@@ -23,7 +23,9 @@ function check(words: string[], skeleton: (s: string) => string, kursi: Set<stri
     const sk = skeleton(words[i]);
     if (oneWord.has(sk)) return true;                                   // written as one word
     if (!kursi.has(sk)) continue;
-    if (words.length <= 2 && !words.some((w) => SURAH.test(w))) return true;   // just "kursi" (not "surah quraish")
+    if (words.length <= 2 && !words.some((w) => SURAH.test(w))) {
+      if (kursi !== KURSI_LATIN || (words[i].length >= 5 && /^[kq]/i.test(words[i]) && /[uo]/i.test(words[i]))) return true;   // just "kursi" (not "surah quraish" or "cars")
+    }
     const prev1 = skeleton(words[i - 1] ?? '');
     const prev2 = skeleton((words[i - 2] ?? '') + (words[i - 1] ?? ''));
     if (ayat.has(prev1) || ayat.has(prev2)) return true;

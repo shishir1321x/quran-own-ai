@@ -68,7 +68,10 @@ export type Ref = readonly [surah: number, ayah: number];
  *  question ("dua" AND "parents"). A theme with `allOf` or `specific` is more specific, so it wins over the plain ones. */
 export interface Theme { id: string; words: string[]; ayahs: Ref[]; allOf?: string[][]; pattern?: RegExp; specific?: boolean }
 
-const DUA_WORDS = ['dua', 'duaa', 'duas', 'doa', 'doas', 'dowa', 'dowas', 'supplication', 'supplications', 'দোয়া', 'দুআ', 'দোআ', 'দু\'আ', 'دعاء', 'دعا', 'ادعية', 'أدعية'];
+const DUA_WORDS = [
+  'dua', 'duaa', 'duas', 'doa', 'doas', 'dowa', 'dowas', 'duagulo', 'duagula', 'doagulo', 'doagula', 'duar', 'doar',
+  'supplication', 'supplications', 'দোয়া', 'দোয়াগুলো', 'দোয়াগুলা', 'দুআ', 'দোআ', 'দুয়া', 'দু\'আ', 'دعاء', 'دعا', 'ادعية', 'أدعية',
+];
 
 const CORE_THEMES: Theme[] = [
   // supplications (duas) that are in the Quran, by what the person asks for
@@ -82,6 +85,18 @@ const CORE_THEMES: Theme[] = [
     ayahs: [[26, 80], [21, 83], [17, 82], [10, 57]] },
   { id: 'dua for family', words: [], allOf: [DUA_WORDS, ['family', 'spouse', 'spouses', 'wife', 'husband', 'children', 'child', 'kids', 'সন্তান', 'পরিবার', 'স্ত্রী', 'স্বামী', 'أسرة', 'ذرية']],
     ayahs: [[25, 74], [46, 15], [14, 40]] },
+  { id: 'dua for guidance', words: [], allOf: [DUA_WORDS, ['guidance', 'guide', 'guided', 'hidayah', 'hedayat', 'hedayet', 'হেদায়াত', 'হিদায়াত', 'সঠিক পথ', 'পথনির্দেশ', 'هداية', 'رشد']],
+    ayahs: [[1, 6], [1, 7], [3, 8], [18, 10]] },
+  { id: 'dua for patience', words: [], allOf: [DUA_WORDS, ['patience', 'patient', 'sabr', 'sobor', 'shobor', 'steadfast', 'steadfastness', 'dhairjo', 'dhoirjo', 'ধৈর্য', 'সবর', 'অবিচল', 'صبر']],
+    ayahs: [[2, 250], [7, 126], [3, 147]] },
+  { id: 'dua for protection', words: [], allOf: [DUA_WORDS, ['protection', 'protect', 'refuge', 'safety', 'shield', 'evil', 'shaitan', 'shaytan', 'hifazat', 'hefajot', 'surokkha', 'আশ্রয়', 'নিরাপত্তা', 'সুরক্ষা', 'হেফাজত', 'حفظ', 'حماية', 'أعوذ']],
+    ayahs: [[113, 1], [114, 1], [23, 97], [23, 98]] },
+  { id: 'dua for sustenance (rizq)', words: [], allOf: [DUA_WORDS, ['rizq', 'rizk', 'rizik', 'sustenance', 'provision', 'provisions', 'livelihood', 'wealth', 'income', 'need', 'রিযিক', 'রিজিক', 'জীবিকা', 'رزق']],
+    ayahs: [[28, 24], [5, 114], [2, 201]] },
+  { id: 'dua for distress and grief', words: [], allOf: [DUA_WORDS, ['distress', 'anxiety', 'anxious', 'worry', 'worried', 'grief', 'sad', 'sadness', 'hardship', 'trouble', 'kosto', 'koshto', 'dukkho', 'chinta', 'বিপদ', 'দুশ্চিন্তা', 'দুঃখ', 'কষ্ট', 'উদ্বেগ', 'كرب', 'هم', 'حزن']],
+    ayahs: [[21, 87], [21, 83], [18, 10], [2, 286]] },
+  { id: 'dua for travel', words: [], allOf: [DUA_WORDS, ['travel', 'traveling', 'travelling', 'journey', 'riding', 'safar', 'sofor', 'ভ্রমণ', 'সফর', 'যাত্রা', 'سفر']],
+    ayahs: [[43, 13], [43, 14], [23, 29], [17, 80]] },
   { id: 'supplications (dua)', words: DUA_WORDS, ayahs: [[2, 201], [2, 286], [3, 8], [7, 23], [21, 87]] },
   { id: 'patience', ayahs: [[2, 153], [2, 155], [39, 10], [3, 200], [103, 3]],
     words: ['patience', 'patient', 'sabr', 'isbir', 'sobor', 'shobor', 'dhairjo', 'dhoirjo', 'ধৈর্য', 'সবর', 'صبر', 'الصبر'] },
