@@ -87,3 +87,56 @@ export function plausibleTypo(typed: string, word: string): boolean {
   if (diff.length === 2 && diff[1] === diff[0] + 1 && typed[diff[0]] === word[diff[1]] && typed[diff[1]] === word[diff[0]]) return true;  // swapped
   return diff.length === 1 && adjacentKeys(typed[diff[0]], word[diff[0]]);
 }
+
+/** Sound class of the initial letter so unrelated words never collide ("makki" ~ "maqqi", never "bakki"). */
+export function phoneticFirstClass(raw: string): string {
+  const s = raw.normalize('NFD').replace(/\p{M}+/gu, '').toLowerCase().replace(/[^a-z]/g, '');
+  if (!s) return '';
+  if (/^[aeiou]/.test(s)) return 'V';
+  if (/^[qkc]/.test(s)) return 'k';
+  if (/^[jz]/.test(s) || s.startsWith('dh')) return 'z';
+  if (/^[pf]/.test(s)) return 'f';
+  if (/^[bv]/.test(s)) return 'b';
+  if (/^[uw]/.test(s)) return 'u';
+  if (/^[iy]/.test(s)) return 'V';
+  return s[0];
+}
+
+/**
+ * Conservative phonetic key for Latin transliterations of Arabic, Islamic, and Banglish terms.
+ * Preserves vowel quality except long-vowel duplication and standard South-Asian/Arabic equivalences.
+ */
+export function phoneticTermKey(raw: string): string {
+  let s = raw.normalize('NFD').replace(/\p{M}+/gu, '').toLowerCase().replace(/[^a-z]/g, '');
+  if (s.length < 3) return s;
+  s = s
+    .replace(/ph/g, 'f')
+    .replace(/gh/g, 'g')
+    .replace(/kh/g, 'k')
+    .replace(/sh/g, 's')
+    .replace(/chh?/g, 'c')
+    .replace(/dh|zh/g, 'z')
+    .replace(/th$/g, 't')         // jannath -> jannat, qiyamath -> qiyamat (preserve English "truth"/"faith" via isEnglish guard)
+    .replace(/th/g, 's')          // kawthar/kawsar, hadith/hadis, uthman/usman
+    .replace(/bh/g, 'b')
+    .replace(/jy/g, 'z')          // dhoirjyo -> dhoirjo
+    .replace(/v/g, 'b')
+    .replace(/q/g, 'k')
+    .replace(/cc/g, 'k')          // meccan/maccan/mecci -> mekan/makan/meki
+    .replace(/c(?=[aou]|$)/g, 'k')
+    .replace(/j/g, 'z')           // namaj/namaz, roja/roza, jakat/zakat, jikir/zikir, julum/zulum
+    .replace(/w/g, 'u')           // tawba/tauba, tawhid/tauhid, dawud/daud, sawm/saum
+    .replace(/y/g, 'i')           // koyta/koita, qiyamat/kiamat, shaytan/shaitan, sulayman/sulaiman
+    .replace(/ee+|ii+|ie/g, 'i')
+    .replace(/oo+|ou|uu+|au/g, 'u')
+    .replace(/aa+/g, 'a')
+    .replace(/ai|ei|oi/g, 'ai')
+    .replace(/(.)\1+/g, '$1')
+    .replace(/h$/, '');
+  return s;
+}
+
+/** Vowel-relaxed phonetic key (`e -> i`, `o -> u`). */
+export function phoneticTermKeyFlex(raw: string): string {
+  return phoneticTermKey(raw).replace(/e/g, 'i').replace(/o/g, 'u');
+}

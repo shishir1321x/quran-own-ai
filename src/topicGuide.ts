@@ -1187,6 +1187,247 @@ export const TOPIC_GUIDE: Record<string, TopicGuideEntry> = {
       ],
     ),
   ),
+
+  'tahajjud (night prayer)': g(
+    t(
+      'The Quran praises those who rise in the night for prayer and worship (tahajjud) alongside recitation, supplication, and seeking forgiveness.',
+      'কুরআনে রাতের শেষভাগে উঠে নামাজ (তাহাজ্জুদ), তিলাওয়াত, দোয়া ও ক্ষমা প্রার্থনার প্রশংসা করা হয়েছে।',
+      'يثني القرآن على القائمين في الليل للصلاة والتهجد وتلاوة القرآن والاستغفار.',
+    ),
+    pt(
+      [
+        'Surah Al-Israa (17:79) mentions rising in part of the night for voluntary prayer, hoping to be raised to a praised station.',
+        'Surah Al-Muzzammil (73:20) notes reciting what is easy from the Quran during the night while showing Allah\'s mercy for circumstances.',
+        'Surah As-Sajda (32:16) and Surah Adh-Dhaariyat (51:17) describe believers whose sides forsake their beds to call on their Lord in hope and fear.',
+      ],
+      [
+        'সূরা ইসরা (17:79)-এ রাতের কিছু অংশে নফল নামাজ (তাহাজ্জুদ) পড়ার এবং প্রশংসিত মাকামে পৌঁছানোর কথা বলা হয়েছে।',
+        'সূরা মুযযাম্মিল (73:20)-এ রাতের অংশে যতটুকু সহজ ততটুকু কুরআন পাঠ করার এবং ওজরের ক্ষেত্রে সহজীকরণের উল্লেখ আছে।',
+        'সূরা সিজদা (32:16) ও সূরা যারিয়াত (51:17)-এ শয্যা ত্যাগ করে ভয়ে ও আশায় রবকে ডাকার বর্ণনা রয়েছে।',
+      ],
+      [
+        'تذكر الإسراء (17:79) التهجد في الليل نافلةً وعسى أن يبعثك ربك مقامًا محمودًا.',
+        'وتبيّن المزمل (73:20) قراءة ما تيسّر من القرآن في قيام الليل.',
+        'وتصف السجدة (32:16) والذاريات (51:17) الذين تتجافى جنوبهم عن المضاجع يدعون ربهم خوفًا وطمعًا.',
+      ],
+    ),
+  ),
+
+  'racism and equality': g(
+    t(
+      'The Quran affirms that all humanity originates from a single soul and single pair, making righteousness and mindfulness of Allah (taqwa) the sole measure of honor.',
+      'কুরআনে বলা হয়েছে সব মানুষ একই উৎস থেকে সৃষ্ট, এবং জাতি-গোত্র নয় বরং তাকওয়াই (আল্লাহভীতি) আল্লাহর কাছে সম্মানের একমাত্র মাপকাঠি।',
+      'يؤكد القرآن أن البشر جميعًا من أصل واحد، وأن ميزان الكرامة والتفاضل عند الله هو التقوى لا اللون أو النسب.',
+    ),
+    pt(
+      [
+        'Surah Al-Hujuraat (49:13) states that humanity was created from a male and a female into nations and tribes to know one another, and the most noble in the sight of Allah is the most righteous.',
+        'Surah Ar-Room (30:22) counts the diversity of human languages and colors among Allah\'s signs.',
+        'Surah An-Nisaa (4:1) reminds people to be mindful of their Lord who created them all from one soul.',
+      ],
+      [
+        'সূরা হুজুরাত (49:13)-এ বলা হয়েছে, মানুষকে বিভিন্ন জাতি ও গোত্রে ভাগ করা হয়েছে পরিচিতির জন্য, আর আল্লাহর কাছে সবচেয়ে সম্মানিত সে-ই যে সবচেয়ে বেশি মুত্তাকী।',
+        'সূরা রূম (30:22)-এ মানুষের ভাষা ও বর্ণের বৈচিত্র্যকে আল্লাহর নিদর্শন বলা হয়েছে।',
+        'সূরা নিসা (4:1)-এ স্মরণ করানো হয়েছে যে সব মানুষকে এক প্রাণ থেকেই সৃষ্টি করা হয়েছে।',
+      ],
+      [
+        'تؤكد الحجرات (49:13) أن أكرمكم عند الله أتقاكم وأن اختلاف الشعوب والقبائل للتعارف.',
+        'وتعدّ الروم (30:22) اختلاف الألسنة والألوان من آيات الله.',
+        'وتذكّر النساء (4:1) بأن الله خلق الناس جميعًا من نفس واحدة.',
+      ],
+    ),
+  ),
+
+  'cheating and fraud': g(
+    t(
+      'The Quran strongly condemns fraud, cheating in weights and measures, and taking others\' property unjustly.',
+      'কুরআনে মাপে বা ওজনে কম দেওয়া, প্রতারণা করা এবং অন্যের সম্পদ অন্যায়ভাবে গ্রাস করার ব্যাপারে কঠোর সতর্কবার্তা দেওয়া হয়েছে।',
+      'يحذّر القرآن تحذيرًا شديدًا من الغش والتطفيف في الكيل والميزان وأكل أموال الناس بالباطل.',
+    ),
+    pt(
+      [
+        'Surah Al-Mutaffifin (83:1–3) warns those who take full measure from others yet give less when measuring or weighing for them.',
+        'Surah Hud (11:85) and Surah Al-Israa (17:35) command giving full measure and weighing with an accurate balance.',
+      ],
+      [
+        'সূরা মুতাফফিফীন (83:1–3)-এ যারা মানুষের কাছ থেকে নেওয়ার সময় পূর্ণ নেয় কিন্তু দেওয়ার সময় কম দেয়, তাদের জন্য ধ্বংসের সতর্কবাণী এসেছে।',
+        'সূরা হূদ (11:85) ও সূরা ইসরা (17:35)-এ সঠিক ওজন ও ন্যায়সঙ্গত পরিমাপ বজায় রাখার নির্দেশ দেওয়া হয়েছে।',
+      ],
+      [
+        'تتوعد سورة المطففين (83:1–3) الذين يستوفون على الناس ويخسرونهم إذا كالوا أو وزنوا.',
+        'وتأمر سورة هود (11:85) والإسراء (17:35) بإيفاء الكيل والوزن بالقسطاس المستقيم.',
+      ],
+    ),
+  ),
+
+  "Isra and Mi'raj (the Night Journey)": g(
+    t(
+      'The Quran mentions the Night Journey (al-Isra) from Al-Masjid al-Haram to Al-Masjid al-Aqsa and the Prophet witnessing some of Allah\'s great signs.',
+      'কুরআনে মসজিদুল হারাম থেকে মসজিদুল আকসা পর্যন্ত নৈশভ্রমণ (ইসরা) এবং মহান নিদর্শনসমূহ প্রত্যক্ষ করার কথা উল্লেখ করা হয়েছে।',
+      'يذكر القرآن رحلة الإسراء من المسجد الحرام إلى المسجد الأقصى ومشاهدة آيات الله الكبرى.',
+    ),
+    pt(
+      [
+        'Surah Al-Israa (17:1) describes how Allah took His Servant by night from Al-Masjid al-Haram to Al-Masjid al-Aqsa to show him of His signs.',
+        'Surah An-Najm (53:13–14) mentions seeing great signs near Sidrat al-Muntaha (the Lote Tree of the Utmost Boundary).',
+        'Detailed narratives of the Ascension (Mi\'raj) come from Hadith and Seerah collections; ask a qualified scholar for further study.',
+      ],
+      [
+        'সূরা ইসরা (17:1)-এ মসজিদুল হারাম থেকে মসজিদুল আকসা পর্যন্ত রাতের ভ্রমণ ও নিদর্শন দেখানোর কথা এসেছে।',
+        'সূরা নাজম (53:13–14)-এ সিদরাতুল মুনতাহার নিকটে মহান নিদর্শন দেখার উল্লেখ রয়েছে।',
+        'মিরাজের বিস্তারিত ঘটনা হাদীস ও সীরাত গ্রন্থ থেকে জানা যায়; বিস্তারিত জানতে একজন যোগ্য আলেমের পরামর্শ নিন।',
+      ],
+      [
+        'تذكر الإسراء (17:1) إسرَاءَ الله بعبده ليلاً من المسجد الحرام إلى المسجد الأقصى ليريه من آياته.',
+        'وتشير النجم (53:13–14) إلى الرؤية عند سدرة المنتهى.',
+        'وترد تفاصيل المعراج في كتب الحديث والسيرة؛ يُرجى سؤال عالم مؤهل.',
+      ],
+    ),
+  ),
+
+  'Trinity and oneness of Allah': g(
+    t(
+      'The Quran affirms strict monotheism (Tawhid), stating that Allah is One and explicitly rejecting the claim that Allah is three.',
+      'কুরআনে আল্লাহর একত্ববাদ (তাওহীদ) স্পষ্টভাবে ঘোষণা করা হয়েছে এবং "তিন" বা ত্রিত্ববাদের ধারণাকে পরিষ্কারভাবে প্রত্যাখ্যান করা হয়েছে।',
+      'يؤكد القرآن التوحيد الخالص بأن الله واحد أحد، ويرفض القول بالتثليث.',
+    ),
+    pt(
+      [
+        'Surah An-Nisaa (4:171) calls upon the People of the Scripture not to say "Three" and affirms that Allah is only one God.',
+        'Surah Al-Maaida (5:73, 5:116) states there is no deity except one God and recounts Isa (Jesus) affirming he only called people to worship Allah.',
+        'Surah Al-Ikhlaas (112:1) declares succinctly: "Say, He is Allah, [who is] One."',
+      ],
+      [
+        'সূরা নিসা (4:171)-এ আহলে কিতাবকে "তিন" না বলার আহ্বান জানিয়ে বলা হয়েছে যে আল্লাহ একমাত্র ইলাহ।',
+        'সূরা মায়িদাহ (5:73, 5:116)-এ এক ইলাহ ছাড়া কোনো মাবুদ নেই বলে উল্লেখ এবং ঈসা (আ.)-এর শুধু আল্লাহর ইবাদতের আহ্বানের কথা এসেছে।',
+        'সূরা ইখলাস (112:1)-এ ঘোষণা করা হয়েছে: "বলুন, তিনি আল্লাহ, একক।"',
+      ],
+      [
+        'تنهى النساء (4:171) عن القول «ثلاثة» وتؤكد أن الله إله واحد.',
+        'وتؤكد المائدة (5:73، 5:116) الوحدانية ونفي الشريك، وقول عيسى عليه السلام بعبادة الله وحده.',
+        'وتقرر سورة الإخلاص (112:1): ﴿قُلْ هُوَ اللَّهُ أَحَدٌ﴾.',
+      ],
+    ),
+  ),
+
+  'crucifixion of Isa (Jesus)': g(
+    t(
+      'Regarding the crucifixion of Prophet Isa (Jesus), the Quran states that he was neither killed nor crucified, but rather it appeared so to people, and Allah raised him up to Himself.',
+      'নবী ঈসা (আ.)-কে ক্রুশবিদ্ধ করার বিষয়ে কুরআনে স্পষ্ট বলা হয়েছে যে তাঁকে হত্যা করা হয়নি এবং ক্রুশবিদ্ধও করা হয়নি, বরং তাঁদের কাছে সেরূপ মনে হয়েছিল এবং আল্লাহ তাঁকে নিজের কাছে তুলে নিয়েছেন।',
+      'يبيّن القرآن بشأن صلب عيسى عليه السلام أنه لم يُقتل ولم يُصلب، ولكن شُبّه لهم، ورفعه الله إليه.',
+    ),
+    pt(
+      [
+        'Surah An-Nisaa (4:157) states they did not kill him nor crucify him, but it was made to appear so to them.',
+        'Surah An-Nisaa (4:158) states that Allah raised him up to Himself, and Allah is Exalted in Might and Wise.',
+      ],
+      [
+        'সূরা নিসা (4:157)-এ বলা হয়েছে, তারা তাঁকে হত্যা করেনি এবং শূলেও চড়ায়নি, বরং তাদের কাছে সাদৃশ্য তৈরি হয়েছিল।',
+        'সূরা নিসা (4:158)-এ বলা হয়েছে, বরং আল্লাহ তাঁকে নিজের দিকে তুলে নিয়েছেন।',
+      ],
+      [
+        'تذكر سورة النساء (4:157) أنهم ما قتلوه وما صلبوه ولكن شُبّه لهم.',
+        'وتبيّن النساء (4:158) أن الله رفعه إليه، وكان الله عزيزًا حكيمًا.',
+      ],
+    ),
+  ),
+
+  'Yajuj and Majuj (Gog and Magog)': g(
+    t(
+      'The Quran mentions Yajuj and Majuj (Gog and Magog) in the account of Dhul-Qarnayn building a barrier and notes their future release before the Hour.',
+      'কুরআনে যুলকারনাইনের বিবরণে ইয়াজুজ ও মাজুজের ফাসাদ ও প্রতিবন্ধক নির্মাণের কথা এবং কেয়ামতের পূর্বে তাদের মুক্ত হওয়ার উল্লেখ রয়েছে।',
+      'يذكر القرآن يأجوج ومأجوج في قصة ذي القرنين وبناء السدّ، ويشير إلى فتحهم قبيل الساعة.',
+    ),
+    pt(
+      [
+        'Surah Al-Kahf (18:94, 18:98) recounts people asking Dhul-Qarnayn for protection from Yajuj and Majuj and his reply that when Allah\'s promise comes, the barrier will be leveled.',
+        'Surah Al-Anbiyaa (21:96) mentions when Yajuj and Majuj are opened and swarm from every elevation.',
+      ],
+      [
+        'সূরা কাহফ (18:94, 18:98)-এ যুলকারনাইনের কাছে ইয়াজুজ ও মাজুজের বিপর্যয় থেকে রক্ষার আবেদন এবং প্রতিবন্ধক নির্মাণের বিবরণ এসেছে।',
+        'সূরা আম্বিয়া (21:96)-এ কিয়ামতের পূর্বে তাদের উন্মুক্ত হয়ে ছড়িয়ে পড়ার উল্লেখ আছে।',
+      ],
+      [
+        'تذكر الكهف (18:94، 18:98) قصة السد الذي بناه ذو القرنين لردّ إفساد يأجوج ومأجوج.',
+        'وتشير الأنبياء (21:96) إلى فتح يأجوج ومأجوج ونسلهم من كل حدب.',
+      ],
+    ),
+  ),
+
+  'previous scriptures (Torah, Zabur, Injeel)': g(
+    t(
+      'The Quran affirms that Allah revealed earlier scriptures—including the Tawrat (Torah) to Musa, Zabur (Psalms) to Dawud, and Injeel (Gospel) to Isa—and confirms what remained true while standing as a guardian over them.',
+      'কুরআনে পূর্বে নাজিলকৃত আসমানি কিতাব—যেমন মূসা (আ.)-এর প্রতি তাওরাত, দাউদ (আ.)-এর প্রতি যাবুর এবং ঈসা (আ.)-এর প্রতি ইঞ্জিল—নাজিলের সত্যতা উল্লেখ করা হয়েছে।',
+      'يذكر القرآن إنزال الكتب السماوية السابقة كالتوراة على موسى والزبور على داود والإنجيل على عيسى عليهم السلام.',
+    ),
+    pt(
+      [
+        'Surah Al-Maaida (5:44, 5:46) states Allah revealed the Tawrat containing guidance and light, and followed with the Injeel confirming what came before it.',
+        'Surah An-Nisaa (4:163) mentions giving the Zabur to Dawud alongside revelation to other prophets.',
+        'Surah Aal-i-Imraan (3:3) mentions the Quran confirming the scriptures that preceded it.',
+      ],
+      [
+        'সূরা মায়িদাহ (5:44, 5:46)-এ হিদায়াত ও নূরসহ তাওরাত এবং পূর্ববর্তী কিতাবের সত্যায়নকারী হিসেবে ইঞ্জিল নাজিলের কথা এসেছে।',
+        'সূরা নিসা (4:163)-এ দাউদ (আ.)-কে যাবুর প্রদানের উল্লেখ রয়েছে।',
+        'সূরা আলে ইমরান (3:3)-এ কুরআনকে পূর্ববর্তী কিতাবসমূহের সত্যায়নকারী হিসেবে উল্লেখ করা হয়েছে।',
+      ],
+      [
+        'تذكر المائدة (5:44، 5:46) إنزال التوراة فيها هدى ونور، وإنزال الإنجيل مصدقًا لما بين يديه.',
+        'وتشير النساء (4:163) إلى إيتاء داود زبورًا.',
+        'وتبيّن آل عمران (3:3) إنزال الكتاب مصدقًا لما بين يديه من التوراة والإنجيل.',
+      ],
+    ),
+  ),
+
+  'success and striving': g(
+    t(
+      'The Quran defines true success (falah) through faith, humility in prayer, purification of the soul, and sincere righteous effort.',
+      'কুরআনে ঈমান, নামাজে বিনয়, আত্মশুদ্ধি এবং সৎ কর্মপ্রচেষ্টার মাধ্যমেই প্রকৃত সফলতা (ফালাহ) অর্জনের কথা বলা হয়েছে।',
+      'يربط القرآن الفلاح الحقيقي بالإيمان والخشوع وتزكية النفس والسعي الصالح.',
+    ),
+    pt(
+      [
+        'Surah Al-Mu\'minoon (23:1) opens with the declaration that the believers have indeed succeeded.',
+        'Surah Ash-Shams (91:9) affirms that the one who purifies their soul has succeeded.',
+        'Surah An-Najm (53:39) and Surah At-Tawba (9:105) state that a person receives what they strive for and urge believers to work righteously.',
+      ],
+      [
+        'সূরা মুমিনুন (23:1)-এ ঘোষণা করা হয়েছে, নিশ্চয় মুমিনগণ সফল হয়েছে।',
+        'সূরা শামস (91:9)-এ বলা হয়েছে, যে আত্মাকে পরিশুদ্ধ করেছে সে-ই সফল হয়েছে।',
+        'সূরা নাজম (53:39) ও সূরা তাওবা (9:105)-এ মানুষের চেষ্টা অনুযায়ী প্রতিদান ও সৎকাজে প্রচেষ্টার নির্দেশ এসেছে।',
+      ],
+      [
+        'تفتتح المؤمنون (23:1) بقوله تعالى: ﴿قَدْ أَفْلَحَ الْمُؤْمِنُونَ﴾.',
+        'وتؤكد الشمس (91:9) فلاح من زكّى نفسه.',
+        'وتبيّن النجم (53:39) والتوبة (9:105) أن للإنسان ما سعى والأمر بالعمل الصالح.',
+      ],
+    ),
+  ),
+
+  'companions (Sahaba) and Hijrah': g(
+    t(
+      'The Quran praises the early Muhajirin (emigrants) and Ansar (helpers) for their faith, sacrifice, mutual support, and striving in Allah\'s cause.',
+      'কুরআনে প্রথমাগ্রগামী মুহাজির ও আনসার সাহাবীদের ঈমান, ত্যাগ, পারস্পরিক ভালোবাসা ও আনুগত্যের উচ্চ প্রশংসা করা হয়েছে।',
+      'يثني القرآن على السابقين الأولين من المهاجرين والأنصار، ويصف إيمانهم وتعاونهم وإيثارهم.',
+    ),
+    pt(
+      [
+        'Surah At-Tawba (9:100) mentions Allah being pleased with the foremost of the Muhajirin and the Ansar and those who followed them with goodness.',
+        'Surah Al-Fath (48:29) describes Muhammad and those with him as compassionate among themselves and devoted in prayer.',
+        'Surah Al-Hashr (59:8–9) highlights the sacrifices of the poor emigrants and the generosity of the Ansar who loved those who migrated to them.',
+      ],
+      [
+        'সূরা তাওবা (9:100)-এ প্রথম অগ্রগামী মুহাজির ও আনসার এবং তাঁদের অনুসারীদের প্রতি আল্লাহর সন্তুষ্টির কথা এসেছে।',
+        'সূরা ফাতহ (48:29)-এ নবী (সা.) ও তাঁর সাথীদের পারস্পরিক দয়া, রুকু ও সিজদার গুণাবলি বর্ণিত হয়েছে।',
+        'সূরা হাশর (59:8–9)-এ মুহাজিরদের ত্যাগ এবং আনসারদের নিঃস্বার্থ আতিথেয়তা ও ভালোবাসার প্রশংসা রয়েছে।',
+      ],
+      [
+        'تذكر التوبة (9:100) رضوان الله على السابقين الأولين من المهاجرين والأنصار.',
+        'وتصف الفتح (48:29) محمدًا والذين معه بالرحمة بينهم وكثرة الركوع والسجود.',
+        'وتبرز الحشر (59:8–9) تضحيات المهاجرين وإيثار الأنصار.',
+      ],
+    ),
+  ),
 };
 
 const NOTE_SOURCE_LABEL = { en: 'Saheeh International', bn: 'Dr. Abu Bakr Muhammad Zakaria' } as const;

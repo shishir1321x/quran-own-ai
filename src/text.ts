@@ -1,7 +1,7 @@
 // Turning text into comparable words, for English, Bengali and Arabic. The SAME functions are used
 // for the Quran texts and for the question, so they always agree.
 import { BANGLISH_TO_EN, NAME_TO_EN } from './lexicon.js';
-import { latinSkeleton, makeSkeletonIndex } from './fuzzy.js';
+import { editDistance, latinSkeleton, makeSkeletonIndex, phoneticFirstClass, phoneticTermKeyFlex } from './fuzzy.js';
 
 /** Remove a footnote marker like [2] or [১] and a leading verse number like (1), for DISPLAY only. */
 export function cleanTranslation(t: string): string {
@@ -157,9 +157,42 @@ export function tokensAr(s: string): string[] {
   return normAr(s).split(PUNCT).filter((w) => w && /[\u0600-\u06FF]/.test(w) && !STOP_AR.has(w)).map((w) => (w.length > 4 && w.startsWith('ال') ? w.slice(2) : w));
 }
 
-// Words typed in many spellings ("dhairjo" / "dhoirjo" / "dhorjo"): the consonants decide.
-const banglishIndex = makeSkeletonIndex(Object.entries(BANGLISH_TO_EN).filter(([k]) => /^[a-z]+$/.test(k)), latinSkeleton);
-const nameIndex = makeSkeletonIndex(Object.entries(NAME_TO_EN).filter(([k]) => /^[a-z]+$/.test(k)), latinSkeleton);
+// Words typed in many spellings ("dhairjo" / "dhoirjo" / "dhorjo"): the consonants decide, guarded by initial sound,
+// length proximity, and phonetic distance so unrelated words like "pork", "bilqis", or "sahabir" never falsely collide.
+const banglishEntries = Object.entries(BANGLISH_TO_EN).filter(([k]) => /^[a-z]+$/.test(k));
+const nameEntries = Object.entries(NAME_TO_EN).filter(([k]) => /^[a-z]+$/.test(k));
+const banglishIndex = makeSkeletonIndex(banglishEntries, latinSkeleton);
+const nameIndex = makeSkeletonIndex(nameEntries, latinSkeleton);
+
+function buildSourceKeysByTarget(entries: Array<[string, string]>): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const [k, v] of entries) {
+    const arr = map.get(v);
+    if (arr) arr.push(k);
+    else map.set(v, [k]);
+  }
+  return map;
+}
+const banglishKeysByTarget = buildSourceKeysByTarget(banglishEntries);
+const nameKeysByTarget = buildSourceKeysByTarget(nameEntries);
+
+function skeletonSafeMatch(
+  word: string,
+  index: ReturnType<typeof makeSkeletonIndex<string>>,
+  keysByTarget: Map<string, string[]>,
+  allowNear: boolean,
+): string | null {
+  const hit = index.exact(word) ?? (allowNear ? index.near(word) : null);
+  if (!hit) return null;
+  const wf = phoneticFirstClass(word);
+  const wkf = phoneticTermKeyFlex(word);
+  const sources = keysByTarget.get(hit) ?? [];
+  const ok = sources.some((k) =>
+    phoneticFirstClass(k) === wf
+    && Math.abs(word.length - k.length) <= 2
+    && editDistance(wkf, phoneticTermKeyFlex(k)) <= 2);
+  return ok ? hit : null;
+}
 
 /** Banglish and known Bengali words of a question as ENGLISH words (not stemmed): namaz -> prayer.
  *  `isEnglish` says whether a Latin word is a real English word; those are never "corrected". */
@@ -173,14 +206,21 @@ export function mappedEnglishWords(
     if (BANGLISH_TO_EN[w]) out.push(BANGLISH_TO_EN[w]);
     else if (NAME_TO_EN[w]) out.push(NAME_TO_EN[w]);
     else if (w.length >= 4 && !isEnglish(w)) {
-      const m = banglishIndex.exact(w) ?? nameIndex.exact(w) ?? (isArabicWord(w) ? null : nameIndex.near(w));   // another spelling of a known word
+      const m = skeletonSafeMatch(w, banglishIndex, banglishKeysByTarget, false)
+        ?? skeletonSafeMatch(w, nameIndex, nameKeysByTarget, !isArabicWord(w));   // another spelling of a known word
       if (m) out.push(m);
     }
   }
   for (const w of s.normalize('NFC').split(/[\s.,;:!?"'“”‘’()\[\]{}<>\/\\|\-–—_*&^%$#@~`+=।॥؟،؛…]+/u)) if (NAME_TO_EN[w]) out.push(NAME_TO_EN[w]);
   for (const w of wordsBn(s)) {
+    const ws = stemBn(w);
     for (const [k, v] of Object.entries(BANGLISH_TO_EN)) {
-      if (/[\u0980-\u09FF]/.test(k) && (w === k || (k.length >= 3 && w.includes(k)))) out.push(v);
+      if (!/[\u0980-\u09FF]/.test(k)) continue;
+      const hit = k.length < 3 ? w === k
+        : k.length === 3 ? (w === k || ws === k)
+          : k.length === 4 ? (w === k || ws === k || w.startsWith(k))
+            : (w === k || w.includes(k));
+      if (hit) out.push(v);
     }
   }
   return out;

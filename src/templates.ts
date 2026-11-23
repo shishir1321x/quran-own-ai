@@ -125,6 +125,16 @@ export const THEME_LABEL: Record<string, T> = {
   'family and kinship': t('family and kinship', 'আত্মীয়তার সম্পর্ক', 'صلة الرحم والأقارب'),
   'magic and sihr': t('magic and sihr', 'জাদু ও সিহর', 'السحر'),
   'signs in creation and reflection': t('signs in creation and reflection', 'সৃষ্টির নিদর্শন ও চিন্তাভাবনা', 'آيات الخلق والتفكر'),
+  'tahajjud (night prayer)': t('tahajjud (night prayer)', 'তাহাজ্জুদ (রাতের নামাজ)', 'التهجد وقيام الليل'),
+  'racism and equality': t('human equality and rejecting racism', 'মানুষের সমতা ও বর্ণবাদ বর্জন', 'المساواة ونبذ العنصرية'),
+  'cheating and fraud': t('honesty in trade and forbidding fraud', 'প্রতারণা ও মাপে কম দেওয়া বর্জন', 'تحريم الغش والتطفيف'),
+  "Isra and Mi'raj (the Night Journey)": t("Isra and Mi'raj (the Night Journey)", 'ইসরা ও মিরাজ', 'الإسراء والمعراج'),
+  'Trinity and oneness of Allah': t('the oneness of Allah and rejecting the Trinity', 'আল্লাহর একত্ববাদ ও ত্রিত্ববাদ প্রত্যাখ্যান', 'توحيد الله ورفض التثليث'),
+  'crucifixion of Isa (Jesus)': t('what the Quran says about the crucifixion of Isa (Jesus)', 'ঈসা (আ.)-এর ক্রুশবিদ্ধ হওয়া সম্পর্কিত আয়াত', 'ما ذكره القرآن عن صلب عيسى عليه السلام'),
+  'Yajuj and Majuj (Gog and Magog)': t('Yajuj and Majuj (Gog and Magog)', 'ইয়াজুজ ও মাজুজ', 'يأجوج ومأجوج'),
+  'previous scriptures (Torah, Zabur, Injeel)': t('previous scriptures (Torah, Zabur, Injeel)', 'পূর্ববর্তী আসমানি কিতাব (তাওরাত, যাবুর, ইঞ্জিল)', 'الكتب السماوية السابقة (التوراة والزبور والإنجيل)'),
+  'success and striving': t('success and sincere striving', 'সফলতা ও সৎ প্রচেষ্টা', 'الفلاح والسعي الصالح'),
+  'companions (Sahaba) and Hijrah': t('the Companions (Sahaba) and Hijrah', 'সাহাবায়ে কিরাম ও হিজরত', 'الصحابة والهجرة'),
 };
 
 export const MSG = {
@@ -146,6 +156,16 @@ export const MSG = {
     'This is a question about hadith or the virtue of a surah. I have the Quran text, a translation and the translators\' notes, but no hadith collections, so I cannot answer it reliably. Please ask a qualified scholar.',
     'এটি হাদীস বা কোনো সূরার ফজিলত সংক্রান্ত প্রশ্ন। আমার কাছে কুরআনের পাঠ, অনুবাদ ও অনুবাদকের টীকা আছে, কিন্তু হাদীসের কোনো সংকলন নেই, তাই নির্ভরযোগ্য উত্তর দিতে পারব না। অনুগ্রহ করে একজন যোগ্য আলেমকে জিজ্ঞেস করুন।',
     'هذا سؤال عن الحديث أو فضل سورة. عندي نص القرآن وترجمته وملاحظات المترجم، بلا مجموعات حديث، فلا أستطيع الجواب بثقة. يرجى سؤال عالم مؤهل.'),
+  // Strict factual boundary when asked about figures not named in the Quran text (Dajjal, Imam Mahdi) — scholar review advised
+  notNamedInQuran: (who: 'dajjal' | 'mahdi'): T => who === 'dajjal'
+    ? t(
+      'Al-Masih ad-Dajjal (the False Messiah) is not mentioned by name in the Quran text. Detailed teachings about Dajjal come from authentic Hadith collections, which this assistant does not carry; please ask a qualified scholar.',
+      'দাজ্জাল (আল-মাসীহ আদ-দাজ্জাল) নামটি সরাসরি কুরআনের পাঠে উল্লেখ নেই। দাজ্জাল সম্পর্কিত বিস্তারিত বিবরণ সহীহ হাদীস গ্রন্থগুলোতে এসেছে, যা এই সহকারীর ডেটায় নেই; বিস্তারিত জানতে একজন যোগ্য আলেমকে জিজ্ঞেস করুন।',
+      'المسيح الدجال لم يُذكر باسمه صراحةً في نص القرآن الكريم، وتفاصيل أمره واردة في السنة النبوية والحديث الشريف، وليست عندي مجموعات حديث؛ يُرجى سؤال عالم مؤهل.')
+    : t(
+      'Imam Mahdi is not mentioned by name in the Quran text. Accounts about the Mahdi come from Hadith collections and classical Islamic scholarship, which this assistant does not carry; please ask a qualified scholar.',
+      'ইমাম মাহদী নামটি কুরআনের পাঠে উল্লেখ নেই। ইমাম মাহদী সম্পর্কিত বিবরণ হাদীস গ্রন্থ ও আলেমদের বর্ণনায় এসেছে, যা এই সহকারীর ডেটায় নেই; বিস্তারিত জানতে একজন যোগ্য আলেমকে জিজ্ঞেস করুন।',
+      'المهدي لم يُذكر باسمه في نص القرآن الكريم، وإنما وردت أخباره في كتب الحديث وآثار العلماء، وليست عندي مجموعات حديث؛ يُرجى سؤال عالم مؤهل.'),
   noAsbab: t(
     'I cannot determine from the Quran text alone whether or why a surah or ayah was revealed on a particular historical occasion: reasons for revelation (Asbab al-Nuzul) come from hadith and tafsir collections, which I do not have, and I do not interpret ayahs to infer them. For the text itself you can ask for the surah or ayah directly (or use "explain ..." for the translator\'s notes); for reasons of revelation, please ask a qualified scholar.',
     'শুধু কুরআনের পাঠ থেকে কোনো সূরা বা আয়াত নাজিলের ঐতিহাসিক কারণ নির্ণয় করা আমার পক্ষে সম্ভব নয়: নাজিলের কারণ (শানে নুযূল / আসবাবুন নুযূল) হাদীস ও তাফসীর গ্রন্থ থেকে জানা যায়, যা আমার কাছে নেই, এবং আমি নিজে আয়াত ব্যাখ্যা করে তা অনুমান করি না। মূল পাঠ দেখতে সরাসরি সূরা বা আয়াতের নম্বর লিখুন (বা অনুবাদকের টীকার জন্য "... এর ব্যাখ্যা" লিখুন); নাজিলের কারণ জানতে একজন যোগ্য আলেমকে জিজ্ঞেস করুন।',
@@ -447,6 +467,59 @@ export const STAT_TEXT = {
     `Surah 58, Al-Mujaadila (المجادلة — ${count} ayahs, Medinan), is the only surah in the Quran in which the name Allah (الله) appears in every single ayah.`,
     `সূরা ৫৮, আল-মুজাদালাহ (المجادلة — ${bd(count)}টি আয়াত, মাদানী) কুরআনের একমাত্র সূরা যার প্রতিটি আয়াতে "আল্লাহ" (الله) নামটি রয়েছে।`,
     `سورة المجادلة (رقم 58، ${count} آية، مدنية) هي السورة الوحيدة في القرآن التي ورد فيها لفظ الجلالة «الله» في كل آية منها.`),
+  // Additional verified structural & factual answers (from data/quran.json; scholar review advised for wording)
+  surahsNamedAnimals: t(
+    "Six surahs in the Quran are named after animals: 2 Al-Baqara (The Cow), 6 Al-An'aam (The Cattle), 16 An-Nahl (The Bee), 27 An-Naml (The Ant), 29 Al-Ankaboot (The Spider), and 105 Al-Fil (The Elephant).",
+    'কুরআনের ৬টি সূরা প্রাণীদের নামে নামকরণ করা হয়েছে: ২ আল-বাকারা (গাভী/গরু), ৬ আল-আনআম (গবাদি পশু), ১৬ আন-নাহল (মৌমাছি), ২৭ আন-নামল (পিঁপড়া), ২৯ আল-আনকাবুত (মাকড়সা) এবং ১০৫ আল-ফীল (হাতি)।',
+    'ست سور في القرآن مسمّاة بأسماء حيوانات: 2 البقرة، 6 الأنعام، 16 النحل، 27 النمل، 29 العنكبوت، و105 الفيل.'),
+  surahOpeningList: (labelEn: string, labelBn: string, labelAr: string, count: number, list: string, extraEn = '', extraBn = '', extraAr = ''): T => t(
+    `${count} surahs begin with ${labelEn}: ${list}.${extraEn ? ' ' + extraEn : ''}`,
+    `${labelBn} দিয়ে ${bd(count)}টি সূরা শুরু হয়েছে: ${list}।${extraBn ? ' ' + extraBn : ''}`,
+    `تبدأ ${count} سور بـ${labelAr}: ${list}.${extraAr ? ' ' + extraAr : ''}`),
+  sahabiZayd: t(
+    'Zayd (Zayd ibn Harithah) is the only Companion (Sahabi) of Prophet Muhammad mentioned explicitly by personal name in the Quran, in Surah Al-Ahzaab (33:37, shown below). Abu Bakr is referred to in 9:40 as the companion in the cave without his personal name.',
+    'সাহাবীদের মধ্যে একমাত্র যায়েদ ইবনে হারিসা (রা.)-এর নাম সরাসরি কুরআনে উল্লেখ এসেছে—সূরা আহযাবের ৩৩:৩৭ নম্বর আয়াতে (নিচে দেখানো হলো)। আবু বকর (রা.)-কে ৯:৪০ আয়াতে "দুইজনের দ্বিতীয়জন / সাথী" হিসেবে উল্লেখ করা হয়েছে, তবে নাম ছাড়াই।',
+    'زيد بن حارثة رضي الله عنه هو الصحابي الوحيد المذكور باسمه صراحةً في القرآن الكريم، وذلك في سورة الأحزاب (33:37، معروضة أدناه). أما أبو بكر رضي الله عنه فذُكر بوصفه صاحبه في الغار في (9:40) دون التصريح باسمه.'),
+  angelsNamed: t(
+    'Five angels are explicitly mentioned by name in the Quran text: Jibril (Gabriel — 2:97, 2:98, 66:4), Mikail (Michael — 2:98), Harut and Marut (2:102), and Malik (the keeper of Hell — 43:77). The Angel of Death is mentioned by title in 32:11 rather than by personal name; other angel names (such as Israfil) come from Hadith.',
+    'কুরআনের পাঠে ৫ জন ফেরেশতার নাম সরাসরি উল্লেখ আছে: জিবরীল (2:97, 2:98, 66:4), মীকাইল (2:98), হারূত ও মারূত (2:102) এবং মালিক (জাহান্নামের প্রহরী, 43:77)। মৃত্যুর ফেরেশতা (32:11) উপাধিতে উল্লিখিত হয়েছেন; অন্যান্য ফেরেশতার নাম (যেমন ইসরাফীল) হাদীস থেকে জানা যায়।',
+    'وردت أسماء خمسة ملائكة صراحةً في القرآن: جبريل (2:97، 2:98، 66:4)، وميكال (2:98)، وهاروت وماروت (2:102)، ومالك خازن النار (43:77). وذُكر ملك الموت بصفته في (32:11)، وتُعرف أسماء أخرى من السنة.'),
+  monthNamed: t(
+    'Ramadan is the only month explicitly mentioned by name in the Quran, in Surah Al-Baqara (2:185). Surah At-Tawba (9:36) states that the number of months with Allah is twelve lunar months, four of which are sacred.',
+    'পবিত্র কুরআনে একমাত্র "রমজান" মাসের নাম সরাসরি উল্লেখ এসেছে—সূরা বাকারা (2:185)-এ। সূরা তাওবা (9:36)-এ বলা হয়েছে, আল্লাহর বিধানে মাস ১২টি, যার মধ্যে ৪টি সম্মানিত মাস।',
+    'شهر رمضان هو الشهر الوحيد المذكور باسمه صراحةً في القرآن الكريم، في سورة البقرة (2:185). وتذكر سورة التوبة (9:36) أن عدة الشهور عند الله اثنا عشر شهرًا منها أربعة حرم.'),
+  dayNamed: t(
+    'Among days of the week, two are explicitly named in the Quran: Al-Jumu\'ah (Friday, 62:9) and As-Sabt (the Sabbath / Saturday, e.g. 2:65, 4:47, 4:154, 7:163, 16:124).',
+    'সপ্তাহের দিনগুলোর মধ্যে কুরআনে দুটি দিনের নাম সরাসরি এসেছে: জুমুআ (শুক্রবার, 62:9) এবং সাবত (শনিবার, যেমন 2:65, 4:154, 7:163)।',
+    'من أيام الأسبوع ذُكر يومان صراحةً في القرآن: يوم الجمعة (62:9) والسبت (مثل 2:65، 4:154، 7:163، 16:124).'),
+  mosquesNamed: t(
+    'Two mosques are explicitly named by proper name in the Quran: Al-Masjid al-Haram in Makkah (mentioned 15 times, e.g. 2:144, 17:1) and Al-Masjid al-Aqsa in Jerusalem (17:1). In addition, 9:108 describes "a mosque founded on righteousness from the first day" (identified in Seerah/tafsir with Quba) and 9:107 mentions a mosque built for harm without giving those names.',
+    'কুরআনে দুটি মসজিদের নাম সরাসরি উল্লেখ আছে: মক্কার মসজিদুল হারাম (১৫ বার, যেমন 2:144, 17:1) এবং জেরুজালেমের মসজিদুল আকসা (17:1)। এ ছাড়া 9:108-এ "প্রথম দিন থেকেই তাকওয়ার ওপর প্রতিষ্ঠিত মসজিদ"-এর বর্ণনা এবং 9:107-এ ক্ষতির উদ্দেশ্যে নির্মিত মসজিদের উল্লেখ আছে, তবে নাম উল্লেখ ছাড়াই।',
+    'ذُكر مسجدان باسميهما صراحةً في القرآن: المسجد الحرام (15 مرة، مثل 2:144 و17:1) والمسجد الأقصى (17:1). كما وُصف في (9:108) مسجد أُسّس على التقوى، وفي (9:107) مسجد الضرار دون تسميتهما.'),
+  revelationYears: t(
+    'The Quran text itself does not state an exact number of years for its revelation; it describes being revealed gradually in stages (17:106, 25:32). Historical accounts of the ~23-year revelation period come from Seerah and Hadith; please ask a qualified scholar for historical details.',
+    'কুরআনের মূল পাঠে নাজিলের নির্দিষ্ট বছর-সংখ্যা উল্লেখ নেই; তবে কুরআন যে ধাপে ধাপে ধীরে ধীরে নাজিল হয়েছে তা 17:106 ও 25:32 আয়াতে বলা হয়েছে। প্রায় ২৩ বছরে নাজিল হওয়ার ঐতিহাসিক বিবরণ সীরাত ও হাদীস থেকে জানা যায়; বিস্তারিত জানতে একজন যোগ্য আলেমকে জিজ্ঞেস করুন।',
+    'لا يذكر نص القرآن عدد سنوات نزوله، وإنما يبيّن أنه نُزِّل مفرَّقًا على مراحل (17:106، 25:32). وتُعرف مدة النزول التاريخية من السيرة والحديث؛ يُرجى سؤال عالم مؤهل.'),
+  mostMentionedProphet: (
+    top: { name: T; times: number; ayahs: number },
+    next: Array<{ name: T; times: number }>,
+    surah: { tr: string; ar: string } | null,
+  ): T => t(
+    `In the Quran text${surah ? ` of Surah ${surah.tr}` : ''}, the most-mentioned prophet is ${top.name.en} — ${top.times} times in ${top.ayahs} ayahs (using this app's Arabic+English name counter). Next: ${next.map((x) => `${x.name.en} (${x.times})`).join(', ')}.`,
+    `${surah ? `সূরা ${surah.tr}-এ` : 'কুরআনে'} সবচেয়ে বেশি উল্লেখিত নবীর নাম ${top.name.bn} — ${bd(top.ayahs)}টি আয়াতে মোট ${bd(top.times)} বার (আরবি ও ইংরেজি নাম মিলিয়ে গোনা হয়েছে)। এরপর: ${next.map((x) => `${x.name.bn} (${bd(x.times)})`).join(', ')}।`,
+    `أكثر الأنبياء ذكرًا بالاسم في ${surah ? `سورة ${surah.ar}` : 'القرآن'} هو ${top.name.ar} — ${arTimes(top.times)} في ${arAyahs(top.ayahs)}. يليه: ${next.map((x) => `${x.name.ar} (${x.times})`).join('، ')}.`),
+  mostMentionedAnimal: (
+    top: { name: T; times: number; ayahs: number },
+    next: Array<{ name: T; times: number }>,
+    surah: { tr: string; ar: string } | null,
+  ): T => t(
+    `Among named animal kinds in the Quran text${surah ? ` of Surah ${surah.tr}` : ''}, the most frequently mentioned is the ${top.name.en} — ${top.times} times in ${top.ayahs} ayahs (excluding general terms like cattle/livestock, using this app's Arabic+English counter). Next: ${next.map((x) => `${x.name.en} (${x.times})`).join(', ')}.`,
+    `${surah ? `সূরা ${surah.tr}-এ` : 'কুরআনে'} নির্দিষ্টভাবে নাম উল্লেখ থাকা প্রাণীদের মধ্যে সবচেয়ে বেশি এসেছে ${top.name.bn} — ${bd(top.ayahs)}টি আয়াতে মোট ${bd(top.times)} বার ("গবাদি পশু"-র মতো সাধারণ শব্দ বাদে)। এরপর: ${next.map((x) => `${x.name.bn} (${bd(x.times)})`).join(', ')}।`,
+    `أكثر الحيوانات المسمّاة ذكرًا في ${surah ? `سورة ${surah.ar}` : 'القرآن'} هو ${top.name.ar} — ${arTimes(top.times)} في ${arAyahs(top.ayahs)}. يليه: ${next.map((x) => `${x.name.ar} (${x.times})`).join('، ')}.`),
+  surahsByMeaningList: (query: string, itemsEn: string, itemsBn: string, itemsAr: string): T => t(
+    `Surahs matching "${query}": ${itemsEn}.`,
+    `"${query}" অর্থ বা নামের সাথে মিলেছে এমন সূরা: ${itemsBn}।`,
+    `السور المطابقة لـ«${query}»: ${itemsAr}.`),
   manzils: t(
     'The Quran is traditionally divided into 7 manzils (roughly equal portions for completing recitation in one week). Manzil markings are reading divisions in printed mushafs and are not stored in the ayah dataset used here.',
     'সাত দিনে পুরো কুরআন খতম করার সুবিধার্থে ঐতিহ্যগতভাবে কুরআনকে ৭টি মনযিলে ভাগ করা হয়েছে। মনযিল মূলত মুসহাফে পাঠের সুবিধার বিভাজন, যা এখানকার মূল আয়াত-ডেটায় আলাদাভাবে সংরক্ষিত নেই।',

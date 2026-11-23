@@ -6,7 +6,7 @@ import { Bm25 } from './bm25.js';
 import type { Ayah, Quran } from './data.js';
 import { BANGLISH_TO_EN, NAME_TO_EN, THEMES, type Theme } from './lexicon.js';
 import { phoneticFirstClass, phoneticTermKey, phoneticTermKeyFlex } from './phoneticNorm.js';
-import { americanize, bnLooseNorm, mappedEnglishWords, normAr, STOP_EN, normBn, stemEn, tokensAr, tokensBn, tokensBnLoose, tokensEn, wordsBn, wordsEn } from './text.js';
+import { americanize, bnLooseNorm, mappedEnglishWords, normAr, STOP_EN, normBn, stemBn, stemEn, tokensAr, tokensBn, tokensBnLoose, tokensEn, wordsBn, wordsEn } from './text.js';
 
 export interface Index {
   en: Bm25;
@@ -68,14 +68,23 @@ export function matchThemes(question: string, isEnglish: (w: string) => boolean 
     queryPhonetic.push({ word: w, key: phoneticTermKey(w), flex: phoneticTermKeyFlex(w), first: phoneticFirstClass(w) });
   }
   const bn = wordsBn(question);
+  const bnStems = bn.map(stemBn);
   const bnLoose = bn.map(bnLooseNorm);
+  const bnLooseStems = bnStems.map(bnLooseNorm);
   const ar = new Set(tokensAr(question).map(arWord));
   const wordHit = (raw: string): boolean => {
     if (isBengali(raw)) {
       const w = normBn(raw);
-      if (bn.some((x) => x === w || (w.length >= 3 && x.includes(w)))) return true;
+      const hitExact = w.length < 3 ? bn.some((x) => x === w)
+        : w.length === 3 ? bn.some((x, i) => x === w || bnStems[i] === w)
+          : w.length === 4 ? bn.some((x, i) => x === w || bnStems[i] === w || x.startsWith(w))
+            : bn.some((x) => x === w || x.includes(w));
+      if (hitExact) return true;
       const wl = bnLooseNorm(w);
-      return wl.length >= 3 && bnLoose.some((x) => x === wl || x.includes(wl));
+      if (wl.length < 3) return bnLoose.some((x) => x === wl);
+      if (wl.length === 3) return bnLoose.some((x, i) => x === wl || bnLooseStems[i] === wl);
+      if (wl.length === 4) return bnLoose.some((x, i) => x === wl || bnLooseStems[i] === wl || x.startsWith(wl));
+      return bnLoose.some((x) => x === wl || x.includes(wl));
     }
     if (isArabic(raw)) return ar.has(arWord(raw));
     const lo = raw.toLowerCase();

@@ -51,3 +51,31 @@ export function countWord(q: Quran, word: string, lang: WordLang): { line: strin
     total, ayahs, top,
   };
 }
+
+/** Count exact whole-word Arabic stems (allowing standard attached prefixes و ف ب ل ك ال لل) across the Arabic text. */
+export function countArabicStems(
+  q: Quran,
+  stems: string[],
+  label: string,
+): { line: string; total: number; ayahs: number; top: string; forms: Array<[string, number]> } {
+  const re = new RegExp(`(?<![\\u0600-\\u06FF])(?:و|ف)?(?:ب|ل|ك)?(?:ال|لل)?(?:${stems.join('|')})(?![\\u0600-\\u06FF])`, 'g');
+  const per = new Map<number, number>();
+  const formsMap = new Map<string, number>();
+  let total = 0, ayahs = 0;
+  for (const y of q.ayahs) {
+    const m = normAr(y.arc).match(re);
+    if (m && m.length > 0) {
+      total += m.length;
+      ayahs++;
+      per.set(y.s, (per.get(y.s) ?? 0) + m.length);
+      for (const f of m) formsMap.set(f, (formsMap.get(f) ?? 0) + 1);
+    }
+  }
+  const top = [...per.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 5).map(([s, n]) => `${s} ${q.chapters[s - 1].tr}: ${n}`).join(', ') || 'none';
+  const forms = [...formsMap.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const formsText = forms.map(([f, n]) => `${f} (${n})`).join(', ') || 'none';
+  return {
+    line: `Arabic forms for "${label}" (Tanzil simple-clean): ${total} times in ${ayahs} ayahs. Forms counted: ${formsText}. Top surahs: ${top}.`,
+    total, ayahs, top, forms,
+  };
+}

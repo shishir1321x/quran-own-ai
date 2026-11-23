@@ -15,6 +15,9 @@ const STRONG_BANGLISH = new Set([
   'ki', 'keno', 'kivabe', 'kibhabe', 'kothay', 'kokhon', 'koto', 'kon', 'konti', 'konta', 'kake', 'kemon', 'kiser',
   // how many / how often ("quran e sijda koyta")
   'koyta', 'koita', 'koyti', 'koiti', 'koyto', 'kotogulo', 'kotogula', 'kotota', 'kototi', 'koybar', 'koibar', 'kotobar', 'kothobar', 'duibar', 'sijdar', 'sejda', 'sejdar',
+  'sobcheye', 'shobcheye', 'beshi', 'besi', 'esheche', 'eseche', 'asche', 'ase', 'nobir', 'nabir', 'nobider', 'nabider', 'sahabir', 'sahabider',
+  'pipra', 'moumachi', 'makorsha', 'maser', 'masher', 'fereshtar', 'suragulo', 'surahgulo', 'shuru', 'suru', 'diye', 'diya',
+  'sofolota', 'porishrom', 'protarona', 'vejal', 'bhejal', 'bornobad', 'boishommo', 'monkharap',
   // next / previous / more ("porer ayat", "ager ayat", "aro dekhao")
   'porer', 'poror', 'ager', 'aager', 'aro', 'aaro', 'dekhao',
   // pronouns
@@ -59,6 +62,7 @@ const STRONG_BANGLISH = new Set([
 const WEAK_BANGLISH = new Set([
   'er', 'te', 'ta', 'ti', 'ke', 'kar', 'se', 'tar', 'ei', 'oi', 'na', 'ba',
   'ma', 'mon', 'pap', 'paap', 'hok', 'sura', 'doa', 'hoj', 'sud', 'bou', 'para',
+  'nam', 'naam', 'nobi', 'kom', 'loha', 'guha', 'alo', 'churi',
 ]);
 
 // Banglish words that are ALSO ordinary English words ("sob", "mane", "chai", "pore",
