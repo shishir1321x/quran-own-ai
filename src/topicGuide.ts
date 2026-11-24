@@ -368,6 +368,128 @@ export const TOPIC_GUIDE: Record<string, TopicGuideEntry> = {
     ),
   ),
 
+  'suicide and sanctity of life': g(
+    t(
+      'The Quran strictly forbids taking one\'s own life or throwing oneself into destruction, affirming the sanctity of every human soul while reminding servants never to despair of Allah\'s mercy.',
+      'কুরআনে আত্মহত্যা করা বা নিজেকে ধ্বংসের মুখে ঠেলে দেওয়া স্পষ্টভাবে নিষিদ্ধ করা হয়েছে এবং প্রতিটি মানুষের জীবনের পবিত্রতা ও আল্লাহর অসীম রহমত থেকে নিরাশ না হওয়ার কথা স্মরণ করিয়ে দেওয়া হয়েছে।',
+      'ينهى القرآن صراحةً عن قتل النفس أو إلقائها إلى التهلكة، مؤكّدًا حرمة النفس البشرية وداعيًا العباد إلى عدم القنوط من رحمة الله.',
+    ),
+    pt(
+      [
+        'Surah An-Nisaa (4:29–30) explicitly commands: "And do not kill yourselves [or one another]. Indeed, Allah is to you ever Merciful," warning against transgression.',
+        'Surah Al-Baqara (2:195) instructs believers not to throw themselves with their own hands into destruction.',
+        'Surah Az-Zumar (39:53) calls on servants never to despair of the mercy of Allah.',
+        'Surah Al-Maaida (5:32) highlights the immense sanctity of saving and preserving human life. (If you or someone you know is personally struggling right now, please reach out to a trusted person or local crisis helpline immediately.)',
+      ],
+      [
+        'সূরা নিসা (4:29–30)-এ স্পষ্ট নির্দেশ দেওয়া হয়েছে: "এবং নিজেদেরকে হত্যা করো না; নিশ্চয় আল্লাহ তোমাদের প্রতি পরম দয়ালু।"',
+        'সূরা বাকারা (2:195)-এ নিজ হাতে নিজেদের ধ্বংসের মুখে ঠেলে দিতে নিষেধ করা হয়েছে।',
+        'সূরা যুমার (39:53)-এ আল্লাহর অনুগ্রহ ও রহমত থেকে কখনো নিরাশ না হওয়ার আহ্বান জানানো হয়েছে।',
+        'সূরা মায়িদাহ (5:32)-এ মানুষের প্রাণ রক্ষার অপরিসীম মর্যাদা উল্লেখ করা হয়েছে। (আপনি বা আপনার পরিচিত কেউ ব্যক্তিগতভাবে মানসিক সংকটে থাকলে অনুগ্রহ করে এখনই বিশ্বস্ত কারও সাথে বা জরুরি হেল্পলাইনে কথা বলুন।)',
+      ],
+      [
+        'تنهى سورة النساء (4:29–30) صراحةً بقوله تعالى: «ولا تقتلوا أنفسكم إن الله كان بكم رحيمًا».',
+        'وتأمر سورة البقرة (2:195) بعدم إلقاء النفس باليد إلى التهلكة.',
+        'وتدعو سورة الزمر (39:53) إلى عدم القنوط من رحمة الله الواسعة.',
+        'وتبيّن سورة المائدة (5:32) عظم حرمة النفس وإحيائها. (إن كنت تمرّ بضيق شخصي الآن، فيرجى التحدث فورًا مع شخص تثق به أو الاتصال بخط المساندة المحلي.)',
+      ],
+    ),
+  ),
+
+  'hospitality and honoring guests': g(
+    t(
+      'The Quran praises generous hospitality toward guests and selfless kindness toward visitors and those in need.',
+      'কুরআনে মেহমানদের প্রতি উদার আতিথেয়তা এবং অভ্যাগতদের প্রতি নিঃস্বার্থ সৌজন্যের প্রশংসা করা হয়েছে।',
+      'يثني القرآن على إكرام الضيف والإيثار وحسن الاستقبال.',
+    ),
+    pt(
+      [
+        'Surah Adh-Dhaariyat (51:24–27) recounts Prophet Ibrahim greeting his guests with peace and promptly preparing a generous meal for them.',
+        'Surah Al-Hashr (59:9) praises believers who honor newcomers and prefer others over themselves even in need.',
+      ],
+      [
+        'সূরা যারিয়াত (51:24–27)-এ ইবরাহীম (আ.)-এর মেহমানদের সালাম দেওয়া ও দ্রুত উত্তম খাবারের আয়োজনের বিবরণ এসেছে।',
+        'সূরা হাশর (59:9)-এ নিজেদের অভাব থাকা সত্ত্বেও অন্যকে প্রাধান্যদানকারী মুমিনদের প্রশংসা করা হয়েছে।',
+      ],
+      [
+        'تذكر سورة الذاريات (51:24–27) إكرام إبراهيم عليه السلام لضيوفه بالسلام وتقديم الطعام.',
+        'وتثني سورة الحشر (59:9) على الذين يؤثرون على أنفسهم ولو كان بهم خصاصة.',
+      ],
+    ),
+  ),
+
+  'verifying news and avoiding rumors': g(
+    t(
+      'The Quran instructs believers to verify unconfirmed reports carefully, think well of one another, and avoid speaking without knowledge.',
+      'কুরআনে যাচাইহীন সংবাদ ভালোভাবে যাচাই করা, পরস্পরের প্রতি সুধারণা রাখা এবং না জেনে কোনো কথার পেছনে না ছোটার নির্দেশ দেওয়া হয়েছে।',
+      'يأمر القرآن بالتثبت من الأخبار وحسن الظن وعدم قفو ما لا علم للإنسان به.',
+    ),
+    pt(
+      [
+        'Surah Al-Hujuraat (49:6) commands investigating reports carefully lest you harm people out of ignorance and regret it.',
+        'Surah An-Noor (24:12) calls on believers to think good of one another when hearing accusations.',
+        'Surah Al-Israa (17:36) warns not to pursue that of which you have no knowledge.',
+      ],
+      [
+        'সূরা হুজুরাত (49:6)-এ অজ্ঞতাবশত কাউকে কষ্ট দেওয়া থেকে বাঁচতে সংবাদ যাচাই করার নির্দেশ দেওয়া হয়েছে।',
+        'সূরা নূর (24:12)-এ অপবাদ শুনলে মুমিনদের পরস্পরের প্রতি সুধারণা পোষণের শিক্ষা দেওয়া হয়েছে।',
+        'সূরা ইসরা (17:36)-এ যে বিষয়ে জ্ঞান নেই তার অনুসরণ করতে নিষেধ করা হয়েছে।',
+      ],
+      [
+        'تأمر سورة الحجرات (49:6) بالتبيّن عند سماع النبأ خشية إصابة قوم بجهالة.',
+        'وتدعو سورة النور (24:12) إلى حسن الظن بالمؤمنين عند سماع الإفك.',
+        'وتنهى سورة الإسراء (17:36) عن اتباع ما ليس للإنسان به علم.',
+      ],
+    ),
+  ),
+
+  'peacemaking and reconciliation': g(
+    t(
+      'The Quran commands reconciling fairly between disputing people, affirming brotherhood and encouraging speech that brings peace.',
+      'কুরআনে বিবাদমান মানুষের মাঝে ন্যায়সঙ্গতভাবে মীমাংসা ও শান্তি স্থাপনের নির্দেশ দেওয়া হয়েছে।',
+      'يأمر القرآن بالإصلاح بالعدل بين المتخاصمين وقول الخير الذي يجمع القلوب.',
+    ),
+    pt(
+      [
+        'Surah Al-Hujuraat (49:9–10) instructs making fair settlement between disputing believers and reminds that believers are brothers.',
+        'Surah An-Nisaa (4:114) highlights the goodness of enjoining charity, kindness, or reconciliation between people.',
+      ],
+      [
+        'সূরা হুজুরাত (49:9–10)-এ বিবাদমান পক্ষের মাঝে ন্যায়ভিত্তিক মীমাংসার নির্দেশ দেওয়া হয়েছে।',
+        'সূরা নিসা (4:114)-এ দান, সৎকাজ ও মানুষের মাঝে মীমাংসার কথাকে কল্যাণকর বলা হয়েছে।',
+      ],
+      [
+        'تأمر سورة الحجرات (49:9–10) بالإصلاح بين المؤمنين بالعدل والقسط.',
+        'وتذكر سورة النساء (4:114) خير من أمر بصدقة أو معروف أو إصلاح بين الناس.',
+      ],
+    ),
+  ),
+
+  'gentle speech and greetings': g(
+    t(
+      'The Quran teaches returning greetings with equal or greater warmth, speaking gently, and responding to harshness with peace.',
+      'কুরআনে সালাম ও অভিবাদনের উত্তম জবাব দেওয়া, কোমল ও সুন্দর ভাষায় কথা বলা এবং রূঢ়তার জবাবে শান্তির কথা বলার নির্দেশ দেওয়া হয়েছে।',
+      'يرشد القرآن إلى ردّ التحية بأحسن منها والقول اللين ومقابلة الجهل بالسلام.',
+    ),
+    pt(
+      [
+        'Surah An-Nisaa (4:86) instructs greeting back with something better or returning the greeting equally.',
+        'Surah Al-Furqaan (25:63) describes servants of the Most Merciful who reply with words of peace when addressed harshly.',
+        'Surah Al-Israa (17:53), Surah Taa-Haa (20:44), and Surah Luqman (31:19) enjoin speaking what is best, gentle speech, and lowering one\'s voice.',
+      ],
+      [
+        'সূরা নিসা (4:86)-এ অভিবাদনের জবাব আরও উত্তমভাবে বা সমপরিমাণে দেওয়ার নির্দেশ এসেছে।',
+        'সূরা ফুরকান (25:63)-এ অজ্ঞদের রূঢ় কথার জবাবে শান্তিপূর্ণ কথা বলার গুণ উল্লেখ আছে।',
+        'সূরা ইসরা (17:53), ত্ব-হা (20:44) ও লুকমান (31:19)-এ উত্তম ও নম্র কথা বলা এবং কণ্ঠস্বর সংযত রাখার নির্দেশ দেওয়া হয়েছে।',
+      ],
+      [
+        'تأمر سورة النساء (4:86) بردّ التحية بأحسن منها أو بمثلها.',
+        'وتصف سورة الفرقان (25:63) عباد الرحمن بأنهم إذا خاطبهم الجاهلون قالوا سلامًا.',
+        'وتحث الإسراء (17:53) وطه (20:44) ولقمان (31:19) على القول الأحسن واللين وغضّ الصوت.',
+      ],
+    ),
+  ),
+
   'knowledge': g(
     t(
       'The Quran honors reading, learning, and seeking beneficial knowledge, distinguishing those who know from those who do not.',

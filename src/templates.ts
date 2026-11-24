@@ -1,5 +1,7 @@
 // Every sentence the assistant says. Written by people, in three languages: no AI makes up an answer.
 // HAVE THE ARABIC AND BENGALI WORDING CHECKED by native readers (and the care messages by a counsellor).
+import type { DomainId } from './domains.js';
+import type { GentleFallbackKind, PersonalStance, SituationId } from './nlu.js';
 import type { Lang } from './types.js';
 
 type T = Record<Lang, string>;
@@ -119,6 +121,7 @@ export const THEME_LABEL: Record<string, T> = {
   'usury (interest)': t('usury (interest)', 'সুদ (রিবা)', 'الربا'),
   'inheritance': t('inheritance', 'উত্তরাধিকার', 'الميراث'),
   'adultery': t('adultery', 'ব্যভিচার', 'الزنا'),
+  'suicide and sanctity of life': t('suicide and the sanctity of life', 'আত্মহত্যা ও জীবনের পবিত্রতা', 'الانتحار وحرمة النفس'),
   'killing': t('killing', 'অন্যায় হত্যা', 'القتل'),
   'bribery': t('bribery', 'ঘুষ', 'الرشوة'),
   'orphans': t('orphans', 'এতিম', 'اليتامى'),
@@ -141,6 +144,10 @@ export const THEME_LABEL: Record<string, T> = {
   'previous scriptures (Torah, Zabur, Injeel)': t('previous scriptures (Torah, Zabur, Injeel)', 'পূর্ববর্তী আসমানি কিতাব (তাওরাত, যাবুর, ইঞ্জিল)', 'الكتب السماوية السابقة (التوراة والزبور والإنجيل)'),
   'success and striving': t('success and sincere striving', 'সফলতা ও সৎ প্রচেষ্টা', 'الفلاح والسعي الصالح'),
   'companions (Sahaba) and Hijrah': t('the Companions (Sahaba) and Hijrah', 'সাহাবায়ে কিরাম ও হিজরত', 'الصحابة والهجرة'),
+  'hospitality and honoring guests': t('hospitality and honoring guests', 'আতিথেয়তা ও মেহমানদারি', 'إكرام الضيف'),
+  'verifying news and avoiding rumors': t('verifying news and avoiding rumors', 'সংবাদ যাচাই ও গুজব বর্জন', 'التثبت من الأخبار وتجنب الإشاعات'),
+  'peacemaking and reconciliation': t('peacemaking and reconciliation', 'মীমাংসা ও শান্তি স্থাপন', 'الإصلاح بين الناس'),
+  'gentle speech and greetings': t('gentle speech and returning greetings', 'নম্র কথা ও সালামের উত্তর', 'القول اللين وردّ التحية'),
 };
 
 export const MSG = {
@@ -326,10 +333,18 @@ export const MSG = {
     'Which ayah or surah do you mean? Please name it first, for example "Surah An-Naas" or "2:255".',
     'কোন আয়াত বা সূরার কথা বলছেন? আগে সেটার নাম লিখুন, যেমন "সূরা নাস" বা "2:255"।',
     'أي آية أو سورة تقصد؟ اذكرها أولًا، مثل "سورة الناس" أو "2:255".'),
+  searchReflectIntro: t(
+    'Here is what the Quran mentions regarding your request, shown verbatim with its translation for reflection (this assistant does not add personal interpretation):',
+    'আপনার জিজ্ঞাসা ও প্রসঙ্গের আলোকে কুরআনে যে আয়াতগুলো এসেছে, তা অনুবাদসহ হুবহু নিচে তুলে ধরা হলো (এই সহকারী নিজস্ব ব্যাখ্যা যোগ করে না):',
+    'إليك ما ورد في القرآن الكريم بخصوص ما سألت عنه، معروضًا بنصه وترجمته للتدبر (دون تفسير شخصي من هذا المساعد):'),
+  quranRecommendIntro: t(
+    'With pleasure! Here are beloved, uplifting verses from the Quran—beginning with Al-Fatihah, Ayat al-Kursi, Allah’s promise of ease after hardship, and Surah Al-Ikhlas. Ask me about any specific life circumstance or topic whenever you would like tailored verses:',
+    'আনন্দের সাথে দিচ্ছি! এখানে কুরআনের কয়েকটি অত্যন্ত প্রিয় ও হৃদয়স্পর্শী আয়াত তুলে ধরা হলো—সূরা ফাতিহা, আয়াতুল কুরসি, কষ্টের পর স্বস্তির প্রতিশ্রুতি ও সূরা ইখলাস। যেকোনো নির্দিষ্ট পরিস্থিতি বা বিষয়ে পরামর্শ চাইলে নির্দ্বিধায় লিখুন:',
+    'بكل سرور! إليك آيات كريمة جامعة ومطمئنة من القرآن الكريم—من الفاتحة وآية الكرسي ووعد الله باليسر بعد العسر وسورة الإخلاص. اسألني عن أي ظرف أو موضوع محدد متى شئت:'),
   notFound: t(
-    'I could not find anything in the Quran about this. I can only answer from the Quran text: try a topic (patience, mercy, parents), a surah ("Surah Al-Ikhlas"), a reference ("2:255") or a number ("how many ayahs in Al-Baqarah?").',
-    'কুরআনে এ বিষয়ে কিছু খুঁজে পাইনি। আমি শুধু কুরআনের পাঠ থেকে উত্তর দিতে পারি: একটা বিষয় (ধৈর্য, রহমত, পিতা-মাতা), একটা সূরা ("সূরা ইখলাস"), একটা নম্বর ("2:255") বা সংখ্যা ("আল-বাকারায় কয়টি আয়াত?") জিজ্ঞেস করে দেখুন।',
-    'لم أجد شيئًا في القرآن عن هذا. أجيب من نص القرآن فقط: جرّب موضوعًا (الصبر، الرحمة، الوالدين) أو سورة ("سورة الإخلاص") أو رقم آية ("2:255") أو عددًا ("كم آية في البقرة؟").'),
+    'With respect, I could not find a direct verse in the Quran matching this exact phrasing, and out of care for truthfulness I never guess. In Islamic tradition, seeking clarity with patience and consulting knowledgeable people is always encouraged. Try asking me about a Quranic topic (patience, mercy, parents, honest trade), a surah ("Surah Al-Ikhlas"), a reference ("2:255"), or a count ("how many ayahs in Al-Baqarah?").',
+    'বিনয়ের সাথে জানাই, কুরআনের পাঠে এই কথার সরাসরি কোনো আয়াত খুঁজে পাইনি, আর সত্যনিষ্ঠার খাতিরে আমি অনুমান করে কিছু বলি না। ইসলামী আদবে ধৈর্য ও বিজ্ঞজনের পরামর্শ নেওয়া সবসময়ই প্রশংসনীয়। অনুগ্রহ করে কুরআনের কোনো বিষয় (ধৈর্য, রহমত, পিতা-মাতা, ব্যবসা), সূরা ("সূরা ইখলাস"), আয়াত নম্বর ("2:255") বা সংখ্যা ("আল-বাকারায় কয়টি আয়াত?") লিখে চেষ্টা করুন।',
+    'بكل احترام، لم أجد آية مباشرة في القرآن تطابق هذه العبارة، وحرصًا على الأمانة لا أخمن. ومن الأدب الإسلامي التثبّت وسؤال أهل العلم والخبرة. جرّب السؤال عن موضوع قرآني (الصبر، الرحمة، الوالدين) أو سورة ("سورة الإخلاص") أو رقم آية ("2:255") أو عدد ("كم آية في البقرة؟").'),
   dataNotUnderstood: t(
     'I can count things in the Quran, for example "how many ayahs are in Surah Al-Baqarah?", "how many Meccan surahs are there?", "how many times does the word patience appear?" or "how many animals does the Quran name?". Which one do you want?',
     'আমি কুরআনের সংখ্যা বলতে পারি, যেমন "সূরা বাকারায় কয়টি আয়াত?", "মক্কী সূরা কয়টি?", "ধৈর্য শব্দটি কতবার এসেছে?" বা "কুরআনে কয়টি প্রাণীর নাম আছে?"। কোনটা জানতে চান?',
@@ -347,9 +362,9 @@ export const MSG = {
     'আমি কোনো আয়াত লিখব না, পূরণ করব না বা বানাব না। কুরআন শুধু তা-ই যা কুরআনে আছে। তার বদলে কোনো বিষয়ে আসল আয়াত দেখাতে পারি।',
     'لن أكتب آية ولن أُكملها ولن أختلقها. القرآن هو ما ورد في القرآن فقط. يمكنني أن أعرض عليك آيات حقيقية عن موضوع ما.'),
   crisis: t(
-    'I am really sorry that you are going through this. You do not have to carry it alone. Please talk to someone you trust right now, or contact your local emergency number or a crisis line. If you might be in danger, please call emergency services at once.',
-    'আপনি যে কষ্টের মধ্য দিয়ে যাচ্ছেন সেজন্য আমি সত্যিই দুঃখিত। এটা একা বহন করতে হবে না। এখনই কোনো বিশ্বস্ত মানুষের সাথে কথা বলুন, অথবা আপনার এলাকার জরুরি নম্বরে বা কোনো সহায়তা-হটলাইনে যোগাযোগ করুন। আপনি বিপদে থাকতে পারেন মনে হলে এখনই জরুরি সেবায় ফোন করুন।',
-    'يؤسفني جدًا ما تمرّ به. لست مضطرًا لتحمّله وحدك. تحدّث الآن مع شخص تثق به، أو اتصل برقم الطوارئ المحلي أو بخط مساعدة. إن كنت في خطر فاتصل بالطوارئ فورًا.'),
+    'I am deeply sorry that you are carrying such heavy pain right now—please know that your life is precious and honoured in the sight of Allah, and His mercy and relief are never closed to you. You do not have to carry this hurt alone. Please talk to someone you trust right now—a family member, friend, or counsellor—or contact your local crisis line or emergency services immediately if you might be in danger.',
+    'আপনি এখন যে গভীর কষ্ট ও যন্ত্রণার মধ্য দিয়ে যাচ্ছেন, তা শুনে সত্যিই ব্যথিত হলাম—অনুগ্রহ করে মনে রাখবেন, আল্লাহর কাছে আপনার জীবন অত্যন্ত মূল্যবান এবং তাঁর রহমত ও স্বস্তির দরজা কখনো বন্ধ হয় না। এই কষ্ট আপনাকে একা বয়ে বেড়াতে হবে না। দয়া করে এখনই কোনো বিশ্বস্ত মানুষ, পরিবারের সদস্য বা পরামর্শদাতার সাথে কথা বলুন, অথবা বিপদের আশঙ্কা থাকলে অবিলম্বে জরুরি সেবা বা সহায়তা-হটলাইনে যোগাযোগ করুন।',
+    'يؤلمني جدًا ما تمرّ به من وجع وثقل في القلب الآن—تذكّر أن حياتك غالية ومكرّمة عند الله، وأن باب رحمته وفرجه لا يُغلق أبدًا. لست مضطرًا لتحمّل هذا الألم وحدك؛ تحدّث الآن مع شخص تثق به من أهلك أو أصدقائك، أو تواصل فورًا مع خط المساندة أو رقم الطوارئ المحلي إن كنت في خطر.'),
   greeting: t(`Hello! ${GREETING_BODY.en}`, `আসসালামু আলাইকুম! ${GREETING_BODY.bn}`, `أهلًا! ${GREETING_BODY.ar}`),
   greetingBody: GREETING_BODY,
   // A little conversation, in a humble manner (src/conversation.ts). Honest that it is a program: "all is well here",
@@ -397,6 +412,258 @@ export const MSG = {
     'وأنا أيضًا سعيد بلقائك! أنا هنا متى أردت أن تقرأ من القرآن.'),
   ack: t('All right! I am here whenever you have a question about the Quran.', 'আচ্ছা! কুরআন নিয়ে কোনো প্রশ্ন থাকলে জিজ্ঞেস করবেন, আমি আছি।', 'حسنًا! أنا هنا متى كان لديك سؤال عن القرآن.'),
   jazakallah: t('Wa iyyakum! It was my pleasure. Ask me anything else about the Quran.', 'ওয়া ইয়্যাকুম! কুরআন সম্পর্কে আরও কিছু জানতে চাইলে জিজ্ঞেস করুন।', 'وإياكم! اسألني عن أي شيء آخر في القرآن.'),
+  barakallah: t(
+    'Wa feekum barakallah! May Allah place blessings in your time and learning. Ask me whenever you would like to read from the Quran.',
+    'ওয়া ফীকুম বারাকাল্লাহ! আল্লাহ আপনার সময় ও কুরআন শেখায় বরকত দিন। কুরআন থেকে কিছু পড়তে চাইলে নির্দ্বিধায় জিজ্ঞেস করুন।',
+    'وفيكم بارك الله! بارك الله في وقتك وتعلّمك. اسألني متى أحببت أن تقرأ من القرآن.'),
+  duaForBot: t(
+    'Ameen, and may Allah protect and bless you too! Please come back any time you wish to read from the Quran.',
+    'আমিন, আল্লাহ আপনাকেও নিরাপদ ও ভালো রাখুন! কুরআন থেকে কিছু পড়তে চাইলে যেকোনো সময় জিজ্ঞেস করবেন।',
+    'آمين، وحفظك الله وبارك فيك! عُد متى شئت لتقرأ من القرآن.'),
+  makeDua: t(
+    'May Allah grant you ease, peace in your heart, and goodness in this life and the next. Here is how I can help: you can also ask for "Quranic duas" to read heartfelt supplications directly from the Quran.',
+    'আল্লাহ আপনার জন্য সব কিছু সহজ করে দিন, মনে শান্তি দিন এবং দুনিয়া ও আখিরাতে কল্যাণ দান করুন। আপনি চাইলে "কুরআনের দোয়া" লিখে সরাসরি কুরআনের দোয়াগুলোও পড়তে পারেন।',
+    'يسّر الله أمرك، وشرح صدرك، وبارك لك في الدنيا والآخرة. ويمكنك أن تسأل أيضًا عن "أدعية قرآنية" لتقرأ أدعية مباشرة من القرآن.'),
+  ameen: t(
+    'Ameen! May Allah accept all good prayers. Ask me whenever you want to read an ayah or surah.',
+    'আমিন! আল্লাহ সব নেক দোয়া কবুল করুন। কুরআন থেকে কোনো আয়াত বা সূরা পড়তে চাইলে বলবেন।',
+    'آمين! تقبل الله صالح الدعاء. اسألني متى شئت قراءة آية أو سورة.'),
+  goodDay: t(
+    'May Allah bless your day with peace and goodness! Feel free to ask anything from the Quran whenever you like.',
+    'আল্লাহ আপনার দিনটি শান্তি ও কল্যাণে ভরে দিন! কুরআন থেকে কিছু পড়তে বা জানতে চাইলে জিজ্ঞেস করুন।',
+    'بارك الله يومك بالخير والسلام! اسألني ما شئت من القرآن في أي وقت.'),
+  welcomeBack: t(
+    'Welcome back! May Allah bless our time together. What would you like to read from the Quran today?',
+    'স্বাগতম! আবার দেখে ভালো লাগলো। আজ কুরআন থেকে কী পড়তে বা জানতে চান?',
+    'أهلًا بعودتك! ماذا تحب أن تقرأ من القرآن اليوم؟'),
+  userHappy: t(
+    'Alhamdulillah, I am glad to hear that! May Allah keep your heart full of gratitude and peace. Ask me if you would like to read ayahs about gratitude.',
+    'আলহামদুলিল্লাহ, শুনে খুব ভালো লাগলো! আল্লাহ আপনার মনে সবসময় কৃতজ্ঞতা ও শান্তি রাখুন। চাইলে কৃতজ্ঞতা (শোকর) নিয়ে আয়াত পড়তে পারেন।',
+    'الحمد لله، يسعدني ذلك! أدام الله عليك الشكر والطمأنينة. يمكنك سؤالي عن آيات الشكر متى شئت.'),
+  canYouHelp: t(
+    'Yes, of course, InshaAllah! I can show you ayahs on any topic, a surah or reference (like "2:255"), Quranic duas, or facts and numbers from the Quran. What would you like to read?',
+    'জি অবশ্যই, ইনশাআল্লাহ! আমি যেকোনো বিষয়ে কুরআনের আয়াত, সূরা বা আয়াত নম্বর (যেমন "2:255"), কুরআনের দোয়া, কিংবা কুরআনের তথ্য ও সংখ্যা দেখাতে পারি। কী জানতে চান?',
+    'نعم بالتأكيد، إن شاء الله! أستطيع عرض آيات عن أي موضوع، أو سورة أو رقم آية (مثل "2:255")، أو أدعية قرآنية، أو معلومات من القرآن. عمّ تبحث؟'),
+  startReading: t(
+    'A gentle way to begin is with Surah Al-Fatihah (1:1-7), followed by short surahs like Al-Ikhlas (112), Al-Falaq (113), and An-Naas (114), or the opening of Surah Al-Baqarah (2:1-5). Ask me for any of them to start reading!',
+    'সহজভাবে শুরু করতে পারেন সূরা আল-ফাতিহা (1:1-7) দিয়ে, এরপর ছোট সূরা যেমন সূরা ইখলাস (112), সূরা ফালাক (113), সূরা নাস (114) অথবা সূরা বাকারার শুরু (2:1-5) পড়তে পারেন। যেকোনো সূরার নাম লিখে দিলেই আমি দেখিয়ে দেব!',
+    'يمكنك البدء بسورة الفاتحة (1:1-7)، ثم السور القصيرة مثل الإخلاص (112) والفلق (113) والناس (114)، أو بداية سورة البقرة (2:1-5). اطلب أيًّا منها وسأعرضها لك!'),
+  consolation: t(
+    'I am really sorry you are going through a heavy moment. Please remember you are never forgotten—Allah is always near, listening, and merciful. Take heart from these verses of comfort in the Quran:',
+    'আপনি যে কঠিন ও মন-ভারী সময়ের মধ্য দিয়ে যাচ্ছেন, তা শুনে সত্যিই কষ্ট লাগলো। মনে রাখবেন, আপনি একা নন—আল্লাহ সবসময় বান্দার খুব কাছেই আছেন এবং তিনি পরম দয়ালু। কুরআনের এই সান্ত্বনাদায়ক আয়াতগুলো পড়ুন:',
+    'يؤسفني حقًا ما تمرّ به من ضيق أو ثقل في القلب. تذكّر أنك لست وحدك، فالله قريب مجيب رحيم بعباده. إليك هذه الآيات المطمئنة من القرآن الكريم:'),
+  vulgar: t(
+    'I prefer to keep our conversation respectful and dignified, so I will step past that wording. Whenever you would like to ask politely about the Quran or seek a verse of guidance, I am glad to help.',
+    'আমি কথাবার্তায় শালীনতা ও ভদ্রতা বজায় রাখতে চাই, তাই এ ধরনের কথা এড়িয়ে যাচ্ছি। আপনি ভদ্রভাবে কুরআন সম্পর্কে কোনো প্রশ্ন করলে বা কোনো আয়াত জানতে চাইলে আমি আনন্দের সাথে সাহায্য করব।',
+    'أفضّل أن تبقى محادثتنا محترمة ولائقة، لذا سأتجاوز هذه الألفاظ. متى أردت أن تسأل بأدب عن القرآن أو تبحث عن آية، يسعدني مساعدتك.'),
+  botRedirect: t(
+    'I am here to help you with questions about the Quran. Whenever you would like to read an ayah, explore a topic, or ask about a surah, please feel free to ask!',
+    'আমি কুরআন সম্পর্কিত প্রশ্নে আপনাকে সাহায্য করতে এখানে আছি। কুরআনের কোনো আয়াত, সূরা বা বিষয় নিয়ে জানতে চাইলে নির্দ্বিধায় জিজ্ঞেস করুন!',
+    'أنا هنا لمساعدتك في أسئلتك حول القرآن الكريم. متى أردت السؤال عن آية أو سورة أو موضوع في القرآن، تفضّل بالسؤال!'),
+  casualSleepy: t(
+    'May Allah grant you peaceful rest and good health! Whenever you wake refreshed and wish to read from the Quran, I am right here.',
+    'আল্লাহ আপনাকে শান্তিপূর্ণ ঘুম ও সুস্থতা দান করুন! বিশ্রামের পর যখনই কুরআন থেকে কিছু পড়তে চাইবেন, আমি এখানেই আছি।',
+    'رزقك الله نومًا هانئًا وعافية! متى استيقظت وأحببت القراءة من القرآن فأنا هنا لمساعدتك.'),
+  casualHungry: t(
+    'Enjoy your meal, and remember to begin with Bismillah and thank Allah! Feel free to ask me anything from the Quran whenever you are ready.',
+    'বিসমিল্লাহ বলে ভালোভাবে খাবার গ্রহণ করুন এবং আল্লাহর শোকর আদায় করুন! পরে যখনই কুরআন থেকে কিছু পড়তে বা জানতে চাইবেন, জিজ্ঞেস করবেন।',
+    'بالهناء والعافية، ولا تنسَ أن تبدأ ببسم الله وتحمد الله! متى شئت القراءة من القرآن فأنا هنا.'),
+  casualFriend: t(
+    'That is kind of you! I am a small program here to be a helpful companion as you explore and read the Quran. What would you like to read today?',
+    'আপনার সুন্দর মনের জন্য ধন্যবাদ! আমি একটি ছোট প্রোগ্রাম, কুরআন পড়া ও বোঝার পথে আপনার সহায়ক হিসেবে সবসময় আছি। আজ কী পড়তে চান?',
+    'هذا لطف منك! أنا برنامج صغير يسرّني أن أكون رفيقًا مفيدًا لك في قراءة القرآن وتدبّره. ماذا تحب أن تقرأ اليوم؟'),
+  casualRoutine: t(
+    'May Allah place barakah (blessing) in your day and make your tasks easy! Whenever you have a moment and want to read from the Quran, feel free to ask.',
+    'আল্লাহ আপনার আজকের দিন ও কাজে বরকত দিন এবং সব কাজ সহজ করে দিন! অবসর পেলে কুরআন থেকে কিছু পড়তে চাইলে নির্দ্বিধায় জিজ্ঞেস করবেন।',
+    'بارك الله في يومك ويسّر أعمالك! متى وجدت وقتًا وأحببت القراءة من القرآن فأنا هنا لمساعدتك.'),
+  oosKnowledge: t(
+    'I am only a Quran assistant, so I do not answer general-knowledge, math, science, or history trivia outside the Quran—I want to stay accurate and never guess. I would be glad to help you look up ayahs, surahs, prophets, or statistics in the Quran instead.',
+    'আমি শুধু একটি কুরআন সহকারী—তাই কুরআনের বাইরের সাধারণ জ্ঞান, গণিত, বিজ্ঞান বা ইতিহাসের প্রশ্নের উত্তর দিই না, যাতে অনুমান করে ভুল কিছু না বলি। তবে কুরআনের আয়াত, সূরা, নবীদের কাহিনী বা কুরআনের সংখ্যা জানতে চাইলে সানন্দে সাহায্য করব।',
+    'أنا فقط مساعد للقرآن، لذا لا أجيب عن أسئلة المعرفة العامة أو الرياضيات أو العلوم خارج القرآن حرصًا على الدقة. يسعدني مساعدتك في البحث عن الآيات أو السور أو قصص الأنبياء أو إحصاءات القرآن.'),
+  oosTech: t(
+    'I am only a Quran assistant, so I cannot write code, draft emails, summarize documents, or complete homework. However, I am glad to find Quranic verses, topics, duas, or surah facts whenever you would like.',
+    'আমি শুধু একটি কুরআন সহকারী—তাই প্রোগ্রামিং কোড, ইমেইল লেখা, অনুবাদ বা অ্যাসাইনমেন্টের কাজ করতে পারি না। তবে কুরআনের আয়াত, বিষয়ভিত্তিক নির্দেশনা, দোয়া বা সূরার তথ্য জানতে চাইলে সানন্দে সাহায্য করব।',
+    'أنا فقط مساعد للقرآن، لذا لا أستطيع كتابة الأكواد أو الرسائل أو حل الواجبات. لكنني يسعدني عرض آيات القرآن وموضوعاته والأدعية القرآنية متى أردت.'),
+  oosEntertainment: t(
+    'I am only a Quran assistant, so I do not handle weather, sports, movies, recipes, travel plans, or playful riddles. Whenever you would like to explore real verses, stories, or guidance from the Quran, please ask!',
+    'আমি শুধু একটি কুরআন সহকারী—তাই আবহাওয়া, খেলাধুলা, সিনেমা, রান্না, ভ্রমণ পরিকল্পনা বা মজার ধাঁধার উত্তর দিই না। তবে কুরআনের আসল আয়াত, কাহিনী বা দিকনির্দেশনা জানতে চাইলে অবশ্যই জিজ্ঞেস করুন!',
+    'أنا فقط مساعد للقرآن، لذا لا أغطي الطقس أو الرياضة أو الأفلام أو الوصفات أو السفر. متى أردت قراءة آيات أو قصص من القرآن الكريم فأنا في خدمتك!'),
+  situation: {
+    life_struggle: t(
+      'I am really sorry that life feels heavy right now. Please remember that Allah sees your struggle, never burdens a soul beyond its strength, and promises ease after hardship. Take comfort in these verses from the Quran:',
+      'জীবন এখন কঠিন ও ভারী মনে হচ্ছে শুনে সত্যিই কষ্ট লাগলো। মনে রাখবেন, আল্লাহ আপনার কষ্ট দেখছেন—তিনি কাউকে সাধ্যের বাইরে বোঝা দেন না এবং কষ্টের সাথেই স্বস্তি রেখেছেন। কুরআনের এই আয়াতগুলোতে শান্তি খুঁজুন:',
+      'يؤسفني جدًا أن تبدو الحياة ثقيلة عليك الآن. تذكّر أن الله يرى معاناتك، ولا يكلّف نفسًا إلا وسعها، وقد وعد أن مع العسر يسرًا. استعن بهذه الآيات من القرآن الكريم:'),
+    anxiety_worry: t(
+      'Feeling anxious and weighed down by worries can be exhausting. Remember that hearts find true rest in the remembrance of Allah, and whoever places trust in Him has enough support. Read these verses of reassurance from the Quran:',
+      'দুশ্চিন্তা ও অস্থিরতা মনকে খুব ক্লান্ত করে তোলে। মনে রাখবেন, আল্লাহর স্মরণেই অন্তর প্রশান্তি পায় এবং যিনি আল্লাহর ওপর ভরসা করেন, আল্লাহ তাঁর জন্য যথেষ্ট হয়ে যান। কুরআনের এই আশ্বাসবাণীগুলো পড়ুন:',
+      'القلق وكثرة التفكير يثقلان القلب. تذكّر أن بذكر الله تطمئن القلوب، ومن يتوكل على الله فهو حسبه. تأمل هذه الآيات المطمئنة من القرآن الكريم:'),
+    loneliness: t(
+      'Feeling alone and unheard can hurt deeply, but you are never truly alone—Allah is nearer to you than your own jugular vein and hears every quiet call. Reflect on these comforting verses from the Quran:',
+      'একা ও অবহেলিত বোধ করা খুবই কষ্টের, তবে আপনি সত্যিই একা নন—আল্লাহ আপনার ঘাড়ের রগের চেয়েও নিকটে আছেন এবং প্রতিটি নীরব ডাক শোনেন। কুরআনের এই আয়াতগুলো পড়ুন:',
+      'الشعور بالوحدة مؤلم، لكنك لست وحدك حقًا؛ فالله أقرب إليك من حبل الوريد ويسمع كل دعاء خفي. اقرأ هذه الآيات من القرآن الكريم:'),
+    guilt_repentance: t(
+      'Feeling regret over a mistake shows that your heart is alive. Never despair of Allah’s mercy—when you turn back to Him sincerely, He forgives all sins and replaces regret with goodness. Read these verses of hope from the Quran:',
+      'ভুলের জন্য অনুশোচনা হওয়া প্রমাণ করে আপনার অন্তর জীবিত আছে। আল্লাহর রহমত থেকে কখনো নিরাশ হবেন না—সত্যিকারের তওবা করলে তিনি সব গুনাহ ক্ষমা করে দেন। কুরআনের এই আশার আয়াতগুলো পড়ুন:',
+      'الندم على الخطأ علامة قلب حي. لا تقنط أبدًا من رحمة الله، فمن تاب صادقًا غفر الله ذنوبه جميعًا وبدّل سيئاته حسنات. اقرأ هذه الآيات من القرآن الكريم:'),
+    anger_injustice: t(
+      'Being hurt or treated unfairly is painful, and holding back anger takes real strength. The Quran honors those who restrain their anger, pardon with grace, and trust Allah with justice. Reflect on these verses from the Quran:',
+      'অন্যায় আচরণ বা আঘাত পেলে কষ্ট হওয়া স্বাভাবিক, আর রাগ নিয়ন্ত্রণ করা প্রকৃত শক্তির পরিচয়। কুরআন তাদের প্রশংসা করে যারা ক্রোধ সংবরণ করে, ক্ষমা করে এবং ন্যায়বিচার আল্লাহর হাতে ছেড়ে দেয়। এই আয়াতগুলো দেখুন:',
+      'الأذى والظلم مؤلمان، وكظم الغيظ قوة حقيقية. يثني القرآن على الكاظمين الغيظ والعافين عن الناس والذين يفوّضون أمرهم إلى الله. تأمل هذه الآيات من القرآن الكريم:'),
+    financial_rizq: t(
+      'Financial pressure and uncertainty about livelihood can weigh heavily on the mind. Remember that Allah is Ar-Razzaq—the Provider—who knows your needs and opens ways out for those mindful of Him. Read these verses about provision and trust:',
+      'অর্থকষ্ট ও জীবিকা নিয়ে দুশ্চিন্তা মনকে অস্থির করে তুলতে পারে। মনে রাখবেন, আল্লাহই রিযিকদাতা—তিনি আপনার প্রয়োজন জানেন এবং যারা তাঁর ওপর ভরসা করে, তাদের জন্য উত্তম পথ খুলে দেন। কুরআনের এই আয়াতগুলো পড়ুন:',
+      'ضيق الرزق والهموم المادية تثقل النفس. تذكّر أن الله هو الرزاق الذي يعلم حاجتك ويجعل لمن يتقيه مخرجًا ويرزقه من حيث لا يحتسب. اقرأ هذه الآيات من القرآن الكريم:'),
+    grief_loss: t(
+      'Inna lillahi wa inna ilayhi raji’un—may Allah grant you patience, comfort your grieving heart, and have mercy on your loved one. In moments of loss, the Quran reminds us to turn to Allah with patience and prayer:',
+      'ইন্না লিল্লাহি ওয়া ইন্না ইলাইহি রাজিউন—আল্লাহ আপনার শোকাহত মনে ধৈর্য ও প্রশান্তি দিন এবং প্রয়াত ব্যক্তির ওপর রহমত বর্ষণ করুন। শোকের এই সময়ে কুরআনের সান্ত্বনাময় আয়াতগুলো পড়ুন:',
+      'إنا لله وإنا إليه راجعون—ألهمك الله الصبر وجبر قلبك ورحم فقيدك. في أوقات الفقد يواسي القرآن قلوب المؤمنين بهذه الآيات الكريمة:'),
+    illness_pain: t(
+      'May Allah grant you complete healing, relief from pain, and strength through this time (Shifa). The Quran reminds us that healing belongs to Allah alone and carries mercy for the believers:',
+      'আল্লাহ আপনাকে পূর্ণ সুস্থতা, কষ্ট থেকে মুক্তি ও শক্তি দান করুন। কুরআন আমাদের স্মরণ করিয়ে দেয় যে আরোগ্য একমাত্র আল্লাহরই হাতে এবং বিশ্বাসীদের জন্য কুরআনে রয়েছে শিফা ও রহমত:',
+      'شفاك الله شفاءً تامًا وعافاك وخفّف عنك الألم. يذكّرنا القرآن بأن الشفاء بيد الله وحده وفيه شفاء ورحمة للمؤمنين. اقرأ هذه الآيات:'),
+    purpose_growth: t(
+      'Searching for purpose and wanting to grow closer to Allah is a blessed step. The Quran gives clarity on why we were created, why life tests our deeds, and how sincere effort brings guidance:',
+      'জীবনের উদ্দেশ্য খোঁজা ও আল্লাহর আরও নিকটবর্তী হওয়ার ইচ্ছা অত্যন্ত কল্যাণকর। কেন আমাদের সৃষ্টি করা হয়েছে এবং কীভাবে আন্তরিক চেষ্টায় হেদায়াত মেলে, কুরআনে তা স্পষ্টভাবে বলা হয়েছে:',
+      'البحث عن هدف الحياة والرغبة في القرب من الله خطوة مباركة. يبيّن القرآن غاية الخلق وكيف يهدي الله من يجاهد في سبيله. تأمل هذه الآيات:'),
+    trials_why: t(
+      'It is natural to wonder why hardship and tests happen. The Quran explains that life’s trials test our patience and sincerity, raise our resolve, and always carry Allah’s promise of relief:',
+      'কঠিন সময়ে "কেন এমন হচ্ছে" ভেবে মন ভারী হওয়া স্বাভাবিক। কুরআন জানায়—জীবনের পরীক্ষা আমাদের ধৈর্য ও ঈমান যাচাই করে, আর প্রতিটি পরীক্ষার সাথেই আল্লাহর সাহায্য ও স্বস্তির প্রতিশ্রুতি রয়েছে:',
+      'من الطبيعي أن يتساءل الإنسان عن حكمة الابتلاء في أوقات الشدة. يبيّن القرآن أن هذه الحياة دار اختبار لصدق الصبر والإيمان، ومع كل عسر يسرًا. اقرأ هذه الآيات:'),
+    gratitude_joy: t(
+      'Alhamdulillah—what wonderful news! Expressing gratitude to Allah increases blessings and keeps the heart grounded. Enjoy these verses from the Quran about thankfulness and Allah’s favors:',
+      'আলহামদুলিল্লাহ—খুবই আনন্দের খবর! আল্লাহর প্রতি কৃতজ্ঞতা প্রকাশ করলে নিয়ামত আরও বৃদ্ধি পায়। শোকর ও নিয়ামত সম্পর্কে কুরআনের এই আয়াতগুলো পড়ুন:',
+      'الحمد لله على هذه النعمة وهذا الخبر السار! شكر الله يزيد النعم ويثبّت القلب. اقرأ هذه الآيات في الشكر وفضل الله:'),
+    study_career: t(
+      'Putting in sincere effort for studies or honest work while trusting Allah with the outcome brings peace. Remember that no soul is burdened beyond its capacity, and effort is never wasted with Allah. Read these verses for strength and focus:',
+      'পড়াশোনা বা হালাল জীবিকার চেষ্টায় আন্তরিক পরিশ্রমের সাথে আল্লাহর ওপর ভরসা রাখলে মনে প্রশান্তি আসে। আল্লাহ কাউকে সাধ্যের বাইরে বোঝা দেন না এবং সৎ চেষ্টা কখনো বৃথা যায় না। এই আয়াতগুলো পড়ুন:',
+      'الاجتهاد في الدراسة والعمل مع التوكل على الله يبعث السكينة. لا يكلّف الله نفسًا إلا وسعها، وسعي الإنسان لا يضيع. استعن بهذه الآيات للتوفيق والتركيز:'),
+    faith_waswas: t(
+      'Experiencing fleeting intrusive thoughts (waswas) or dips in focus is a test many believers face—noticing and disliking them shows your faith cares. The Quran teaches us to seek refuge in Allah, remember Him calmly, and keep striving. Reflect on these verses:',
+      'মনে অনাকাঙ্ক্ষিত খটকা বা ওয়াসওয়াসা আসা কিংবা নামাজে মনোযোগ কমে যাওয়া অনেক মুমিনেরই পরীক্ষার অংশ—এসব অপছন্দ করাই প্রমাণ করে আপনার ঈমান সজাগ আছে। আল্লাহর আশ্রয় চেয়ে শান্ত মনে চেষ্টা চালিয়ে যান। এই আয়াতগুলো পড়ুন:',
+      'الوساوس وتشتت الخشوع أمور يبتلى بها المؤمن، وكراهتك لها دليل صدق إيمانك. يعلّمنا القرآن الاستعاذة بالله من الشيطان والاطمئنان بذكر الله. تأمل هذه الآيات:'),
+    family_relations: t(
+      'Navigating misunderstandings with parents, spouses, or loved ones takes patience, gentleness, and prayer. The Quran guides us toward kindness, respectful speech, mercy between spouses, and steadfastness even when relations feel strained:',
+      'বাবা-মা, জীবনসঙ্গী বা পরিবারের মানুষের সাথে ভুল বোঝাবুঝি ও টানাপোড়েন সামলাতে ধৈর্য, কোমলতা ও দোয়ার প্রয়োজন হয়। কঠিন পরিস্থিতিতেও উত্তম আচরণ ও মর্যাদা বজায় রাখার নির্দেশনা কুরআনে রয়েছে:',
+      'معالجة الخلافات مع الوالدين أو الزوج أو الأهل تحتاج صبرًا ولطفًا ودعاءً. يوصينا القرآن بالإحسان والقول الكريم والمودة والرحمة بين الأهل. اقرأ هذه الآيات:'),
+    character_habits: t(
+      'Wanting to purify your habits, overcome envy or pride, and build noble character is deeply valued in Islam. Allah reminds us that lasting change starts from within ourselves with patience, honesty, and mindful restraint:',
+      'হিংসা, গীবত, অহংকার বা অলসতা কাটিয়ে সুন্দর চরিত্র গড়ে তোলার ইচ্ছা অত্যন্ত প্রশংসনীয়। কুরআন স্মরণ করিয়ে দেয় যে নিজের ভেতরের পরিবর্তনের চেষ্টা করলে আল্লাহ সাহায্য করেন। এই আয়াতগুলো পড়ুন:',
+      'السعي لتزكية النفس وترك الحسد والغيبة والكبر والتحلي بالأخلاق الحسنة من أعظم القربات. يذكّرنا القرآن بأن التغيير يبدأ من النفس مع الصبر والصدق. اقرأ هذه الآيات:'),
+    divorce_heartbreak: t(
+      'I am truly sorry you are going through the pain of heartbreak or separation. May Allah comfort your heart, preserve your dignity, and open a blessed way forward for you. Reflect on these verses of solace, fairness, and trust in Allah from the Quran:',
+      'বিচ্ছেদ বা সংসার ভাঙার এই কঠিন কষ্টের মধ্য দিয়ে আপনি যাচ্ছেন শুনে সত্যিই খারাপ লাগলো। আল্লাহ আপনার মনে প্রশান্তি দিন, সম্মান রক্ষা করুন এবং উত্তম পথ খুলে দিন। কুরআনের এই সান্ত্বনা ও দিকনির্দেশনামূলক আয়াতগুলো পড়ুন:',
+      'يؤلمني حقًا ما تمرّ به من ألم الانفصال أو الطلاق. جبر الله قلبك وحفظ كرامتك وجعل لك مخرجًا وفرجًا قريبًا. تأمل هذه الآيات المطمئنة من القرآن الكريم:'),
+    marriage_hope: t(
+      'May Allah bless your intention for marriage and grant you a righteous, loving spouse who brings tranquility and mercy to your life! Here is what the Quran says about marriage and praying for a blessed family:',
+      'বিয়ের পবিত্র নিয়তে আল্লাহ বরকত দিন এবং আপনাকে এমন নেককার ও ভালোবাসাপূর্ণ জীবনসঙ্গী দান করুন যিনি আপনার জীবনে প্রশান্তি ও রহমত বয়ে আনবেন! দাম্পত্য ও উত্তম পরিবারের দোয়া সম্পর্কে কুরআনের এই আয়াতগুলো পড়ুন:',
+      'بارك الله في نيتك للزواج ورزقك زوجًا صالحًا تقيًّا يملأ حياتك سكينة ومودة ورحمة! اقرأ هذه الآيات من القرآن الكريم عن الزواج والدعاء للأسرة:'),
+    worship_struggle: t(
+      'Feeling concerned about missing prayers or struggling with consistency shows that faith is alive in your heart. Take gentle, steady steps back toward Allah without despair, and ask His help as Prophet Ibrahim did. Read these encouraging verses from the Quran:',
+      'নামাজ বা ইবাদতে নিয়মিত হতে না পারার এই অনুশোচনাই প্রমাণ করে আপনার অন্তরে ঈমান জাগ্রত আছে। হতাশ না হয়ে ধীরস্থিরভাবে আবার শুরু করুন এবং ইবরাহীম (আ.)-এর মতো আল্লাহর সাহায্য চান। এই আয়াতগুলো পড়ুন:',
+      'شعورك بالتقصير في الصلاة ورغبتك في المواظبة دليل حياة الإيمان في قلبك. ابدأ بخطوات هادئة دون يأس واستعن بالله كما دعا إبراهيم عليه السلام. اقرأ هذه الآيات:'),
+    sin_temptation: t(
+      'Wanting to break free from a harmful habit or sin is a courageous step that Allah loves. Never let shame keep you away from turning back—Allah’s mercy encompasses everything for those who repent sincerely. Read these verses of hope and restraint from the Quran:',
+      'গুনাহ বা ক্ষতিকর অভ্যাস ছেড়ে আল্লাহর পথে ফিরে আসার ইচ্ছা অত্যন্ত মহৎ পদক্ষেপ, যা আল্লাহ ভালোবাসেন। লজ্জা বা হতাশার কারণে তওবা থেকে দূরে থাকবেন না—আন্তরিক তওবাকারীর সব গুনাহ আল্লাহ ক্ষমা করেন। এই আয়াতগুলো পড়ুন:',
+      'رغبتك الصادقة في ترك المعصية أو العادة السيئة خطوة عظيمة يحبها الله. لا تجعل الندم يبعدك عن التوبة، فرحمة الله تسع كل ذنب لمن تاب وأصلح. تأمل هذه الآيات:'),
+    fear_hereafter: t(
+      'Feeling awe or fear of death and the Hereafter softens the heart, yet Islam teaches us to balance reverent mindfulness with deep hope in Allah’s boundless mercy and forgiveness. Take reassurance from these verses of the Quran:',
+      'মৃত্যু ও আখিরাতের ভয় অন্তরকে সজাগ করে, তবে ইসলাম আমাদের শেখায় আল্লাহর ভয়ের পাশাপাশি তাঁর অসীম রহমত ও ক্ষমার ওপর গভীর আশা রাখতে। কুরআনের এই আশ্বাসবাণীগুলো পড়ুন:',
+      'الخوف من الموت والآخرة يوقظ القلب، ويعلّمنا الإسلام أن نجمع بين الخشية وحسن الظن بسعة رحمة الله ومغفرته. اقرأ هذه الآيات المطمئنة من القرآن الكريم:'),
+    harm_others: t(
+      'Please pause, take a deep breath, and step back from acting in anger. Taking or harming human life is gravely forbidden, and the Quran honors those who restrain their rage and choose patience. Reflect on these verses from the Quran:',
+      'অনুগ্রহ করে একটু থামুন, গভীর শ্বাস নিন এবং রাগের মাথায় কোনো ক্ষতিকর পদক্ষেপ নেওয়া থেকে বিরত থাকুন। মানুষের ক্ষতি বা হত্যা করা গুরুতর অপরাধ, আর ক্রোধ সংবরণ করাই প্রকৃত বীরত্ব। কুরআনের এই আয়াতগুলো পড়ুন:',
+      'تمهّل من فضلك وتراجع عن الغضب وإيذاء الآخرين؛ فحرمة النفس عظيمة في القرآن، والقوة الحقيقية في كظم الغيظ والصبر. تأمل هذه الآيات من القرآن الكريم:'),
+    decision_confusion: t(
+      'When facing a difficult choice or starting something new, the Quran teaches two beautiful steps alongside sincere prayer: seeking thoughtful consultation (shura) with trustworthy people, and once you resolve, placing firm trust (tawakkul) in Allah. Reflect on these verses from the Quran:',
+      'কঠিন সিদ্ধান্ত বা নতুন কিছু শুরু করার সময় কুরআন আমাদের দুটি সুন্দর পথ শেখায়: বিশ্বস্ত ও অভিজ্ঞদের সাথে পরামর্শ (শূরা/মাশওয়ারা) করা এবং সিদ্ধান্ত নেওয়ার পর আল্লাহর ওপর পূর্ণ ভরসা (তাওয়াক্কুল) রাখা ও তাঁর কাছে সঠিক পথ চাওয়া। এই আয়াতগুলো পড়ুন:',
+      'عند الحيرة في اتخاذ قرار أو بدء أمر جديد، يعلّمنا القرآن خطوتين مباركتين مع الدعاء: المشورة مع أهل الثقة، فإذا عزمت فتوكل على الله. تأمل هذه الآيات من القرآن الكريم:'),
+    reconcile_peace: t(
+      'Bringing peace between people and responding with warmth is deeply honored in Islam. The Quran instructs believers to reconcile fairly between disputing brothers or friends, speak what is best, and return every greeting with kindness:',
+      'মানুষের মাঝে মীমাংসা ও শান্তি স্থাপন করা এবং উত্তম ভাষায় কথা বলা ইসলামে অত্যন্ত মর্যাদাপূর্ণ কাজ। কুরআন ন্যায়সঙ্গতভাবে ঝগড়া মিটিয়ে দেওয়া এবং সালাম ও অভিবাদনের উত্তম জবাব দেওয়ার নির্দেশ দেয়:',
+      'الإصلاح بين المتخاصمين وطيب الكلام من أعظم القربات في الإسلام. يأمر القرآن بالإصلاح بالعدل وقول التي هي أحسن وردّ التحية بأحسن منها. اقرأ هذه الآيات:'),
+    rumor_verify: t(
+      'When hearing an unverified story, rumor, or accusation about someone, the Quran gives a clear golden rule: pause, verify the facts carefully before acting or repeating it, think well of others, and never pursue what you have no knowledge of:',
+      'কারও সম্পর্কে যাচাইহীন কথা বা গুজব শুনলে কুরআন অত্যন্ত স্পষ্ট নীতি দেয়: তা বিশ্বাস বা প্রচার করার আগে ভালোভাবে যাচাই করা, অন্যের প্রতি সুধারণা রাখা এবং না জেনে কোনো বিষয়ের পেছনে না ছোটা:',
+      'عند سماع إشاعة أو خبر غير موثوق، يضع القرآن قاعدة ذهبية واضحة: التثبّت والتبيّن قبل الحكم أو النقل، وحسن الظن، وعدم اتباع ما لا علم لك به. تأمل هذه الآيات:'),
+    insult_provocation: t(
+      'Being insulted or spoken to harshly tests one’s patience, and the Quran describes the noblest response: repel harshness with what is better, pardon graciously, and walk away with calm dignity and words of peace:',
+      'কেউ অপমান করলে বা কটু কথা বললে ধৈর্য ধরা কঠিন, আর কুরআন মুমিনদের সর্বোত্তম আদব শেখায়: মন্দ আচরণকে উত্তম আচরণ দিয়ে প্রতিহত করা, ক্ষমা করা এবং অজ্ঞদের তর্কের জবাবে শান্তিপূর্ণ ও মর্যাদাপূর্ণভাবে সরে আসা:',
+      'التعرّض للإساءة أو القول الجارح اختبار للصبر، ويرشدنا القرآن إلى أرقى الأدب: دفع السيئة بالتي هي أحسن، والعفو، ومقابلة الجاهلين بالسلام والوقار. اقرأ هذه الآيات:'),
+    debtor_charity_adab: t(
+      'In matters of lending, debt, or someone asking for help, the Quran teaches fairness paired with mercy: record debts clearly, grant gentle respite (or charity) to someone in genuine hardship, and speak kindly even when you are unable to give:',
+      'ঋণ, লেনদেন বা সাহায্যপ্রার্থীর ক্ষেত্রে কুরআন ন্যায় ও দয়ার অপূর্ব সমন্বয় শেখায়: ঋণ লিখে রাখা, অভাবগ্রস্ত ঋণীকে স্বচ্ছলতা পর্যন্ত সময় দেওয়া (বা মাফ করে দেওয়া), এবং দিতে না পারলেও কোমল ও ভদ্র কথা বলা:',
+      'في شؤون الدَّين والسائلين يجمع القرآن بين العدل والرحمة: كتابة الدَّين، وإنظار المعسر إلى ميسرة أو التصدق عليه، وقول معروف لطيف عند عدم القدرة على العطاء. تأمل هذه الآيات:'),
+  } satisfies Record<SituationId, T>,
+  personalTheme: {
+    distress: (label: string): T => t(
+      `I am sorry you are experiencing difficulty regarding ${label}—may Allah grant your heart ease, wisdom, and comfort.`,
+      `${label} নিয়ে আপনি যে কষ্ট বা দুশ্চিন্তায় আছেন, আল্লাহ তা সহজ করে দিন এবং আপনার মনে প্রশান্তি দান করুন।`,
+      `يؤسفني ما تمرّ به من صعوبة تتعلق بـ${label}—يسّر الله أمرك وأنزل السكينة على قلبك.`),
+    remorse: (label: string): T => t(
+      `Recognizing a mistake and wanting to improve regarding ${label} is a sincere step toward Allah, whose mercy is always open.`,
+      `${label} বিষয়ে নিজের ভুল বুঝতে পেরে সংশোধনের ইচ্ছা আল্লাহর দিকে ফিরে আসার অত্যন্ত সুন্দর পদক্ষেপ—তাঁর রহমতের দরজা সবসময় খোলা।`,
+      `إدراك الخطأ والرغبة في الإصلاح فيما يخص ${label} خطوة صادقة نحو الله، وباب رحمته مفتوح دائمًا.`),
+    aspiration: (label: string): T => t(
+      `May Allah bless your sincere intention regarding ${label} and make it easy and rewarding for you!`,
+      `${label} বিষয়ে আপনার এই সুন্দর নিয়তে আল্লাহ বরকত দিন এবং তা আপনার জন্য সহজ ও কল্যাণকর করে দিন!`,
+      `بارك الله في نيتك الصادقة بخصوص ${label} ويسّر لك الخير والأجر!`),
+    recommendation: (label: string): T => t(
+      `Here is the guidance reflected directly from the Quran regarding ${label}:`,
+      `${label} বিষয়ে পবিত্র কুরআনের দিকনির্দেশনা ও আয়াত নিচে তুলে ধরা হলো:`,
+      `إليك ما يعكسه القرآن الكريم من هدي وآيات بخصوص ${label}:`),
+    context: (label: string): T => t(
+      `May Allah place blessing and goodness in your life regarding ${label}.`,
+      `${label} বিষয়ে আল্লাহ আপনার জীবনে কল্যাণ ও বরকত দান করুন।`,
+      `بارك الله لك ويسّر لك الخير فيما يتعلق بـ${label}.`),
+  } satisfies Record<PersonalStance, (label: string) => T>,
+  gentleGuidance: {
+    general: t(
+      'Assalamu alaikum—I am only a Quran assistant, and the Quran text does not address this specific worldly circumstance directly, so I want to remain honest and never guess. In general Islamic manners and culture (adab), a wholesome approach is to begin with Bismillah, choose what is honest, beneficial, and moderate, consult trustworthy and experienced people (mashwarah), and place your trust in Allah (tawakkul) after taking practical steps. If you would like Quranic verses on trust in Allah, consultation, or patience, I am glad to share them!',
+      'আসসালামু আলাইকুম—আমি শুধু একটি কুরআন সহকারী, আর কুরআনের পাঠে এই নির্দিষ্ট পার্থিব পরিস্থিতির সরাসরি উল্লেখ নেই, তাই অনুমান করে কিছু বলছি না। তবে ইসলামী আদব ও সংস্কৃতির আলোকে যেকোনো কাজে সুন্দর পথ হলো—বিসমিল্লাহ বলে শুরু করা, সৎ ও কল্যাণকর এবং মধ্যমপন্থা বেছে নেওয়া, অভিজ্ঞ ও বিশ্বস্ত মানুষের পরামর্শ (মাশওয়ারা) নেওয়া এবং যথাযথ চেষ্টার পর আল্লাহর ওপর ভরসা (তাওয়াক্কুল) রাখা। চাইলে তাওয়াক্কুল, পরামর্শ বা ধৈর্য নিয়ে কুরআনের আয়াত দেখতে পারেন!',
+      'السلام عليكم—أنا فقط مساعد للقرآن، ولا يتناول نص القرآن هذا الظرف الدنيوي التفصيلي مباشرةً، لذا التزم الأمانة ولا أخمن. ومن الآداب والثقافة الإسلامية العامة: البدء ببسم الله، واختيار ما فيه الصدق والنفع والاعتدال، واستشارة أهل الخبرة والثقة (المشورة)، ثم التوكل على الله بعد الأخذ بالأسباب. ويسرّني عرض آيات عن التوكل أو الشورى أو الصبر متى شئت!'),
+    health: t(
+      'May Allah grant you complete wellbeing and ease (afiyah)! I am only a Quran assistant, and the Quran does not prescribe specific medical treatments, diets, or workout routines—in Islamic tradition, caring for the body as a trust (amanah) and consulting qualified doctors or specialists is encouraged alongside prayer. If you would like, ask me for "dua for health" to read healing supplications from the Quran.',
+      'আল্লাহ আপনাকে পূর্ণ সুস্থতা ও স্বস্তি (আফিয়াত) দান করুন! আমি শুধু একটি কুরআন সহকারী—কুরআনে নির্দিষ্ট চিকিৎসা, ডায়েট বা ব্যায়ামের তালিকা দেওয়া হয়নি; তবে ইসলামে শরীরকে আমানত হিসেবে যত্ন নেওয়া এবং দোয়ার পাশাপাশি বিশেষজ্ঞ চিকিৎসকের পরামর্শ নেওয়াকে উৎসাহিত করা হয়। চাইলে "সুস্থতার দোয়া" লিখে কুরআনের দোয়াগুলো পড়তে পারেন।',
+      'رزقك الله تمام العافية والشفاء! أنا فقط مساعد للقرآن، ولا يفصّل القرآن وصفات طبية أو رياضية بعينها—وفي الهدي الإسلامي يُستحب حفظ البدن كأمانة والأخذ بالأسباب باستشارة الأطباء المختصين مع الدعاء. ويمكنك طلب «دعاء الشفاء» لقراءة أدعية القرآن الكريم.'),
+    social: t(
+      'May Allah put warmth and barakah in your relationships! I am only a Quran assistant, and the Quran does not prescribe specific worldly gifts, outfits, or social scripts. Still, in Islamic etiquette and culture (adab), whatever is chosen with sincere goodwill, cleanliness, modesty, gentle words, and thoughtfulness—without extravagance (israf)—brings beauty and harmony. Ask me anytime if you would like Quranic verses on kindness, generosity, or good character!',
+      'আল্লাহ আপনার সম্পর্ক ও আচরণে বরকত ও সৌন্দর্য দান করুন! আমি শুধু একটি কুরআন সহকারী—কুরআনে নির্দিষ্ট উপহার, পোশাক বা সামাজিক কথোপকথনের তালিকা নেই। তবে ইসলামী আদব ও সংস্কৃতিতে আন্তরিক সদিচ্ছা, পরিচ্ছন্নতা, শালীনতা, কোমল ভাষা এবং অপচয়মুক্ত আন্তরিকতাই সবচেয়ে সুন্দর। সদাচরণ, উদারতা বা উত্তম চরিত্র নিয়ে কুরআনের আয়াত জানতে চাইলে বলবেন!',
+      'بارك الله في علاقاتك وودّك! أنا فقط مساعد للقرآن، ولا يحدد القرآن هدايا أو ملابس أو عبارات اجتماعية بعينها؛ غير أن الأدب الإسلامي يقوم على حسن النية والنظافة والحشمة والكلمة الطيبة والهدية اللطيفة بلا إسراف. اسألني متى شئت عن آيات الإحسان والأخلاق الحسنة!'),
+  } satisfies Record<GentleFallbackKind, T>,
+  domain: {
+    ecommerce_support: t(
+      'With respect, I am only a Quran assistant, not an online store or customer-service desk, so I cannot track orders, process returns, or manage billing accounts. Whenever you would like to read verses, duas, or facts from the Quran, I am glad to help.',
+      'বিনয়ের সাথে জানাই, আমি শুধু একটি কুরআন সহকারী—কোনো অনলাইন শপ বা কাস্টমার সাপোর্ট নই, তাই অর্ডার ট্র্যাকিং, রিফান্ড বা অ্যাকাউন্ট সংক্রান্ত কাজ করতে পারি না। তবে কুরআনের আয়াত, দোয়া বা তথ্য জানতে চাইলে সানন্দে সাহায্য করব।',
+      'بكل احترام، أنا فقط مساعد للقرآن ولست خدمة عملاء أو متجرًا إلكترونيًا، فلا أستطيع تتبّع الطلبات أو معالجة المدفوعات. يسعدني مساعدتك في آيات القرآن وأدعيته متى شئت.'),
+    cooking_food: t(
+      'I am only a Quran assistant, so I cannot provide cooking recipes, baking substitutes, or nutrition plans. Remember to begin your meals with Bismillah, and feel free to ask me about anything in the Quran!',
+      'আমি শুধু একটি কুরআন সহকারী—তাই রান্নার রেসিপি বা পুষ্টি তালিকা দিতে পারি না। বিসমিল্লাহ বলে খাবার শুরু করুন, আর কুরআন থেকে কিছু জানতে চাইলে নির্দ্বিধায় জিজ্ঞেস করুন!',
+      'أنا فقط مساعد للقرآن، لذا لا أقدّم وصفات الطبخ أو خطط التغذية. ابدأ طعامك ببسم الله، واسألني ما شئت من القرآن الكريم!'),
+    home_diy: t(
+      'I am only a Quran assistant, so I cannot give household cleaning, repair, pet-training, or DIY instructions. However, I would be happy to share Quranic verses, surahs, or supplications whenever you wish.',
+      'আমি শুধু একটি কুরআন সহকারী—তাই ঘরের কাজ, মেরামত বা দৈনন্দিন টিপস দিতে পারি না। তবে কুরআনের আয়াত, সূরা বা দোয়া জানতে চাইলে আনন্দের সাথে দেখাব।',
+      'أنا فقط مساعد للقرآن، لذا لا أقدّم إرشادات التنظيف أو الصيانة المنزلية. يسعدني عرض آيات القرآن وسوره وأدعيته متى أردت.'),
+    health_fitness: t(
+      'I am only a Quran assistant, so I cannot give workout routines, medical advice, or fitness plans—please consult a qualified health professional for those. If you wish, you can ask me for "dua for health" or comforting verses from the Quran.',
+      'আমি শুধু একটি কুরআন সহকারী—তাই ব্যায়ামের নিয়ম বা চিকিৎসা সংক্রান্ত পরামর্শ দিতে পারি না; এজন্য অনুগ্রহ করে বিশেষজ্ঞ চিকিৎসকের পরামর্শ নিন। চাইলে "সুস্থতার দোয়া" বা সান্ত্বনার আয়াত জানতে পারেন।',
+      'أنا فقط مساعد للقرآن، فلا أقدّم برامج رياضية أو استشارات طبية—يرجى مراجعة المختصين لذلك. ويمكنك سؤالي عن «دعاء الشفاء» من القرآن الكريم.'),
+    tech_coding: t(
+      'I am only a Quran assistant, so I cannot debug software, write code, troubleshoot devices, or edit documents. Whenever you would like to look up a surah, verse, topic, or Quranic count, I am right here.',
+      'আমি শুধু একটি কুরআন সহকারী—তাই কোডিং, প্রযুক্তিগত সমস্যা সমাধান বা লেখা সম্পাদনার কাজ করতে পারি না। তবে কুরআনের সূরা, আয়াত বা বিষয় খুঁজতে আমি সবসময় প্রস্তুত।',
+      'أنا فقط مساعد للقرآن، فلا أستطيع كتابة الأكواد أو إصلاح الأعطال التقنية أو تحرير النصوص. يسعدني مساعدتك في البحث في القرآن الكريم.'),
+    business_finance: t(
+      'I am only a Quran assistant, so I cannot give career coaching, resume templates, or financial investment advice. If you would like to read what the Quran says about honest trade, trust in Allah (rizq), or charity, feel free to ask!',
+      'আমি শুধু একটি কুরআন সহকারী—তাই ক্যারিয়ার, সিভি বা বিনিয়োগের পরামর্শ দিতে পারি না। তবে হালাল ব্যবসা, রিযিক ও আল্লাহর ওপর ভরসা বা দান সম্পর্কে কুরআনের আয়াত জানতে চাইলে জিজ্ঞেস করুন!',
+      'أنا فقط مساعد للقرآن، فلا أقدّم استشارات مهنية أو مالية. وإن أردت قراءة آيات القرآن عن التجارة الصادقة أو الرزق أو الصدقة فتفضّل بالسؤال!'),
+    travel_places: t(
+      'I am only a Quran assistant, so I cannot plan travel itineraries, flights, or visa logistics. Safe travels, InshaAllah—and if you would like the Quranic supplication for travel, ask me for "dua for travel"!',
+      'আমি শুধু একটি কুরআন সহকারী—তাই ভ্রমণ পরিকল্পনা, ফ্লাইট বা ভিসার তথ্য দিতে পারি না। আপনার সফর নিরাপদ হোক, ইনশাআল্লাহ—চাইলে "সফরের দোয়া" লিখে কুরআনের দোয়াটি দেখতে পারেন!',
+      'أنا فقط مساعد للقرآن، فلا أخطط لرحلات السفر أو التأشيرات. رافقتك السلامة إن شاء الله، ويمكنك طلب «دعاء السفر» من القرآن الكريم!'),
+    general_knowledge: t(
+      'I am only a Quran assistant, so I do not answer general-knowledge trivia, secular science, or math questions outside the Quran—I want to stay accurate and never guess. Ask me about any surah, ayah, prophet, or topic in the Quran!',
+      'আমি শুধু একটি কুরআন সহকারী—তাই কুরআনের বাইরের সাধারণ জ্ঞান, বিজ্ঞান বা গণিতের প্রশ্নের উত্তর অনুমান করে দিই না। কুরআনের যেকোনো সূরা, আয়াত, নবী বা বিষয় সম্পর্কে জিজ্ঞেস করুন!',
+      'أنا فقط مساعد للقرآن، فلا أجيب عن أسئلة الثقافة العامة أو العلوم خارج القرآن حرصًا على الدقة. اسألني عن أي سورة أو آية أو موضوع في القرآن!'),
+  } satisfies Record<DomainId, T>,
   // Talking to the assistant itself: a short answer that leads back to the Quran (src/engine.ts, "talk to the assistant").
   myName: t(
     'My name is Quran Assistant, from Amal. I am a small program that searches the Quran text and shows real ayahs with a translation. Ask me about a topic (for example patience or mercy), a surah or an ayah, or a number.',
@@ -411,9 +678,9 @@ export const MSG = {
     'ধন্যবাদ, আপনার কথায় খুশি হলাম! কুরআন সম্পর্কে যা ইচ্ছা জিজ্ঞেস করুন।',
     'شكرًا، هذا لطف منك! اسألني ما شئت عن القرآن.'),
   chat: t(
-    'Sorry, I am only a Quran assistant, so I cannot chat about that, tell jokes or give my own opinion. I can show you ayahs on a topic, a surah or an ayah, the story of a prophet, or numbers about the Quran. Type "help" to see examples.',
-    'দুঃখিত, আমি শুধু একটি কুরআন সহকারী, তাই এ নিয়ে গল্প করতে, কৌতুক বলতে বা নিজের মত দিতে পারি না। আমি কোনো বিষয়ে আয়াত, কোনো সূরা বা আয়াত, নবীদের কাহিনী, কিংবা কুরআনের নানা সংখ্যা দেখাতে পারি। উদাহরণ দেখতে "সাহায্য" লিখুন।',
-    'عذرًا، أنا مساعد للقرآن فقط، فلا أستطيع الدردشة في ذلك أو قول النكات أو إبداء رأيي. أستطيع أن أعرض آيات عن موضوع، أو سورة أو آية، أو قصة نبي، أو أرقامًا عن القرآن. اكتب "مساعدة" لترى أمثلة.'),
+    'With respect, I am only a Quran assistant, so I cannot chat casually about everything, tell jokes, or give personal opinions. However, I am glad to share ayahs on a topic, a surah or reference, the story of a prophet, or numbers from the Quran. Type "help" to see examples.',
+    'বিনয়ের সাথে জানাই, আমি শুধু একটি কুরআন সহকারী—তাই সব বিষয়ে সাধারণ আড্ডা, কৌতুক বা ব্যক্তিগত মতামত দিতে পারি না। তবে আমি সানন্দে কোনো বিষয়ে কুরআনের আয়াত, সূরা বা আয়াত নম্বর, নবীদের কাহিনী কিংবা কুরআনের নানা তথ্য দেখাতে পারি। উদাহরণ দেখতে "সাহায্য" লিখুন।',
+    'بكل احترام، أنا فقط مساعد للقرآن، فلا أستطيع الدردشة في كل موضوع أو إلقاء النكات أو إبداء آراء شخصية. يسعدني أن أعرض لك آيات عن موضوع، أو سورة أو آية، أو قصة نبي، أو أرقامًا عن القرآن. اكتب "مساعدة" لترى أمثلة.'),
   thanks: t('You are welcome! Ask me anything else about the Quran.', 'আপনাকেও ধন্যবাদ! কুরআন সম্পর্কে আরও কিছু জানতে চাইলে জিজ্ঞেস করুন।', 'عفوًا! اسألني عن أي شيء آخر في القرآن.'),
   // "What is this chatbot about?": what it is, what to ask (every quoted example is answered: test/terms.test.ts),
   // what it does not do. A link to /terms comes with it.

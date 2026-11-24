@@ -43,6 +43,7 @@ export const BANGLISH_TO_EN: Record<string, string> = {
   kobor: 'grave', qabr: 'grave', fereshta: 'angels', firishta: 'angels',
   shagor: 'sea', sagor: 'sea', bou: 'wife', jamai: 'husband',
   betha: 'grief', shahosh: 'steadfast', porikkha: 'trial', imtehan: 'trial',
+  hotash: 'grief', hotasha: 'grief', klanto: 'hardship', pereshan: 'distress',
   rizik: 'provision', rizq: 'provision', jibika: 'provision',
   // Common Bengali script words -> English fallback if bn search misses or literary wording differs
   'নামাজ': 'prayer', 'নামায': 'prayer', 'সালাত': 'prayer',
@@ -106,6 +107,7 @@ const CORE_THEMES: Theme[] = [
   { id: 'hardship and comfort', ayahs: [[94, 5], [94, 6], [2, 286], [13, 28], [65, 3], [93, 3], [3, 139]],
     words: ['hardship', 'difficulty', 'difficult', 'trouble', 'problem', 'problems', 'sad', 'sadness', 'grief', 'anxiety', 'anxious',
       'worry', 'worried', 'stress', 'stressed', 'fear', 'afraid', 'scared', 'bhoy', 'bhay', 'ভয়', 'depressed', 'depression', 'mental', 'comfort', 'relief', 'lonely', 'peace', 'tranquility',
+      'struggle', 'struggling', 'exhausted', 'burnout', 'broken', 'defeated', 'hotash', 'hotasha', 'pereshan', 'klanto', 'osohay', 'nirash',
       'heartbreak', 'heartbroken', 'breakup', 'overthinking', 'overwhelmed', 'মনখারাপ', 'দুশ্চিন্তা', 'ব্রেকআপ',
       'koshto', 'kosto', 'koster', 'koshter', 'dukkho', 'dukho', 'dukkher', 'chinta', 'chintar', 'somossa', 'samossa', 'ekla', 'eka', 'shanti', 'shosti', 'swosti', 'কষ্ট', 'দুঃখ', 'চিন্তা', 'সমস্যা', 'একা', 'একাকী', 'শান্তি', 'স্বস্তি', 'বিপদ', 'হতাশা', 'হতাশ', 'মানসিক'] },
   { id: 'mercy and forgiveness', ayahs: [[39, 53], [4, 110], [3, 135], [12, 87]],

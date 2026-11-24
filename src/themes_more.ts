@@ -147,6 +147,11 @@ export const MORE_THEMES: Theme[] = [
     words: ['inheritance', 'inherit', 'inherits', 'inherited', 'heir', 'heirs', 'uttoradhikar', 'miras', 'mirash', 'wirasat', 'উত্তরাধিকার', 'মিরাস', 'মীরাছ', 'ওয়ারিশ', 'ওয়ারিস', 'ميراث', 'الميراث', 'الورثة'] },
   { id: 'adultery', ayahs: [[17, 32], [25, 68]],
     words: ['zina', 'jena', 'adultery', 'fornication', 'byabichar', 'bebichar', 'জিনা', 'যিনা', 'ব্যভিচার', 'زنا'] },
+  { id: 'suicide and sanctity of life', specific: true, ayahs: [[4, 29], [4, 30], [2, 195], [39, 53], [5, 32]],
+    words: ['suicide', 'suicidal', 'selfharm', 'atmohotta', 'atmahatya', 'আত্মহত্যা', 'انتحار', 'الانتحار'] },
+  { id: 'suicide and sanctity of life', specific: true, words: [],
+    pattern: /\bself[- ]?harm\w*\b/i,
+    ayahs: [[4, 29], [4, 30], [2, 195], [39, 53], [5, 32]] },
   { id: 'killing', ayahs: [[5, 32], [17, 33], [6, 151], [4, 93]],
     words: ['kill', 'killing', 'murder', 'homicide', 'hotta', 'hotya', 'khun', 'হত্যা', 'খুন', 'قتل'] },
   { id: 'bribery', ayahs: [[2, 188]],
@@ -203,6 +208,15 @@ export const MORE_THEMES: Theme[] = [
     ayahs: [[23, 1], [91, 9], [53, 39], [9, 105]] },
   { id: 'companions (Sahaba) and Hijrah', ayahs: [[9, 100], [48, 29], [59, 8], [59, 9]],
     words: ['sahaba', 'sahabah', 'sahabi', 'companions', 'ansar', 'muhajirun', 'muhajireen', 'hijrah', 'hijrat', 'সাহাবী', 'সাহাবি', 'সাহাবা', 'আনসার', 'মুহাজির', 'হিজরত', 'الصحابة', 'الهجرة'] },
+  { id: 'hospitality and honoring guests', ayahs: [[51, 24], [51, 25], [51, 26], [51, 27], [59, 9]],
+    words: ['hospitality', 'hospitable', 'guest', 'guests', 'mehman', 'otithi', 'মেহমান', 'অতিথি', 'আতিথেয়তা', 'ضيف', 'ضيوف'] },
+  { id: 'verifying news and avoiding rumors', specific: true, ayahs: [[49, 6], [24, 12], [17, 36], [49, 12]],
+    words: ['rumor', 'rumors', 'rumour', 'rumours', 'unverified', 'gujob', 'গুজব', 'إشاعة', 'شائعات'] },
+  { id: 'peacemaking and reconciliation', specific: true, ayahs: [[49, 9], [49, 10], [4, 114], [8, 1]],
+    words: ['reconcile', 'reconciliation', 'peacemaking', 'quarrel', 'quarreling', 'mitmat', 'মীমাংসা', 'মিটমাট', 'إصلاح'] },
+  { id: 'gentle speech and greetings', specific: true, words: [],
+    pattern: /\b(?:when\s+someone\s+greets|return(?:ing)?\s+a\s+greeting|gentle\s+speech|speak\s+gently|harsh\s+words)\b|সালামের\s*উত্তর|নম্র\s*কথা|رد\s*السلام|قولا\s*لينا/i,
+    ayahs: [[4, 86], [25, 63], [17, 53], [20, 44], [31, 19]] },
 ];
 
 /** The stories of the prophets and other people: the passage where the story begins. Shown when the question

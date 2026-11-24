@@ -27,6 +27,18 @@ import { prophetsIn, prophetsNamedIn } from './prophets.js';
 import type { Lang } from './types.js';
 import { detectLanguage } from './language.js';
 import { conversation, type Conversation } from './conversation.js';
+import { classifyDomain } from './domains.js';
+import { CONSOLATION_AYAHS, isBanglishVulgar, isEmotionalConsolation, isVulgar, START_READING_RE } from './etiquette.js';
+import {
+  classifyCasual,
+  classifyGentleCircumstance,
+  classifySituation,
+  detectPersonalStance,
+  GENERAL_QURAN_RECOMMEND_RE,
+  isBotDirected,
+  isPersonalCrisis,
+  type SituationMatch,
+} from './nlu.js';
 
 export type Kind =
   | 'greeting' | 'thanks' | 'about' | 'scholar' | 'refusal' | 'crisis'
@@ -67,12 +79,6 @@ const EXPLAIN_MAX_AYAHS = 4;
 const NOTE_SOURCE = { en: 'Saheeh International', bn: 'Dr. Abu Bakr Muhammad Zakaria' } as const;
 
 // ------------------------------------------------------------------ safety and small talk
-const CRISIS = [
-  /\b(kill myself|end my life|ending my life|take my own life|want to die|wanna die|suicid\w*|can'?t go on|cannot go on|no reason to live|don'?t want to live|do not want to live|hurt myself|self[- ]?harm|nothing matters)\b/i,
-  /আত্মহত্যা|মরে যেতে|মরতে ইচ্ছ|মরতে চাই|বাঁচতে ইচ্ছ|বাঁচতে চাই না|জীবন শেষ|নিজেকে শেষ|আর পারছি না/,
-  /\b(atmohotta|atmahatya|morte ichha|morte chai|bachte ichha|bachte chai na|jibon shesh|nijeke shesh)\b/i,
-  /أريد أن أموت|انتحار|أقتل نفسي|لا أريد أن أعيش|لا أستطيع المتابعة|لا فائدة من الحياة/,
-];
 const MADE_UP = [
   /\b(write|make up|compose|invent|create|generate|fabricate|forge)\b.{0,50}\b(ayah|ayat|aya|verse|surah|sura)\b/i,
   /\b(complete|finish)\s+(this|my|the following|the next)\s+(ayah|ayat|aya|verse)\b/i,
@@ -91,36 +97,38 @@ const FATWA = [
 ];
 // Questions that need hadith or tafsir, which this assistant does not have.
 const ASBAB = /\b(?:asbab(?:\s*al[-\s]*nuzul)?|shane\s*nuzul|shan[- ]e[- ]nuzul|reasons?\s+(?:of|for)\s+(?:the\s+)?revelation|historical\s+(?:reason|cause|occasion|context)\s+(?:of|for)\s+(?:the\s+)?revelation|why\s+(?:was\s+)?[^.!?\n]{0,45}\brevealed\b|(?:which|what)\s+(?:surah|sura|ayah|ayat|verse)\s+(?:was\s+)?revealed\s+(?:first|last)|(?:first|last)\s+(?:surah|sura|ayah|ayat|verse)\s+(?:to\s+be\s+)?revealed)\b|শানে\s*নুযূল|শানে\s*নুজুল|আসবাব(?:ুন|ু)\s*নুযূল|আসবাব(?:ুন|ু)\s*নুজুল|(?:নাজিলের|নাযিলের|অবতরণের)\s*(?:কারণ|ঐতিহাসিক\s*কারণ|পেছনের\s*ঘটনা|পটভূমি)|কেন\s*(?:নাজিল|নাযিল|অবতীর্ণ)\s*(?:হয়েছে|হয়েছিল|হয়)|(?:প্রথম|শেষ)\s*(?:কোন\s*)?(?:সূরা|সুরা|আয়াত)\s*(?:নাজিল|নাযিল|অবতীর্ণ)|(?:সূরা|সুরা|আয়াত)\s*(?:প্রথম|সবার\s*আগে|শেষ)\s*(?:নাজিল|নাযিল|অবতীর্ণ)|(?:naziler|najiler|obotoroner)\s*karon|keno\s*(?:nazil|najil)\s*(?:hoyeche|hoyechilo|hoise|holo)|(?:prothom|shesh)\s*(?:kon\s*)?(?:surah|sura|ayat)\s*(?:nazil|najil)|أسباب\s*النزول|سبب\s*(?:نزول|النزول)|لماذا\s*نزل(?:ت)?|(?:أول|آخر)\s*(?:سورة|آية)\s*نزل(?:ت)?/i;
-const HADITH = /\b(hadith|hadis|hadees|fazilat|fazilah|fazail|virtues? of|sawab|thawab|reward for (?:reading|reciting)|heart of the (?:quran|koran)|greatest (?:surah|ayah|verse)|best (?:surah|ayah|verse)|most rewarding|who is (?:better|best|greater|greatest|superior|more virtuous)|benefits? of (?:reading|reciting|listening)|one[-\s]?third of the (?:quran|koran)|1\/3 of the (?:quran|koran)|bride of the (?:quran|koran)|umm\s*al[-\s]*(?:quran|kitab)|mother of the (?:quran|book))\b|\b(?:which|what)\s+(?:surah|sura|ayah|ayat)\s+protects?\s+from\b|\bprotects?\s+from\s+(?:dajjal|punishment of the grave|the grave)\b|(?:important|best|greatest|top|most important) (?:surah|ayah|ayat|verse)|(?:surah|ayah|ayat)\s+(?:is|er)?\s*(?:the\s+)?(?:most\s+)?(?:important|best|greatest)|(?:ইম্পর্টেন্ট|ইমপর্টেন্ট|ইম্পরট্যান্ট|গুরুত্বপূর্ণ|শ্রেষ্ঠ|সেরা|সবচেয়ে ভালো|সবচেয়ে উত্তম).{0,14}(?:সূরা|আয়াত)|(?:সূরা|আয়াত).{0,14}(?:ইম্পর্টেন্ট|ইমপর্টেন্ট|গুরুত্বপূর্ণ|শ্রেষ্ঠ|সেরা)|কুরআনের\s*(?:এক\s*তৃতীয়াংশ|তিন\s*ভাগের\s*এক\s*ভাগ|হৃদপিণ্ড|হৃদয়|বধূ)|কোন\s*সূরা.{0,22}(?:রক্ষা\s*করে|বাঁচায়|কবরের\s*আযাব|দাজ্জাল)|\b(?:shreshtho|sreshtho|shera|sera)\s+(?:surah|ayat)|হাদীস|হাদিস|ফজিলত|ফযীলত|সওয়াব|ছওয়াব|সাওয়াব|حديث|فضل سورة|ثلث\s*القرآن|عروس\s*القرآن|قلب\s*القرآن|أم\s*(?:القرآن|الكتاب)|تنجي\s*من\s*عذاب\s*القبر/i;
+const HADITH = /\b(hadith|hadis|hadees|fazilat|fazilah|fazail|virtues? of|sawab|thawab|reward for (?:reading|reciting)|heart of the (?:quran|koran)|greatest (?:surah|ayah|verse)|best (?:surah|ayah|verse)|most rewarding|who is (?:better|best|greater|greatest|superior|more virtuous)|benefits?\s+of\s+(?:reading|reciting|listening|ayat\s*al[- ]*kursi|ayatul\s+kursi|surah\s+\S+)|one[-\s]?third of the (?:quran|koran)|1\/3 of the (?:quran|koran)|bride of the (?:quran|koran)|umm\s*al[-\s]*(?:quran|kitab)|mother of the (?:quran|book))\b|\b(?:which|what)\s+(?:surah|sura|ayah|ayat)\s+protects?\s+from\b|\bprotects?\s+from\s+(?:dajjal|punishment of the grave|the grave)\b|(?:important|best|greatest|top|most important) (?:surah|ayah|ayat|verse)|(?:surah|ayah|ayat)\s+(?:is|er)?\s*(?:the\s+)?(?:most\s+)?(?:important|best|greatest)|(?:ইম্পর্টেন্ট|ইমপর্টেন্ট|ইম্পরট্যান্ট|গুরুত্বপূর্ণ|শ্রেষ্ঠ|সেরা|সবচেয়ে ভালো|সবচেয়ে উত্তম).{0,14}(?:সূরা|আয়াত)|(?:সূরা|আয়াত).{0,14}(?:ইম্পর্টেন্ট|ইমপর্টেন্ট|গুরুত্বপূর্ণ|শ্রেষ্ঠ|সেরা)|নবীদের\s*মধ্যে\s*কে\s*(?:শ্রেষ্ঠ|উত্তম|সেরা|বড়)|কুরআনের\s*(?:এক\s*তৃতীয়াংশ|তিন\s*ভাগের\s*এক\s*ভাগ|হৃদপিণ্ড|হৃদয়|বধূ)|কোন\s*সূরা.{0,22}(?:রক্ষা\s*করে|বাঁচায়|কবরের\s*আযাব|দাজ্জাল)|\b(?:shreshtho|sreshtho|shera|sera)\s+(?:surah|ayat)|হাদীস|হাদিস|ফজিলত|ফযীলত|সওয়াব|ছওয়াব|সাওয়াব|حديث|فضل سورة|ثلث\s*القرآن|عروس\s*القرآن|قلب\s*القرآن|أم\s*(?:القرآن|الكتاب)|تنجي\s*من\s*عذاب\s*القبر/i;
 const DAJJAL_RE = /\b(?:dajjal|dajjaal|antichrist)\b|দাজ্জাল|الدجال/i;
 const MAHDI_RE = /\b(?:imam\s+)?mahdi\b|\bmehdi\b|ইমাম\s*মাহদ[ীি]|মাহদ[ীি]|المهدي/i;
-const PERSONAL_GUIDANCE = /\bwhat\s+(?:does\s+)?(?:allah|god)\s+wants?\s+(?:me|us)\s+to\s+do\b|\b(?:tell|show)\s+me\s+what\s+to\s+do\s+(?:about|in)\s+my\s+(?:personal|life|situation)\b|\bmy\s+personal\s+situation\b/i;
+const PERSONAL_GUIDANCE = /\bwhat\s+(?:does\s+)?(?:allah|god)\s+wants?\s+(?:me|us)\s+to\s+do\b|\bmy\s+personal\s+situation\b/i;
 const NO_FATWA = /\b(?:without|no|not|don'?t|do\s+not)\s+(?:giving|give|issuing|issue|making|make|any)?\s*(?:a\s+)?(?:fatwa|fatawa|ruling|legal\s+ruling)\b|ফতোয়া\s*(?:দেবেন\s*না|দিবেন\s*না|দেবে\s*না|দিও\s*না|ছাড়া|ব্যতীত)|(?:fatwa|hukum|raay)\s*(?:dio\s*na|diben\s*na|deben\s*na|chara)/i;
 const VERSE_ASK = /\b(?:show|give|find|list|verses?|ayahs?|ayats?)\b|আয়াত|দেখান|দেখাও|দাও|দিন/i;
 const WISHES = /\b(eid\s*mubarak|ramadan\s*mubarak|ramzan\s*mubarak|jumma\s*mubarak|jumuah\s*mubarak|jumu'?ah\s*mubarak)\b|ঈদ\s*মোবারক|ঈদ\s*মুবারক|রমজান\s*মোবারক|রমযান\s*মুবারক|জুমা\s*মোবারক|عيد مبارك|رمضان مبارك|جمعة مباركة/i;
 // Topics that need context and knowledge of Islamic law: no ayahs are picked out for them.
-const SENSITIVE = /\b(jihad|jihaad|terror|terrorism|terrorist|terrorists|war|wars|apostasy|apostate|blasphemy|slavery|slaves?|infidels?|kuffar|kafirs?|kafir|stoning|flogging|amputat\w*|hudud|thief|theft|steal(?:ing)?|beheading|honou?r killing)\b|\bchuri\b.{0,22}\b(?:korle|kora|shasti|sasti|bidhan|hukum|niyom|haram|gunah|pap|ki\s+hoy)\b|\b(?:shasti|sasti|bidhan|hukum)\b.{0,15}\bchuri\b|(?<![\u0980-\u09FF])(?:জিহাদ|যুদ্ধ|সন্ত্রাস|দাসত্ব|ক্রীতদাস|কাফির(?![ুূ]ন)|কাফের(?![ুূ]ন)|মুরতাদ|হুদুদ|চুরি|হাত কাটা|পাথর মেরে)|جهاد|إرهاب|ردة|(?<!سور[ةه]\s*ال)كافر|حد السرقة/i;
+const SENSITIVE = /\b(jihad|jihaad|terror|terrorism|terrorist|terrorists|(?<!world\s)(?:war|wars)|apostasy|apostate|blasphemy|slavery|slaves?|infidels?|kuffar|kafirs?|kafir|stoning|flogging|amputat\w*|hudud|thief|theft|steal(?:ing)?(?!\s+(?:from\s+me|my\b))|beheading|honou?r killing)\b|\bchuri\b.{0,22}\b(?:korle|kora|shasti|sasti|bidhan|hukum|niyom|haram|gunah|pap|ki\s+hoy)\b|\b(?:shasti|sasti|bidhan|hukum)\b.{0,15}\bchuri\b|(?<![\u0980-\u09FF])(?:জিহাদ|যুদ্ধ|সন্ত্রাস|দাসত্ব|ক্রীতদাস|কাফির(?![ুূ]ন)|কাফের(?![ুূ]ন)|মুরতাদ|হুদুদ|চুরি(?!\s*করেছে\s*আমার)|হাত কাটা|পাথর মেরে)|جهاد|إرهاب|ردة|(?<!سور[ةه]\s*ال)كافر|حد السرقة/i;
 // (the surah name Al-Kafirun is not that topic: "সূরা কাফিরুন", "سورة الكافرون")
 // Rulings phrased without the word "haram": "is it compulsory", "must I", "do I have to".
 const FATWA_MORE: RegExp[] = [
   /\bis it\b.{0,4}\s*(?:allowed|permitted|permissible|lawful|forbidden|prohibited|sinful|a sin|compulsory|obligatory|mandatory|required|necessary|halal|haram)\b/i,
+  /\bis\s+(?:[a-z]+\s+){1,4}(?:allowed|permitted|permissible|forbidden|prohibited|sinful|haram|halal)\b/i,
+  /\bcan\s+(?:i|we|a\s+muslim|muslims|women|men)\s+(?:eat\s+(?:pork|gelatin|shrimp|crab|lobster|shellfish|non[- ]?halal)|get\s+a\s+tattoo|listen\s+to\s+music|celebrate\s+(?:birthdays?|christmas|halloween|new\s+year)|pray\s+with\s+nail\s+polish|keep\s+a\s+dog|date|take\s+(?:a\s+)?loan|invest\s+in\s+(?:crypto|stocks))\b/i,
   /\b(?:compulsory|obligatory|mandatory)\b/i,
   /\b(?:do|must|should|shall|can|am|are)\s+(?:i|we|you|women|men|muslims|a muslim)\s+(?:have to|need to|must|supposed to|required to|obliged to)\b/i,
   /\bmust\s+(?:i|we|a muslim|muslims|women|men)\b/i,
   /বাধ্যতামূলক|আবশ্যক|অবশ্যই করতে হবে|করতে হবে কি|করা কি জরুরি|জরুরি কি/,
 ];
-const HELP = /^\s*(?:help|menu|commands?|options|start|\?)\s*[!?.]*\s*$|\b(?:how (?:do|can|to) i use|how does this (?:bot|work)|what (?:can|may|should) i ask|what questions|which questions|examples? of questions|show me what you can do)\b|^\s*(?:সাহায্য|হেল্প|মেনু|مساعدة)\s*[!?.।]*\s*$|কী কী প্রশ্ন|কি কি প্রশ্ন|কীভাবে ব্যবহার|কিভাবে ব্যবহার|ki ki (?:prosno|jiggesh)|কী জিজ্ঞেস করব|কি জিজ্ঞেস করব|ما الأسئلة|كيف أستخدم/i;
+const HELP = /^\s*(?:help|menu|commands?|options|start|\?)\s*[!?.]*\s*$|\b(?:how (?:do|can|to) i use|how does this (?:bot|chatbot|app|assistant|site)?\s*work|what (?:can|may|should) i ask|what questions|which questions|examples? of questions|show me what you can do)\b|^\s*(?:সাহায্য|হেল্প|মেনু|مساعدة)\s*[!?.।]*\s*$|কী কী প্রশ্ন|কি কি প্রশ্ন|কীভাবে ব্যবহার|কিভাবে ব্যবহার|ki ki (?:prosno|jiggesh)|কী জিজ্ঞেস করব|কি জিজ্ঞেস করব|ما الأسئلة|كيف أستخدم/i;
 const UNSUPPORTED: RegExp[] = [
   /\b(?:audio|mp3|recording)\b|\b(?:listen to|hear|play|sound of|voice of)\b.{0,30}\b(?:quran|surah|ayat|ayah|recitation|qari)\b|\b(?:recite|recitation)\b.{0,30}\b(?:audio|aloud|for me|to me)\b|অডিও|শুনাও|শোনাও|শুনতে চাই|সুর করে|استمع|صوت/i,
   // Live clock schedules & specific daily prayer/fasting times (today, Fajr, Iftar, Jumuah clock time) stay unsupported;
   // general "prayer time" / "নামাজের সময়" / "namajer somoy" are answered from the Quran (4:103, 17:78, 11:114).
-  /\b(?:azan|adhan|iftar|sehri|suhoor|fajr|zuhr|dhuhr|asr|maghrib|isha|jumm?ah|jumuah|jumua)\s*(?:times?|timings?|schedule)\b|\b(?:time|when|what time)\b.{0,25}\b(?:fajr|zuhr|dhuhr|asr|maghrib|isha|iftar|sehri|suhoor|jumm?ah|jumuah|jumua|azan|adhan)\b|\b(?:prayer|namaz|namaj|salah|salat)\s*(?:times?|timings?)\s*(?:today|now|tonight|tomorrow|schedule|timetable|in\s+[a-z]{3,})\b|\b(?:today'?s?|now|tonight|tomorrow'?s?|current|local)\s+(?:prayer|namaz|namaj|salah|salat)\s*(?:times?|timings?|schedule)\b|\b(?:prayer|namaz|namaj|salah|salat)\s+schedule\b|\b(?:what\s+time|when)\s+(?:is|are)\s+(?:the\s+)?(?:next\s+)?(?:prayer|namaz|namaj|salah|salat)\b|(?:আজকের|আজকে|এখনকার|এখন)\s*(?:নামাজের|নামাযের|সালাতের)\s*(?:সময়|সময়)|(?:নামাজের|নামাযের|সালাতের)\s*(?:সময়সূচী|সময়সূচী)|(?:ajker|ajke|ekhon|kokhon)\s*(?:namaj|namaz|salat)(?:er)?\s*(?:somoy|shomoy|time)|(?:ফজরের|যোহরের|জোহরের|আসরের|মাগরিবের|এশার|ইফতারের|সাহরির|আজানের|জুমার)\s*(?:সময়|সময়)|موعد الصلاة اليوم|متى الصلاة/i,
-  /\bqibla\b.{0,25}\b(?:direction|find|where|which way)\b|\bdirection\b.{0,15}\b(?:qibla|kaaba|kabah|mecca|makkah)\b|কিবলার দিক|কিবলা কোন দিকে|اتجاه القبلة/i,
+  /\b(?:azan|adhan|iftar|sehri|suhoor|fajr|zuhr|dhuhr|asr|maghrib|isha|jumm?ah|jumuah|jumua)\s*(?:times?|timings?|schedule)\b|\b(?:time|when|what time)\b.{0,25}\b(?:fajr|zuhr|dhuhr|asr|maghrib|isha|iftar|sehri|suhoor|jumm?ah|jumuah|jumua|azan|adhan)\b|\b(?:prayer|namaz|namaj|salah|salat)\s*(?:times?|timings?)\s*(?:today|now|tonight|tomorrow|schedule|timetable|in\s+[a-z]{3,})\b|\b(?:today'?s?|now|tonight|tomorrow'?s?|current|local)\s+(?:prayer|namaz|namaj|salah|salat)\s*(?:times?|timings?|schedule)\b|\b(?:prayer|namaz|namaj|salah|salat)\s+schedule\b|\b(?:what\s+time|when)\s+(?:is|are)\s+(?:the\s+)?(?:next\s+)?(?:prayer|namaz|namaj|salah|salat)\b|(?:আজকের|আজকে|এখনকার|এখন)\s*(?:নামাজের|নামাযের|সালাতের)\s*(?:সময়|সময়)|(?:নামাজের|নামাযের|সালাতের)\s*(?:সময়সূচী|সময়সূচী)|(?:ajker|ajke|ekhon|kokhon)\s*(?:namaj|namaz|salat)(?:er)?\s*(?:somoy|shomoy|time)|(?:ফজরের|যোহরের|জোহরের|আসরের|মাগরিবের|এশার|ইফতারের|সাহরির|আজানের|জুমার)\s*(?:(?:নামাজের|নামাযের|সালাতের)\s*)?(?:সময়|সময়)|موعد الصلاة اليوم|متى الصلاة/i,
+  /\bqibla\b.{0,25}\b(?:kon\s*dike|kothay|direction|find|where|which way)\b|\bdirection\b.{0,15}\b(?:qibla|kaaba|kabah|mecca|makkah)\b|কিবলার দিক|কিবলা কোন দিকে|اتجاه القبلة/i,
   /\b(?:next|when is|when'?s|date of|today'?s|what is today'?s)\b.{0,18}\b(?:eid|ramadan|ramzan|hijri|islamic date|muharram|shab-?e|laylatul)\b|\bhijri\b.{0,10}\b(?:date|calendar)\b|ঈদ কবে|রমজান কবে|রমযান কবে|ইসলামিক তারিখ|হিজরি তারিখ|متى (?:العيد|رمضان)|التاريخ الهجري/i,
   /\bzakat\b.{0,12}\b(?:calculator|calculation|calculate|amount|nisab|how much)\b|যাকাত (?:ক্যালকুলেটর|হিসাব|কত)|حاسبة الزكاة/i,
   /\b(?:download|pdf|mp4|wallpaper|app store|play store)\b/i,
 ];
-const FEEDBACK = /\b(?:this|that|your|the|it|answer)\b.{0,25}\b(?:wrong|incorrect|not correct|not right|bad|useless)\b|\byou(?:'re| are)\s+(?:wrong|incorrect|useless|stupid)\b|\b(?:wrong|incorrect) answer\b|ভুল (?:উত্তর|বলছ|বলছেন|বললে)|উত্তর(?:টা)? ভুল|ঠিক (?:না|নয়|হয়নি|হয় নি)|তুমি ভুল|আপনি ভুল|هذا (?:خطأ|غلط)|إجابة خاطئة/i;
+const FEEDBACK = /\b(?:this|that|your|the|it|answer)\b.{0,25}\b(?:wrong|incorrect|not correct|not right|bad|useless)\b|\byou(?:'re| are)\s+(?:wrong|incorrect)\b|\b(?:wrong|incorrect) answer\b|ভুল (?:উত্তর|বলছ|বলছেন|বললে)|উত্তর(?:টা)? ভুল|ঠিক (?:না|নয়|হয়নি|হয় নি)|তুমি ভুল|আপনি ভুল|هذا (?:خطأ|غلط)|إجابة خاطئة/i;
 // "what is this chatbot about?", "what's this?", "tell me about yourself", "tumi k?", "eta ki", "এটা কী?", "এই চ্যাটবটটি কী নিয়ে?"
 const ABOUT_MORE = /^\s*(?:what(?:'s|\s+is)|whats|wats)\s+(?:this|that)(?:\s+(?:chat\s*bot|chatbot|bot|app|application|assistant|site|website|web\s*site|page|tool|thing))?(?:\s+(?:about|for|all\s+about))?\s*[?!.]*$|^\s*(?:tell\s+me\s+)?about\s+(?:this|the)\s+(?:chat\s*bot|chatbot|bot|app|assistant|site|website)\b|\btell\s+me\s+about\s+(?:yourself|this\s+(?:chat\s*bot|chatbot|bot|app|assistant|site|website))\b|\bwhat\s+is\s+(?:the\s+)?quran\s+assistant\b|^\s*(?:tumi|apni|tui)\s+(?:k|ke)\s*[?!.]*$|^\s*(?:eta|eita|eti)\s+(?:ki|kisher|kiser)(?:\s+(?:app|chatbot|bot))?\s*[?!.]*$|(?:এটা|এটি|এই\s*(?:চ্যাটবট|চ্যাটবটটি|অ্যাপ|অ্যাপটি|সাইট|ওয়েবসাইট))\s*(?:কী|কি|কিসের|কীসের)|(?:চ্যাটবটটি|চ্যাটবট|অ্যাপটি)\s*(?:কী|কি)\s*(?:নিয়ে|সম্পর্কে)|^\s*(?:তুমি|আপনি)\s*(?:কে)\s*[?!।]*$|ما\s*هذا|ما\s*هذه|عن\s*ماذا\s*(?:هذا|هذه)/i;
 // "what are your terms?", "privacy policy", "do you store my questions?", "তোমার শর্তাবলী কী?", "الشروط"
@@ -132,15 +140,14 @@ const QURAN_WORD = /\b(?:quran|koran|qur'?an|quraan|ayahs?|ayats?|ayat|verses?|s
 // "what is your name?", "tomar nam ki", "তোমার নাম কী?", "ما اسمك؟"
 const CHAT_NAME = /\b(?:your|ur|yo)\s+(?:good\s+)?name\b|\bwhat\s+(?:should|do|can|shall)\s+(?:i|we)\s+call\s+(?:you|u)\b|\bname\s+of\s+(?:this|the)\s+(?:bot|assistant|app|chatbot)\b|(?:তোমার|আপনার|তোর)\s*নাম|\b(?:tomar|apnar|tor)\s+(?:nam|naam)\b|اسمك/i;
 // "are you a muslim?", "how old are you", "do you pray?", "your favourite colour", "তুমি কি মুসলিম?", "هل أنت مسلم؟"
-const CHAT_PERSONAL = /^\s*(?:are|r)\s+(?:you|u)\s+(?:a\s+|an\s+)?(?:muslim|christian|hindu|jew|believer|human|person|alive|real|male|female|man|woman|boy|girl|married|happy|sad|ok|okay|fine|religious)\b|^\s*do\s+(?:you|u)\s+(?:pray|believe|fast|love|like|feel|sleep|eat|dream|know me|remember me|have feelings)\b|\bhow\s+old\s+(?:are|r)\s+(?:you|u)\b|\bwhere\s+(?:are|do)\s+(?:you|u)\s+(?:from|live)\b|^\s*(?:what(?:'s|\s+is|\s+are)?|whats|tell\s+me|which\s+is)\s+(?:your|ur)\s+(?:age|religion|faith|gender|feelings?|favou?rite\w*|hobby|hobbies|birthday|job|work|purpose)\b|(?:তুমি|আপনি)\s*কি\s*(?:মুসলিম|মুসলমান|মানুষ|জীবিত|ছেলে|মেয়ে|বিবাহিত|নামাজ)|(?:তোমার|আপনার)\s*(?:বয়স|ধর্ম|প্রিয়)|\b(?:tumi|apni)\s+ki\s+(?:muslim|musolman|manush|jibito)\b|\b(?:tomar|apnar)\s+(?:boyos|boyosh|dhormo|priyo)\b|هل\s*(?:انت|أنت)\s*(?:مسلم|انسان|إنسان|حي)|كم\s*عمرك|من\s*(?:اين|أين)\s*(?:انت|أنت)|هل\s*تصلي/i;
+const CHAT_PERSONAL = /^\s*(?:are|r)\s+(?:you|u)\s+(?:a\s+|an\s+)?(?:muslim|christian|hindu|jew|believer|human|person|alive|real|male|female|man|woman|boy|girl|married|happy|sad|ok|okay|fine|religious|gemini|siri|alexa|chatgpt|bot|robot|smart|smarter|tired|busy|hungry|single|bored|listening|funny|angry|sleeping)\b|^\s*(?:will|would)\s+(?:you|u)\s+marry\s+me\b|^\s*do\s+(?:you|u)\s+(?:pray|believe|fast|love|like|feel|sleep|eat|dream|know me|remember me|have\s+(?:feelings|a\s+pet|a\s+family|a\s+boss|friends|emotions|a\s+body|a\s+heart|a\s+brain)|get\s+(?:tired|hungry)|watch|listen\s+to\s+music)\b|\bwhat\s+do\s+(?:you|u)\s+(?:eat|like|do\s+for\s+fun)\b|\bwho\s+is\s+(?:your|ur)\s+(?:boss|owner|creator|maker)\b|\bhow\s+old\s+(?:are|r)\s+(?:you|u)\b|\bwhere\s+(?:are|do)\s+(?:you|u)\s+(?:from|live)\b|^\s*(?:what(?:'s|\s+is|\s+are)?|whats|tell\s+me|which\s+is)\s+(?:your|ur)\s+(?:age|religion|faith|gender|feelings?|favou?rite\w*|hobby|hobbies|birthday|job|work|purpose)\b|(?:তুমি|আপনি)\s*কি\s*(?:মুসলিম|মুসলমান|মানুষ|জীবিত|ছেলে|মেয়ে|বিবাহিত|নামাজ|ক্লান্ত|ক্ষুধার্ত)|(?:তোমার|আপনার)\s*(?:বয়স|ধর্ম|প্রিয়)|\b(?:tumi|apni)\s+ki\s+(?:muslim|musolman|manush|jibito)\b|\b(?:tomar|apnar)\s+(?:boyos|boyosh|dhormo|priyo)\b|هل\s*(?:انت|أنت)\s*(?:مسلم|انسان|إنسان|حي)|كم\s*عمرك|من\s*(?:اين|أين)\s*(?:انت|أنت)|هل\s*تصلي/i;
 // "you are very helpful", "i love you", "good bot", "তুমি খুব ভালো", "أحبك": the WHOLE message (so "you are the best nation",
 // the words of 3:110, is not taken for praise)
 const CHAT_PRAISE = /^\s*(?:i\s+)?love\s+(?:you|u)(?:\s+(?:so\s+much|a\s+lot|bot))?[\s!.]*$|^\s*(?:you|u|ur)(?:'re|\s+are|\s+r)?\s+(?:so\s+|very\s+|really\s+|too\s+)?(?:good|great|nice|smart|clever|awesome|amazing|helpful|cool|wonderful|brilliant|perfect|excellent)(?:\s+(?:bot|assistant|app))?[\s!.]*$|^\s*(?:good|great|nice)\s+(?:bot|job|work|answer)[\s!.]*$|^\s*well\s+done[\s!.]*$|(?:তুমি|আপনি)\s*(?:খুব|অনেক)?\s*(?:ভালো|ভাল|দারুণ|সুন্দর|চমৎকার)|(?:তোমাকে|আপনাকে)\s*ভালোবাসি|\b(?:tumi|apni)\s+(?:khub\s+|onek\s+)?(?:valo|bhalo|darun|sundor)\b|احبك|أحبك|(?:انت|أنت)\s*(?:رائع|ممتاز|جميل|ذكي)/i;
-// "tell me a joke", "let's chat", "what do you think ...": not something this assistant does
-const CHAT_OTHER = /^\s*(?:tell|say|give)\s+(?:me\s+|us\s+)?(?:a\s+|some\s+|another\s+)?jokes?\b|^\s*(?:a\s+)?jokes?\s*(?:please|pls)?[\s!?.]*$|\bsing\b.{0,15}\bsong\b|\bplay\s+(?:a\s+)?game\b|\blet'?s\s+(?:chat|talk)\b|\bchat\s+with\s+me\b|\bi(?:'m|\s+am)\s+bored\b|\bwhat\s+(?:do|can)\s+(?:you|u)\s+think\b|\byour\s+opinion\b|কৌতুক|জোকস|গল্প কর|\bjokes?\s+bolo\b|نكته|نكتة|لنتحدث/i;
-// any other request or question put to the assistant ("can you dance?", "what is your job?"), checked just before the search.
-// Not "do you / did you / have you / are you ...": the Quran itself asks people that ("did you think We created you in vain?").
-const CHAT_TO_YOU = /^\s*(?:can|could|will|would)\s+(?:you|u)\b|^\s*(?:what|who|where|when|why|how)(?:'s|\s+is|\s+are|\s+was|\s+do|\s+does|\s+did)?\s+(?:your|ur)\b|\byourself\b|^\s*(?:tumi|apni|tomar|apnar)\b|^\s*(?:তুমি|আপনি|তোমার|আপনার)|(?:^|\s)(?:انت|أنت)(?:\s|$)/i;
+// "tell me a joke", "let's chat", "play a game": playful non-Quran requests (kept narrow so "what do you think about patience?" checks the Quran first!)
+const CHAT_OTHER = /^\s*(?:tell|say|give)\s+(?:me\s+|us\s+)?(?:a\s+|some\s+|another\s+)?(?:jokes?|riddles?)\b|^\s*(?:a\s+)?jokes?\s*(?:please|pls)?[\s!?.]*$|\bsing\b.{0,15}\bsong\b|\bplay\s+(?:a\s+)?game\b|\blet'?s\s+(?:chat|talk)\b|\bchat\s+with\s+me\b|\b(?:make\s+me\s+laugh|say\s+something\s+funny|roast\s+me)\b|কৌতুক|জোকস|গল্প কর|\bjokes?\s+bolo\b|نكته|نكتة|لنتحدث/i;
+// any other request or question put to the assistant ("can you dance?", "what is your opinion ...?"), checked AFTER Quran lookup
+const CHAT_TO_YOU = /^\s*(?:can|could|will|would)\s+(?:you|u)\b|^\s*(?:what|who|where|when|why|how)(?:'s|\s+is|\s+are|\s+was|\s+do|\s+does|\s+did)?\s+(?:your|ur)\b|\bwhat\s+(?:do|can)\s+(?:you|u)\s+think\b|\byour\s+opinion\b|\byourself\b|^\s*(?:tumi|apni|tomar|apnar)\b|^\s*(?:তুমি|আপনি|তোমার|আপনার)|(?:^|\s)(?:انت|أنت)(?:\s|$)/i;
 
 const TRANSLIT =/\btransliterat\w*|\bromani[sz]ed\b|\broman letters\b|\benglish letters\b|উচ্চারণ|النطق/i;
 // Which translation does the person want?
@@ -799,7 +806,8 @@ export class Engine {
     if (!target && last && this.onlyPointsBack(stripped)) target = last.citations.map((c) => ({ s: c.surah, a: c.ayah }));
     if (!target) {
       const badRef = base.kind === 'notFound' && /\d+\s*[:：]\s*\d+/.test(toAsciiDigits(stripped));
-      const passThrough = ['scholar', 'crisis', 'refusal', 'unsupported', 'feedback', 'help', 'about', 'greeting', 'thanks'].includes(base.kind);
+      const passThrough = ['scholar', 'crisis', 'refusal', 'unsupported', 'feedback', 'help', 'about', 'greeting', 'thanks'].includes(base.kind)
+        || (base.kind === 'chat' && (!!classifyCasual(question)?.startsWith('oos_') || !!classifyDomain(question) || !!classifyGentleCircumstance(question)));
       if (badRef || passThrough) return base;
       return this.reply('help', 'general', lang, `${own} ${MSG.explainWhich[lang]}`);
     }
@@ -951,15 +959,21 @@ export class Engine {
     const lower = text.toLowerCase();
     const words = wordCount(q);
 
-    // 1. safety first
-    if (anyMatch(CRISIS, lower)) return this.reply('crisis', 'general', lang, MSG.crisis[lang]);
+    // 1. safety first (sentence-meaning aware: personal suicidal distress -> crisis care; bare/topic "suicide" -> Quran verses)
+    if (isPersonalCrisis(q)) return this.reply('crisis', 'general', lang, MSG.crisis[lang]);
+    if (isVulgar(q)) {
+      const vLang: Lang = lang === 'en' && isBanglishVulgar(q) ? 'bn' : lang;
+      return this.reply('refusal', 'general', vLang, MSG.vulgar[vLang], { notFound: true });
+    }
     if (anyMatch(MADE_UP, lower)) return this.reply('refusal', 'quran', lang, MSG.refuseMadeUp[lang], { notFound: true });
     if (PERSONAL_GUIDANCE.test(lower)) return this.reply('scholar', 'quran', lang, MSG.personalGuidance[lang], { notFound: true });
     if (ASBAB.test(lower)) return this.reply('scholar', 'quran', lang, MSG.noAsbab[lang], { notFound: true });
     if (HADITH.test(lower)) return this.reply('scholar', 'quran', lang, MSG.noHadith[lang], { notFound: true });
     if (DAJJAL_RE.test(lower)) return this.reply('scholar', 'quran', lang, MSG.notNamedInQuran('dajjal')[lang], { notFound: true });
     if (MAHDI_RE.test(lower)) return this.reply('scholar', 'quran', lang, MSG.notNamedInQuran('mahdi')[lang], { notFound: true });
-    if (SENSITIVE.test(lower)) return this.reply('scholar', 'quran', lang, MSG.sensitive[lang], { notFound: true });
+    if (SENSITIVE.test(lower) && !(words <= 14 && /\b(?:at\s+war\s+with\s+my\w*|stole\s+(?:from\s+me|my\b))\b/i.test(lower))) {
+      return this.reply('scholar', 'quran', lang, MSG.sensitive[lang], { notFound: true });
+    }
     if (anyMatch(FATWA, lower) || anyMatch(FATWA_MORE, lower)) {
       if (NO_FATWA.test(lower) && VERSE_ASK.test(lower)) {
         const subQ = text
@@ -984,22 +998,60 @@ export class Engine {
     const conv = words <= 12 ? conversation(q, this.askedHowAreYou(history)) : null;
     if (conv) return this.converse(conv, lang);
     // small talk and things this assistant cannot do (short messages only, so a real question is never taken for them)
-    if (words <= 5 && THANKS.test(lower)) return this.reply('thanks', 'general', lang, MSG.thanks[lang]);
+    if (words <= 5 && THANKS.test(lower) && !/^\s*translate\b/i.test(lower)) return this.reply('thanks', 'general', lang, MSG.thanks[lang]);
     if (words <= 5 && WISHES.test(lower)) return this.reply('greeting', 'general', lang, MSG.wishes[lang]);
     // what this assistant is, and its terms: a specific answer and a link to the Terms page (never when the Quran is asked about)
     const termsLink = { href: '/terms', label: MSG.termsLink[lang] };
     const aboutQuran = QURAN_WORD.test(`${lower} ${normAr(text)}`);
-    if ((words <= 6 && ABOUT.test(lower)) || (words <= 8 && !aboutQuran && ABOUT_MORE.test(lower))) {
+    if ((words <= 6 && ABOUT.test(lower)) || (words <= 9 && !aboutQuran && (ABOUT_MORE.test(lower) || ABOUT.test(lower)))) {
       return this.reply('about', 'general', lang, MSG.about[lang], { link: termsLink });
     }
     if (words <= 12 && !aboutQuran && TERMS_Q.test(lower)) return this.reply('terms', 'general', lang, MSG.termsShort[lang], { link: termsLink });
     if (words <= 9 && HELP.test(lower)) return this.reply('help', 'general', lang, MSG.help[lang]);
     if (words <= 8 && FEEDBACK.test(lower)) return this.reply('feedback', 'general', lang, MSG.feedback[lang]);
     if (anyMatch(UNSUPPORTED, lower)) return this.reply('unsupported', 'general', lang, MSG.cannotDo[lang]);
-    if (words <= 4 && (GREETING.test(lower) || BN_GREETING.test(lower))) return this.reply('greeting', 'general', lang, MSG.greeting[lang]);
+    if (words <= 4 && (GREETING.test(lower) || BN_GREETING.test(lower)) && !isBotDirected(q) && !/^\s*translate\b/i.test(lower)) return this.reply('greeting', 'general', lang, MSG.greeting[lang]);
     // talk to the assistant itself: its name, "are you a muslim?", praise, a joke (short, and nothing about the Quran in it)
     const talk = words <= 8 ? this.talk(text, lower, words, lang) : null;
     if (talk) return talk;
+
+    // 2.5. sentence-meaning understanding first: beginner/general Quran recommendations, personal life circumstances, and clear non-Quran logistics
+    if (words <= 14 && START_READING_RE.test(lower)) {
+      return this.reply('greeting', 'general', lang, MSG.startReading[lang]);
+    }
+    if (words <= 14 && GENERAL_QURAN_RECOMMEND_RE.test(q)) {
+      const recAyahs = [{ s: 1, a: 1 }, { s: 2, a: 255 }, { s: 94, a: 5 }, { s: 94, a: 6 }, { s: 112, a: 1 }];
+      return this.reply('noTopic', 'quran', lang, MSG.quranRecommendIntro[lang], { ayahs: recAyahs });
+    }
+    const gentle = classifyGentleCircumstance(q);
+    const hasVerbatimQuote = !!this.phrases.find(rawText);
+    if (!aboutQuran && !hasVerbatimQuote) {
+      if (words <= 12 && isBotDirected(q)) return this.reply('chat', 'general', lang, MSG.botRedirect[lang]);
+      const casual = classifyCasual(q);
+      if (words <= 12) {
+        if (casual === 'sleepy') return this.reply('greeting', 'general', lang, MSG.casualSleepy[lang]);
+        if (casual === 'hungry') return this.reply('greeting', 'general', lang, MSG.casualHungry[lang]);
+        if (casual === 'friend') return this.reply('greeting', 'general', lang, MSG.casualFriend[lang]);
+        if (casual === 'routine') return this.reply('greeting', 'general', lang, MSG.casualRoutine[lang]);
+      }
+    }
+    if (words <= 36 && !hasVerbatimQuote) {
+      const sit = classifySituation(q);
+      if (sit) return this.situationReply(sit, lang);
+    }
+    if (words <= 24 && !hasVerbatimQuote && isEmotionalConsolation(q)) {
+      return this.consolationReply(lang);
+    }
+    if (!aboutQuran && !hasVerbatimQuote && !REF.test(text) && !SURAH_WORD_RE.test(text) && !/\b(?:meaning|definition|define)\b|অর্থ|মানে/i.test(lower)) {
+      const domain = classifyDomain(q);
+      if (domain) {
+        return this.reply('chat', 'general', lang, gentle ? MSG.gentleGuidance[gentle][lang] : MSG.domain[domain][lang], { notFound: true });
+      }
+      const casual = classifyCasual(q);
+      if (casual === 'oos_knowledge') return this.reply('chat', 'general', lang, gentle ? MSG.gentleGuidance[gentle][lang] : MSG.oosKnowledge[lang], { notFound: true });
+      if (casual === 'oos_tech') return this.reply('chat', 'general', lang, gentle ? MSG.gentleGuidance[gentle][lang] : MSG.oosTech[lang], { notFound: true });
+      if (casual === 'oos_entertainment') return this.reply('chat', 'general', lang, gentle ? MSG.gentleGuidance[gentle][lang] : MSG.oosEntertainment[lang], { notFound: true });
+    }
 
     // 3. numbers and facts
     // a follow-up that continues the conversation: "show more", "next ayah", "in english", "what about surah kahf?"
@@ -1187,7 +1239,7 @@ export class Engine {
     // from here on a spelling mistake in an English word is corrected ("patince" -> "patience")
     const fixed = this.fix(text);
 
-    // 9. checked themes
+    // 9. checked themes (adapts lead to personal sentence meaning when user expresses a personal stance)
     const themed = matchThemes(fixed, this.isEnglish, this.index);
     if (themed.ayahs.length > 0) {
       const themeIds = [...new Set(themed.themes.map((t) => t.id))];
@@ -1200,7 +1252,9 @@ export class Engine {
         bn: ' আয়াতগুলো কুরআনে যেমন আছে তেমনই অনুবাদসহ দেখানো হলো; এই সহকারী এগুলোর ব্যাখ্যা করে না।',
         ar: ' تُعرض الآيات كما وردت في القرآن مع ترجمة؛ هذا المساعد لا يفسّرها.',
       };
-      const intro = guide ? guide.lead[lang] + scopeTail[lang] : MSG.themeIntro(label)[lang];
+      const baseIntro = guide ? guide.lead[lang] + scopeTail[lang] : MSG.themeIntro(label)[lang];
+      const stance = words <= 32 ? detectPersonalStance(q) : null;
+      const intro = stance ? `${MSG.personalTheme[stance](label)[lang]} ${baseIntro}` : baseIntro;
       const tr: 'en' | 'bn' | 'none' = lang === 'bn' ? 'bn' : lang === 'ar' ? 'none' : 'en';
       const points = buildReplyPoints(this.quran, { kind: 'theme', lang, translation: tr, ayahs, themeIds });
       return this.reply('theme', 'quran', lang, intro + hint, { ayahs, ...(points.length ? { points } : {}) });
@@ -1216,11 +1270,6 @@ export class Engine {
     // a longer greeting that has no question in it ("assalamu alaikum, apni kemon achen?")
     if (words <= 8 && (GREETING.test(lower) || BN_GREETING.test(lower))) return this.reply('greeting', 'general', lang, MSG.greeting[lang]);
 
-    // any other question put to the assistant ("can you dance?"): say what it does, instead of searching for its words
-    if (words <= 10 && CHAT_TO_YOU.test(`${lower} ${normAr(text)}`) && !QURAN_WORD.test(`${lower} ${normAr(text)}`)) {
-      return this.reply('chat', 'general', lang, MSG.chat[lang], { notFound: true });
-    }
-
     // 10.5. A single bare Quranic/Arabic term or pronoun from the glossary (e.g. "Ulaika", "Alladhina", "Allahjina", "Sabiqun")
     // Keep bare single Arabic words like "الله" handled by Step 11 (exact phrase/BM25 rules) unless asked with meaning/ortho.
     if (words <= 3 && !/^[\u0600-\u06FF\s]+$/.test(text)) {
@@ -1230,11 +1279,26 @@ export class Engine {
       }
     }
 
-    // 11. search the text
-    const found = searchAyahs(this.index, this.quran, fixed);
+    // 11. search the Quran text first; for open worldly suggestions/circumstances without Quran framing, avoid false-positive
+    // collisions on everyday words ("book", "gift", "house", "wear") and fall back to gentle Islamic etiquette instead.
+    const GENERIC_WORLDLY_BM25_RE = /\b(?:books?|gifts?|presents?|wear\w*|houses?|rooms?|doors?|tables?|chairs?|seats?|cars?|phones?|bags?|shoes?|clothes|shirts?|cups?|plates?|weekend|desk|office|presentation|meeting|party)\b/i;
+    const allowBm25 = aboutQuran || !gentle || !GENERIC_WORLDLY_BM25_RE.test(lower);
+    const found = allowBm25 ? searchAyahs(this.index, this.quran, fixed) : [];
     if (found.length > 0) {
-      return this.reply('search', 'quran', lang, MSG.searchIntro[lang], { ayahs: found.map((f) => ({ s: f.ayah.s, a: f.ayah.a })) });
+      const intro = gentle ? MSG.searchReflectIntro[lang] : MSG.searchIntro[lang];
+      return this.reply('search', 'quran', lang, intro, { ayahs: found.map((f) => ({ s: f.ayah.s, a: f.ayah.a })) });
     }
+
+    // 12. if the Quran had nothing on a suggestion, recommendation, or circumstance, reply gently with Islamic adab & norms
+    if (gentle) {
+      return this.reply('chat', 'general', lang, MSG.gentleGuidance[gentle][lang], { notFound: true });
+    }
+
+    // any other question put to the assistant ("can you dance?"): say what it does, instead of raw notFound
+    if (words <= 12 && CHAT_TO_YOU.test(`${lower} ${normAr(text)}`) && !QURAN_WORD.test(`${lower} ${normAr(text)}`)) {
+      return this.reply('chat', 'general', lang, MSG.chat[lang], { notFound: true });
+    }
+
     return this.reply('notFound', 'quran', lang, MSG.notFound[lang], { notFound: true });
   }
 
@@ -1383,11 +1447,50 @@ export class Engine {
         return this.reply('theme', 'quran', lang, `${open}${MSG.sorryToHear[lang]} ${MSG.themeIntro(label)[lang]}`,
           { ayahs, ...(points.length ? { points } : {}) });
       }
-      case 'jazakallah': return this.reply('thanks', 'general', lang, open + MSG.jazakallah[lang]);
+      case 'jazakallah':
+      case 'barakallah':
+      case 'duaForBot':
+      case 'makeDua':
+      case 'ameen':
+        return this.reply('thanks', 'general', lang, open + MSG[c.talk][lang]);
       case 'praise': return this.reply('thanks', 'general', lang, open + MSG.compliment[lang]);
       case 'greeting': return this.reply('greeting', 'general', lang, open + MSG.greetingBody[lang]);
       default: return this.reply('greeting', 'general', lang, open + MSG[c.talk][lang]);
     }
+  }
+
+  /** Warm Islamic consolation paired with curated comforting Quran ayahs. */
+  private consolationReply(lang: Lang): Reply {
+    const ayahs = CONSOLATION_AYAHS.map((x) => ({ s: x.s, a: x.a }));
+    const tr: 'en' | 'bn' | 'none' = lang === 'bn' ? 'bn' : lang === 'ar' ? 'none' : 'en';
+    const points = buildReplyPoints(this.quran, {
+      kind: 'theme',
+      lang,
+      translation: tr,
+      ayahs,
+      themeIds: ['hardship and comfort'],
+    });
+    return this.reply('theme', 'quran', lang, MSG.consolation[lang], {
+      ayahs,
+      ...(points.length ? { points } : {}),
+    });
+  }
+
+  /** Meaning-based situational guidance paired with curated real Quran ayahs. */
+  private situationReply(sit: SituationMatch, lang: Lang): Reply {
+    const ayahs = sit.ayahs.map((x) => ({ s: x.s, a: x.a }));
+    const tr: 'en' | 'bn' | 'none' = lang === 'bn' ? 'bn' : lang === 'ar' ? 'none' : 'en';
+    const points = buildReplyPoints(this.quran, {
+      kind: 'theme',
+      lang,
+      translation: tr,
+      ayahs,
+      themeIds: [sit.themeId],
+    });
+    return this.reply('theme', 'quran', lang, MSG.situation[sit.id][lang], {
+      ayahs,
+      ...(points.length ? { points } : {}),
+    });
   }
 
   /** A short message to the assistant itself: its name, a personal question, praise, or a joke. Never when the Quran is asked about. */

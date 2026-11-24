@@ -135,6 +135,10 @@ const FRAMING = new Set([
   'include', 'including', 'find', 'list', 'only', 'without', 'passage', 'passages', 'containing', 'contain', 'contains', 'word', 'words',
   'verse', 'verses', 'ayah', 'ayahs', 'ayat', 'ayats', 'exact', 'phrase', 'statement', 'particular',
   'meaning', 'define', 'definition', 'ortho', 'orthho', 'mane',
+  'suggest', 'suggests', 'suggested', 'suggesting', 'suggestion', 'suggestions',
+  'recommend', 'recommends', 'recommended', 'recommending', 'recommendation', 'recommendations',
+  'advise', 'advises', 'advised', 'advising', 'circumstance', 'circumstances', 'situation', 'situations',
+  'uchit', 'poramorsho', 'koroniyo',
   'al', 'ul', 'il', 'el',
   'er', 'kotha', 'kothata', 'bola', 'bole', 'boleche', 'hoyeche', 'hoise', 'hoyece', 'hoeche', 'kon', 'kono', 'te', 'e', 'o', 'ar',
   'ki', 'kii', 'ache', 'ase', 'achhe', 'asche', 'niye', 'somporke', 'shomporke', 'bishoye', 'korar', 'kora', 'kore', 'korte', 'koro', 'na',
@@ -153,6 +157,7 @@ const EN_SYNONYMS: Record<string, string> = {
   mom: 'mother', mum: 'mother', mommy: 'mother', dad: 'father', daddy: 'father',
   kid: 'child', kids: 'child', hubby: 'husband', education: 'knowledge',
   sadness: 'grief', depression: 'grief', depressed: 'grief', anxiety: 'grief', anxious: 'grief', stress: 'distress',
+  struggle: 'hardship', struggling: 'hardship', exhausted: 'hardship', overwhelmed: 'distress', hopeless: 'despair', broken: 'grief',
   happiness: 'joy', kindness: 'good', courage: 'steadfast', bravery: 'steadfast',
   humility: 'humble', greed: 'stingy', avarice: 'stingy', jealousy: 'envy', jealous: 'envy',
   alcohol: 'intoxicants', liquor: 'intoxicants', betting: 'gambling',
@@ -199,6 +204,7 @@ export function queryTokens(
   let cleaned = question
     .replace(/\b(?:bring|pull|fetch|find|show|give|list)\s+(?:me\s+|us\s+)?(?:all\s+|some\s+|any\s+)?(?:the\s+)?(?:ayahs?|ayats?|verses?)\b/gi, ' ')
     .replace(/\b(?:what\s+(?:does|do)|(?:the\s+)?(?:meaning|definition)\s+of)\b/gi, ' ')
+    .replace(/(?:পরামর্শ|সাজেস্ট|রিকমেন্ড|সুপারিশ|করণীয়|কী\s*করা\s*উচিত|কি\s*করা\s*উচিত|এই\s*(?:অবস্থায়|পরিস্থিতিতে))/g, ' ')
     .replace(/\bmeans?\s*[?؟!.]*\s*$/i, ' ');
   const extraAr: string[] = [];
   for (const [re, arTok] of AR_TERM_TO_AR) {

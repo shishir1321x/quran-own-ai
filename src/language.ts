@@ -53,10 +53,17 @@ const STRONG_BANGLISH = new Set([
   'suray', 'surar', 'surate', 'bangla', 'banglay', 'banglate', 'arbi', 'arbite',
   'shesh', 'sesh', 'prothom', 'pratham', 'naki', 'dekhao', 'dekhan', 'bolo', 'dao', 'den',
   'gula', 'gulo', 'duagulo', 'duagula', 'doagulo', 'doagula', 'duar', 'doar',
+  'lagche', 'lagse', 'khushi', 'kicchu', 'korben',
+  'tui', 'ekta', 'hotash', 'hotasha', 'pagol', 'gadha', 'boka', 'faltu', 'pereshan', 'klanto', 'osohay', 'oshohay',
+  'dishehara', 'nirash', 'dukkho', 'dukho', 'kanna', 'ashanti', 'oshanti', 'dushchinta', 'ekaki', 'ekla', 'obhab',
+  'bekar', 'onutopto', 'parchi', 'parchina', 'bujho', 'bojho', 'bujhte', 'kothin', 'jontrona', 'byartho', 'bertho',
+  'osthir', 'bhari', 'rege', 'chagol', 'goru', 'pacche', 'khabo', 'khida',
+  'porashona', 'porashonay', 'khabar', 'brishti', 'gorom', 'thanda', 'boshate', 'biroktikor', 'jhamela', 'chinta', 'chakri', 'bhul', 'vul', 'shonaw', 'dekhi',
   // a little conversation ("kemon acho", "valo achi", "ki koro", "valo theko", "pore kotha hobe")
   'achi', 'acho', 'aso', 'asen', 'achis', 'achho', 'achhi', 'kmn', 'kmon', 'koro', 'korcho', 'korchen', 'korchis',
   'khobor', 'khbr', 'obostha', 'obosta', 'theko', 'thakben', 'thakun', 'thako', 'acha', 'accha', 'achha', 'thik',
   'kotha', 'laglo', 'dukkhito', 'khoda', 'bidai', 'vlo', 'bhlo', 'jacche', 'porichito',
+  'atmohotta', 'atmahatya', 'morte', 'bachte', 'nijeke',
 ]);
 
 // Shorter Banglish particles/words that count when paired together.

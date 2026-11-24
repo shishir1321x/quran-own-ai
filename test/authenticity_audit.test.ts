@@ -97,10 +97,20 @@ describe('honest non-Quranic boundaries, Hadith guards, and safety', () => {
     expect(r.ayahs).toEqual([]);
   });
 
-  it('preserves crisis safety trigger for suicide questions', () => {
-    const r = engine.ask('what does the quran say about suicide?');
-    expect(r.kind).toBe('crisis');
-    expect(r.ayahs).toEqual([]);
+  it('distinguishes personal suicidal crisis from Quranic topic questions on suicide', () => {
+    for (const crisisQ of ['i want to suicide', 'i want to do suicide', 'I want to kill myself']) {
+      const c = engine.ask(crisisQ);
+      expect(c.kind, crisisQ).toBe('crisis');
+      expect(c.ayahs, crisisQ).toEqual([]);
+      expect(c.answer, crisisQ).toMatch(/precious|mercy/i);
+    }
+
+    for (const topicQ of ['suicide', 'what does the quran say about suicide?']) {
+      const r = engine.ask(topicQ);
+      expect(r.kind, topicQ).toBe('theme');
+      expect(r.notFound, topicQ).toBe(false);
+      expect(r.ayahs.map((a) => `${a.s}:${a.a}`), topicQ).toEqual(expect.arrayContaining(['4:29', '2:195']));
+    }
   });
 });
 
